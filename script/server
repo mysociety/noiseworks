@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# abort on any errors
+set -e
+
+# check that we are in the expected directory
+cd `dirname $0`/..
+
+./manage.py migrate
+./manage.py runserver 0.0.0.0:8000

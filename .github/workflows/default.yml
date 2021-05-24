@@ -1,0 +1,66 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+
+    services:
+      postgres:
+        image: postgis/postgis:13-3.1
+        env:
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: password
+      CFLAGS: "-O0"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install system packages
+      run: sudo apt-get install binutils libproj-dev gdal-bin
+
+    - name: Set up python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+
+    - name: Load cached venv
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      env:
+        POETRY_VIRTUALENVS_CREATE: "false"
+      run: |
+        pip install poetry==1.1.6
+        poetry install --no-interaction --no-root
+        pip install codecov
+
+    - name: Set up database
+      run: |
+        createdb noiseworks
+        psql -d noiseworks -c 'create extension postgis;'
+
+    - name: Run tests
+      env:
+        SECRET_KEY: 'secret'
+        DATABASE_URL: 'postgis://postgres:password@localhost/noiseworks'
+      run: coverage run -m pytest
+
+    - name: Upload code coverage
+      run: codecov
