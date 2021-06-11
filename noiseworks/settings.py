@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import environ
 from pathlib import Path
+import pgconnection
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -48,8 +49,21 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "compressor",
     "debug_toolbar",
+    "pgconnection",
+    "pgtrigger",
+    "crispy_forms",
+    "crispy_forms_gds",
     "accounts",
 ]
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = (
+    "bootstrap",
+    "bootstrap3",
+    "bootstrap4",
+    "uni_form",
+    "gds",
+)
+CRISPY_TEMPLATE_PACK = "gds"
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -90,9 +104,11 @@ WSGI_APPLICATION = "noiseworks.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    "default": env.db(),
-}
+DATABASES = pgconnection.configure(
+    {
+        "default": env.db(),
+    }
+)
 
 
 # Password validation

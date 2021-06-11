@@ -87,6 +87,18 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
+name = "crispy-forms-gds"
+version = "0.2.2"
+description = "Django application to add 'django-crispy-forms' layout objects for the GOV.UK Design System."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+Django = ">=2.2"
+django-crispy-forms = ">=1.9.0"
+
+[[package]]
 name = "dataclasses"
 version = "0.8"
 description = "A backport of the dataclasses module for Python 3.6"
@@ -137,6 +149,14 @@ rjsmin = "1.1.0"
 six = ">=1.12.0"
 
 [[package]]
+name = "django-crispy-forms"
+version = "1.11.2"
+description = "Best way to have Django DRY forms"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
 name = "django-debug-toolbar"
 version = "3.2.1"
 description = "A configurable set of panels that display various debug information about the current request/response."
@@ -167,6 +187,29 @@ python-versions = "*"
 [package.dependencies]
 django-compressor = ">=1.3"
 libsass = ">=0.7.0,<1"
+
+[[package]]
+name = "django-pgconnection"
+version = "1.0.2"
+description = "Route postgres connections and hook into cursor execution"
+category = "main"
+optional = false
+python-versions = ">=3.6.2,<4"
+
+[package.dependencies]
+django = ">=2"
+
+[[package]]
+name = "django-pgtrigger"
+version = "2.3.2"
+description = "Postgres trigger support integrated with Django models."
+category = "main"
+optional = false
+python-versions = ">=3.6.2,<4"
+
+[package.dependencies]
+django = ">=2"
+django-pgconnection = ">=1.0.1"
 
 [[package]]
 name = "importlib-metadata"
@@ -392,7 +435,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "23d3ab29a985566a9a93fdfa6b172082d401b1bdccdeb9339ef0a6d8143fd090"
+content-hash = "348eb7d5efe2e28ee3f3211584562ba1a6eb5c9d2bb64d3c51c4f3a47fa7f83e"
 
 [metadata.files]
 appdirs = [
@@ -423,6 +466,10 @@ colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
+crispy-forms-gds = [
+    {file = "crispy-forms-gds-0.2.2.tar.gz", hash = "sha256:42447e805f634d4f644e925033958eea7de6dd521891cd5f47535e8264a4160b"},
+    {file = "crispy_forms_gds-0.2.2-py2.py3-none-any.whl", hash = "sha256:881aee1db7350f649d4d4bbd2f1fd5fb7fb0fc3ad3e67db5fea20b4f0baacd31"},
+]
 dataclasses = [
     {file = "dataclasses-0.8-py3-none-any.whl", hash = "sha256:0201d89fa866f68c8ebd9d08ee6ff50c0b255f8ec63a71c16fda7af82bb887bf"},
     {file = "dataclasses-0.8.tar.gz", hash = "sha256:8479067f342acf957dc82ec415d355ab5edb7e7646b90dc6e2fd1d96ad084c97"},
@@ -439,6 +486,10 @@ django-compressor = [
     {file = "django_compressor-2.4.1-py2.py3-none-any.whl", hash = "sha256:f8313f59d5e65712fc28787d084fe834997c9dfa92d064a1a3ec3d3366594d04"},
     {file = "django_compressor-2.4.1.tar.gz", hash = "sha256:3358077605c146fdcca5f9eaffb50aa5dbe15f238f8854679115ebf31c0415e0"},
 ]
+django-crispy-forms = [
+    {file = "django-crispy-forms-1.11.2.tar.gz", hash = "sha256:88efa857ce6111bd696cc4f74057539a3456102fe9c3a3ece8868e1e4579e70a"},
+    {file = "django_crispy_forms-1.11.2-py3-none-any.whl", hash = "sha256:3db71ab06d17ec9d0195c086d3ad454da300ac268752ac3a4f63d72f7a490254"},
+]
 django-debug-toolbar = [
     {file = "django-debug-toolbar-3.2.1.tar.gz", hash = "sha256:a5ff2a54f24bf88286f9872836081078f4baa843dc3735ee88524e89f8821e33"},
     {file = "django_debug_toolbar-3.2.1-py3-none-any.whl", hash = "sha256:e759e63e3fe2d3110e0e519639c166816368701eab4a47fed75d7de7018467b9"},
@@ -450,6 +501,14 @@ django-environ = [
 django-libsass = [
     {file = "django-libsass-0.8.tar.gz", hash = "sha256:38fab4ce1245542f3afd7248dc48f8a0b261f5f6c61e7cc43969a9c9079b5ffd"},
     {file = "django_libsass-0.8-py3-none-any.whl", hash = "sha256:3e74fd8e75ac0e6ebc0443efc3e530167981bf279fecc2294094c820ae266fbb"},
+]
+django-pgconnection = [
+    {file = "django-pgconnection-1.0.2.tar.gz", hash = "sha256:1c012e789cd65bee1d514de6a4b3f90c888e599c3c2be195e7bb3627923bb7f3"},
+    {file = "django_pgconnection-1.0.2-py3-none-any.whl", hash = "sha256:51ea5943faaa4aa4a2f953586b925ecddec852b009c004ee0b5de93d5ae162f7"},
+]
+django-pgtrigger = [
+    {file = "django-pgtrigger-2.3.2.tar.gz", hash = "sha256:09587d6377c203a73ece6c7c434f57fa335f3551bd899728fe609cba7cd1f4bf"},
+    {file = "django_pgtrigger-2.3.2-py3-none-any.whl", hash = "sha256:bc817b11beafde62735de789268479fe70cc481861b384a6c2eade1bebca5d1b"},
 ]
 importlib-metadata = [
     {file = "importlib_metadata-4.0.1-py3-none-any.whl", hash = "sha256:d7eb1dea6d6a6086f8be21784cc9e3bcfa55872b52309bc5fad53a8ea444465d"},
