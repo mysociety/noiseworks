@@ -11,6 +11,8 @@ Django = "^3.2.3"
 django-environ = "^0.4.5"
 psycopg2 = "^2.8.6"
 django-libsass = "^0.8"
+crispy-forms-gds = "^0.2.2"
+django-pgtrigger = "^2.3.2"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
