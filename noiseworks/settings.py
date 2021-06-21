@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import environ
 from pathlib import Path
 import pgconnection
+from noiseworks.sass import inline_image
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
     "crispy_forms_gds",
     "accounts",
     "cases",
+    env("COBRAND"),
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = (
@@ -163,6 +165,10 @@ STATICFILES_FINDERS = (
 STATICFILES_DIRS = [BASE_DIR / "noiseworks" / "static"]
 
 COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
+
+LIBSASS_CUSTOM_FUNCTIONS = {
+    "inline-image": inline_image,
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

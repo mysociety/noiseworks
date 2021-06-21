@@ -29,6 +29,7 @@ services:
       SECRET_KEY: 'secret'
       DEBUG: 1
       DATABASE_URL: 'postgis://postgres:password@db/noiseworks'
+      COBRAND: cobrand_hackney
 
 volumes:
   pgdata:
