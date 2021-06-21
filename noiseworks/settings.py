@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "crispy_forms_gds",
     "accounts",
+    "cases",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = (
@@ -76,6 +77,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "noiseworks.middleware.user_audit_middleware",
 ]
 
 ROOT_URLCONF = "noiseworks.urls"
@@ -85,7 +87,7 @@ APPEND_SLASH = False
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "noiseworks" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -109,7 +111,6 @@ DATABASES = pgconnection.configure(
         "default": env.db(),
     }
 )
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -158,6 +159,8 @@ STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     "compressor.finders.CompressorFinder",
 )
+
+STATICFILES_DIRS = [BASE_DIR / "noiseworks" / "static"]
 
 COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
 

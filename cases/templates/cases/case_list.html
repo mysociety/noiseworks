@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Cases</h1>
+
+<ul>
+{% for case in object_list %}
+    <li>
+        <p>{{ case.id }}</p>
+        <a href="{% url 'case-view' case.id %}">{{ case.kind_display }} at {{ case.location_display }}</a>
+        <dl>
+        <dt>Last action</dt>
+        <dd>{{ case.modified|timesince }} - ???</dd>
+        <dt>Assigned</dt>
+        <dd>{{ case.assigned }}</dd>
+        </dl>
+    </li>
+{% empty %}
+    <li>No cases yet.</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

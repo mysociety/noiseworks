@@ -24,6 +24,7 @@ DJANGO_SETTINGS_MODULE = "noiseworks.settings"
 python_files = ["tests.py"]
 filterwarnings = [
     "ignore:'[^']*' defines default_app_config = '[^']*'. Django now detects this configuration automatically. You can remove default_app_config.:PendingDeprecationWarning",
+    "ignore::django.utils.deprecation.RemovedInDjango40Warning",
 ]
 
 [tool.black]
