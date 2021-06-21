@@ -18,6 +18,7 @@
     <dd>{{ case.modified|timesince }} - ???
     <dt>Assigned
     <dd>{{ case.assigned }}
+    <a href="{% url 'case-reassign' case.id %}">Change</a>
 </dl>
 
 <a href="" class="govuk-button">Log an action</a>

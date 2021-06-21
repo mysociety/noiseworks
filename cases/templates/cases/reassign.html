@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+<p><a href="{% url "case-view" case.id %}">&lsaquo; Cancel</a></p>
+
+<p class="case-id-badge">{{ case.id }}</p>
+
+{% error_summary form %}
+{% crispy form %}
+
+{% endblock %}
+
