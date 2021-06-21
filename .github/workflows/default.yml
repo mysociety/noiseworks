@@ -60,6 +60,7 @@ jobs:
       env:
         SECRET_KEY: 'secret'
         DATABASE_URL: 'postgis://postgres:password@localhost/noiseworks'
+        COBRAND: 'cobrand_hackney'
       run: coverage run -m pytest
 
     - name: Upload code coverage
