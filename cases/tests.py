@@ -1,13 +1,25 @@
 import pytest
 from pytest_django.asserts import assertContains
+from accounts.models import User
 from .models import Case
+from .forms import ReassignForm
 
 pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def case_1(db):
-    return Case.objects.create(kind="diy")
+def staff_user_1(db):
+    return User.objects.create(is_staff=True, username="staffuser1")
+
+
+@pytest.fixture
+def staff_user_2(db):
+    return User.objects.create(is_staff=True, username="staffuser2")
+
+
+@pytest.fixture
+def case_1(db, staff_user_1):
+    return Case.objects.create(kind="diy", assigned=staff_user_1)
 
 
 @pytest.fixture
@@ -34,3 +46,28 @@ def test_case_uprn(admin_client, case_other_uprn):
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "Wombat")
     assertContains(response, "10001")
+
+
+def test_reassign():
+    form = ReassignForm(data={})
+    assert form.errors["assigned"] == ["This field is required."]
+
+
+def test_reassign_bad_user(case_1, staff_user_1):
+    form = ReassignForm(instance=case_1, data={"assigned": staff_user_1.id})
+    assert form.errors["assigned"] == [
+        "Select a valid choice. That choice is not one of the available choices."
+    ]
+
+
+def test_reassign_success(case_1, staff_user_2):
+    form = ReassignForm(instance=case_1, data={"assigned": staff_user_2.id})
+    assert form.is_valid()
+
+
+def test_reassign_view(admin_client, case_1, staff_user_2):
+    response = admin_client.get(f"/cases/{case_1.id}/reassign")
+    assertContains(response, "staffuser2")
+    response = admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": 0})
+    assertContains(response, "valid choice")
+    admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": staff_user_2.id})
