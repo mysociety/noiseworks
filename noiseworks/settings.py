@@ -131,7 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-if DEBUG:
+if DEBUG:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = []
 
 
