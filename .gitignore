@@ -10,3 +10,6 @@ __pycache__/
 /cobrand_*/static/*.css
 /cobrand_*/static/*.css.map
 *.auto.*
+
+/.coverage
+/htmlcov
