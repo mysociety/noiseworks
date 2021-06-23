@@ -8,8 +8,11 @@
 <ul>
 {% for case in filter.qs %}
     <li>
-        <p>{{ case.id }}</p>
-        <a href="{% url 'case-view' case.id %}">{{ case.kind_display }} at {{ case.location_display }}</a>
+        <a href="{% url 'case-view' case.id %}">
+            <span class="case-id-badge">{{ case.id }}</span>
+            <br>
+            {{ case.kind_display }} at {{ case.location_display }}
+        </a>
         <dl>
         <dt>Last action</dt>
         <dd>{{ case.modified|timesince }} - ???</dd>

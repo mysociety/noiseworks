@@ -4,7 +4,7 @@
 
 <p><a href="{% url "cases" %}">&lsaquo; Back to all cases</a></p>
 
-<p style="background-color: #00664f; color: #fff; display: inline-block; padding: 0.5em 1em; font-size: smaller; font-weight: bold;">{{ case.id }}</p>
+<p class="case-id-badge">{{ case.id }}</p>
 <h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
 
 <h2>Case info</h2>
