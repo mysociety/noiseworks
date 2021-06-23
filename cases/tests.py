@@ -32,6 +32,19 @@ def test_list(admin_client, case_1):
     assertContains(response, "Cases")
 
 
+def test_assigned_filter(admin_client, admin_user, case_1):
+    response = admin_client.get("/cases?assigned=others")
+    assertContains(response, f"/cases/{case_1.id}")
+    case_1.assigned = admin_user
+    case_1.save()
+    response = admin_client.get("/cases")
+    assertContains(response, f"/cases/{case_1.id}")
+    case_1.assigned = None
+    case_1.save()
+    response = admin_client.get("/cases?assigned=none")
+    assertContains(response, f"/cases/{case_1.id}")
+
+
 def test_case_not_found(admin_client):
     response = admin_client.get("/cases/1")
     assertContains(response, "Not Found", status_code=404)

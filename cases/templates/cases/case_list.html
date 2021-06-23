@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds %}
 
 {% block content %}
 
 <h1>Cases</h1>
 
 <ul>
-{% for case in object_list %}
+{% for case in filter.qs %}
     <li>
         <p>{{ case.id }}</p>
         <a href="{% url 'case-view' case.id %}">{{ case.kind_display }} at {{ case.location_display }}</a>
@@ -20,5 +21,11 @@
     <li>No cases yet.</li>
 {% endfor %}
 </ul>
+
+<h2>Filters</h2>
+
+<div class="case-filters">
+{% crispy filter.form %}
+</div>
 
 {% endblock %}

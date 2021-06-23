@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "pgtrigger",
     "crispy_forms",
     "crispy_forms_gds",
+    "django_filters",
     "accounts",
     "cases",
     env("COBRAND"),

@@ -1,6 +1,7 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
+from .filters import CaseFilter
 from .models import Case
 from .forms import ReassignForm
 
@@ -8,11 +9,12 @@ from .forms import ReassignForm
 @staff_member_required
 def case_list(request):
     qs = Case.objects.all()
+    f = CaseFilter(request.GET, queryset=qs, request=request)
     return render(
         request,
         "cases/case_list.html",
         {
-            "object_list": qs,
+            "filter": f,
         },
     )
 
