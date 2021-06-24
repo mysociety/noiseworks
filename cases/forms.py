@@ -2,7 +2,7 @@ from django import forms
 from accounts.models import User
 from crispy_forms_gds.helper import FormHelper
 from crispy_forms_gds.layout import Submit
-from .models import Case
+from .models import Case, Action
 
 
 class GDSForm:
@@ -54,4 +54,31 @@ class ReassignForm(GDSForm, forms.ModelForm):
         self.helper.legend_size = "xl"
 
     def save(self, case, user):
+        super().save()
+        Action.objects.create(
+            created_by=user,
+            case=self.instance,
+            assigned_old=self.current_assigned,
+            assigned_new=self.instance.assigned,
+        )
+
+
+class ActionForm(GDSForm, forms.ModelForm):
+    submit_text = "Log action"
+
+    class Meta:
+        model = Action
+        fields = ["type", "notes"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["type"].empty_label = None
+        self.fields["type"].widget = forms.RadioSelect()
+        self.fields["type"].required = True
+        self.fields["notes"].label = "Internal notes"
+        self.fields["notes"].required = True
+
+    def save(self, case, user):
+        self.instance.case = case
+        self.instance.created_by = user
         super().save()

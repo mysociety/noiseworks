@@ -125,3 +125,54 @@ class Complaint(AbstractModel):
     )
     happening_description = models.TextField(blank=True)
     more_details = models.TextField(blank=True)
+
+
+class ActionType(models.Model):
+    name = models.CharField(max_length=100)
+    common = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
+class Action(AbstractModel):
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="actions")
+
+    # User
+    type = models.ForeignKey(
+        ActionType,
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+        related_name="actions",
+    )
+    notes = models.TextField(blank=True)
+
+    # Reassign
+    assigned_old = models.ForeignKey(
+        User, blank=True, null=True, on_delete=models.PROTECT, related_name="+"
+    )
+    assigned_new = models.ForeignKey(
+        User, blank=True, null=True, on_delete=models.PROTECT, related_name="+"
+    )
+
+    # Merge
+    case_old = models.ForeignKey(Case, blank=True, null=True, on_delete=models.PROTECT)
+
+    def __str__(self):
+        old = self.assigned_old
+        new = self.assigned_new
+        if self.assigned_old and self.assigned_new:
+            return (
+                f"{self.created_by} reassigned case {self.case_id} from {old} to {new}"
+            )
+        elif self.assigned_new:
+            return f"{self.created_by} assigned {new} to case {self.case_id}"
+        elif self.assigned_old:
+            return f"{self.created_by} unassigned {old} from case {self.case_id}"
+        elif self.case_old:
+            return f"{self.created_by} merged case {self.case_old_id} into case {self.case_id}"
+        elif self.type:
+            return f"{self.created_by}, {self.type.name}, case {self.case_id}"
+        else:
+            return f"{self.created_by}, case {self.case_id}, unknown action"

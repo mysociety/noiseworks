@@ -21,7 +21,7 @@
     <a href="{% url 'case-reassign' case.id %}">Change</a>
 </dl>
 
-<a href="" class="govuk-button">Log an action</a>
+<a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
 <a href="" class="govuk-button govuk-button--secondary">Merge into another case</a>
 
 <h2>Noise source</h2>
@@ -32,7 +32,7 @@
 
 <h2>Timeline</h2>
 
-<a href="" class="govuk-button">Log an action</a>
+<a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
 
 ...
 
