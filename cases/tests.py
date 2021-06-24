@@ -1,7 +1,7 @@
 import pytest
 from pytest_django.asserts import assertContains
 from accounts.models import User
-from .models import Case
+from .models import Case, ActionType, Action
 from .forms import ReassignForm
 
 pytestmark = pytest.mark.django_db
@@ -25,6 +25,14 @@ def case_1(db, staff_user_1):
 @pytest.fixture
 def case_other_uprn(db):
     return Case.objects.create(uprn=10001, kind="other", kind_other="Wombat")
+
+
+@pytest.fixture
+def action_types(db):
+    return [
+        ActionType.objects.create(name="Letter sent", common=True),
+        ActionType.objects.create(name="Noise witnessed"),
+    ]
 
 
 def test_list(admin_client, case_1):
@@ -84,3 +92,34 @@ def test_reassign_view(admin_client, case_1, staff_user_2):
     response = admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": 0})
     assertContains(response, "valid choice")
     admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": staff_user_2.id})
+
+
+def test_log_view(admin_client, case_1, action_types):
+    response = admin_client.get(f"/cases/{case_1.id}/log")
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        {"notes": "", "type": action_types[0].id},
+    )
+    assertContains(response, "required")
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        {"notes": "Some notes", "type": action_types[0].id},
+        follow=True,
+    )
+
+
+def test_action_output(
+    admin_client, staff_user_1, staff_user_2, case_1, case_other_uprn, action_types
+):
+    a = Action(case=case_1, type=action_types[0], notes="Notes")
+    assert str(a) == f"None, Letter sent, case {case_1.id}"
+    a = Action(case=case_1, assigned_new=staff_user_1)
+    assert str(a) == f"None assigned staffuser1 to case {case_1.id}"
+    a = Action(case=case_1, assigned_old=staff_user_1)
+    assert str(a) == f"None unassigned staffuser1 from case {case_1.id}"
+    a = Action(case=case_1, assigned_old=staff_user_1, assigned_new=staff_user_2)
+    assert str(a) == f"None reassigned case {case_1.id} from staffuser1 to staffuser2"
+    a = Action(case=case_1, case_old=case_other_uprn)
+    assert str(a) == f"None merged case {case_other_uprn.id} into case {case_1.id}"
+    a = Action(case=case_1)
+    assert str(a) == f"None, case {case_1.id}, unknown action"

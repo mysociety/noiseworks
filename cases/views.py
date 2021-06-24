@@ -2,8 +2,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from .filters import CaseFilter
-from .models import Case
-from .forms import ReassignForm
+from .models import Case, Action
+from .forms import ReassignForm, ActionForm
 
 
 @staff_member_required
@@ -35,6 +35,23 @@ def reassign(request, pk):
     return render(
         request,
         "cases/reassign.html",
+        {
+            "case": case,
+            "form": form,
+        },
+    )
+
+
+@staff_member_required
+def log_action(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    form = ActionForm(request.POST or None)
+    if form.is_valid():
+        form.save(case=case)
+        return HttpResponseRedirect(case.get_absolute_url())
+    return render(
+        request,
+        "cases/action_form.html",
         {
             "case": case,
             "form": form,
