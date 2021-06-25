@@ -90,6 +90,34 @@ class Case(AbstractModel):
         else:
             return f"{self.radius}m around ({self.latitude},{self.longitude})"
 
+    def timeline(self):
+        data = []
+        for action in self.actions_reversed:
+            row = {
+                "time": action.created,
+                "summary": str(action),
+            }
+            data.append(row)
+        complaints = self.complaints.all()
+        for complaint in complaints:
+            row = {
+                "time": complaint.created,
+                "summary": f"{complaint.created_by} submitted a complaint",
+            }
+            data.append(row)
+        data = sorted(data, reverse=True, key=lambda x: x["time"])
+        return data
+
+    @property
+    def actions_reversed(self):
+        if not hasattr(self, "_actions_reversed"):
+            self._actions_reversed = list(self.actions.order_by("-created"))
+        return self._actions_reversed
+
+    @property
+    def last_action(self):
+        return self.actions_reversed[0] if len(self.actions_reversed) else None
+
 
 class Complaint(AbstractModel):
     DAY_CHOICES = [
@@ -135,6 +163,15 @@ class ActionType(models.Model):
         return self.name
 
 
+class ActionManager(models.Manager):
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.select_related(
+            "created_by", "case", "type", "assigned_old", "assigned_new", "case_old"
+        )
+        return qs
+
+
 class Action(AbstractModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="actions")
 
@@ -158,6 +195,8 @@ class Action(AbstractModel):
 
     # Merge
     case_old = models.ForeignKey(Case, blank=True, null=True, on_delete=models.PROTECT)
+
+    objects = ActionManager()
 
     def __str__(self):
         old = self.assigned_old

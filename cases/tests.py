@@ -1,7 +1,7 @@
 import pytest
 from pytest_django.asserts import assertContains
 from accounts.models import User
-from .models import Case, ActionType, Action
+from .models import Case, Complaint, ActionType, Action
 from .forms import ReassignForm
 
 pytestmark = pytest.mark.django_db
@@ -25,6 +25,13 @@ def case_1(db, staff_user_1):
 @pytest.fixture
 def case_other_uprn(db):
     return Case.objects.create(uprn=10001, kind="other", kind_other="Wombat")
+
+
+@pytest.fixture
+def complaint(db, case_1):
+    return Complaint.objects.create(
+        case=case_1, happening_now=True, happening_pattern=False
+    )
 
 
 @pytest.fixture
@@ -58,7 +65,7 @@ def test_case_not_found(admin_client):
     assertContains(response, "Not Found", status_code=404)
 
 
-def test_case(admin_client, case_1):
+def test_case(admin_client, case_1, complaint):
     response = admin_client.get(f"/cases/{case_1.id}")
     assertContains(response, "DIY")
 
