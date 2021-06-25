@@ -15,7 +15,7 @@
     <dt>Created
     <dd>{{ case.created|timesince }}
     <dt>Last action
-    <dd>{{ case.modified|timesince }} - ???
+    <dd>{{ case.last_action.created|timesince }} - {{ case.last_action }}
     <dt>Assigned
     <dd>{{ case.assigned }}
     <a href="{% url 'case-reassign' case.id %}">Change</a>
@@ -34,6 +34,11 @@
 
 <a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
 
-...
+<ul>
+{% for entry in case.timeline %}
+<li>{{ entry.summary }}
+    <br>{{ entry.time }}
+{% endfor %}
+</ul>
 
 {% endblock %}

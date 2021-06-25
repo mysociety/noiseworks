@@ -15,7 +15,7 @@
         </a>
         <dl>
         <dt>Last action</dt>
-        <dd>{{ case.modified|timesince }} - ???</dd>
+        <dd>{{ case.last_action.created|timesince }} - {{ case.last_action|truncatewords:10 }}
         <dt>Assigned</dt>
         <dd>{{ case.assigned }}</dd>
         </dl>
