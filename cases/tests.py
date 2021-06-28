@@ -1,5 +1,5 @@
 import pytest
-from pytest_django.asserts import assertContains
+from pytest_django.asserts import assertContains, assertNotContains
 from accounts.models import User
 from .models import Case, Complaint, ActionType, Action
 from .forms import ReassignForm
@@ -130,3 +130,22 @@ def test_action_output(
     assert str(a) == f"None merged case {case_other_uprn.id} into case {case_1.id}"
     a = Action(case=case_1)
     assert str(a) == f"None, case {case_1.id}, unknown action"
+
+
+def test_merging_cases(admin_client, case_1, case_other_uprn):
+    response = admin_client.post(
+        f"/cases/{case_other_uprn.id}/merge", {"stop": 1}, follow=True
+    )
+    assertNotContains(response, "We have forgotten your current merging.")
+    response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
+    assertContains(response, "visit the case you wish to merge")
+    response = admin_client.get(f"/cases/{case_1.id}")
+    assertContains(response, f"Merge #{case_other_uprn.id} into this case")
+    response = admin_client.post(
+        f"/cases/{case_other_uprn.id}/merge", {"stop": 1}, follow=True
+    )
+    assertContains(response, "We have forgotten your current merging.")
+    assertNotContains(response, "Merge #{case_other_uprn.id} into this case")
+    response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
+    response = admin_client.post(f"/cases/{case_1.id}/merge", {"dupe": 1})
+    assertContains(response, "has been merged into")

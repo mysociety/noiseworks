@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% with request.session.merging_case as duplicate %}
+
+{% if duplicate and case.id != duplicate.id %}
+<div style="background-color: #ffe; padding: 1em 1em 0;">
+<form action="{% url "case-merge" case.id %}" method="post">{% csrf_token %}
+<input class="govuk-button" type="submit" name="dupe" value="Merge {{ duplicate.name }} into this case" id="edit-form-submit">
+<input class="govuk-button govuk-button--secondary" type="submit" name="stop" value="Stop looking for duplicates">
+</form>
+</div>
+{% endif %}
 
 <p><a href="{% url "cases" %}">&lsaquo; Back to all cases</a></p>
 
@@ -22,7 +32,9 @@
 </dl>
 
 <a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
-<a href="" class="govuk-button govuk-button--secondary">Merge into another case</a>
+{% if not duplicate %}
+<a href="{% url "case-merge" case.id %}" class="govuk-button govuk-button--secondary">Merge into another case</a>
+{% endif %}
 
 <h2>Noise source</h2>
 
@@ -41,4 +53,5 @@
 {% endfor %}
 </ul>
 
+{% endwith %}
 {% endblock %}

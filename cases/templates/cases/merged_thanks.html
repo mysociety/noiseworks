@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p><a href="{% url "cases" %}">&lsaquo; Back to all cases</a></p>
+
+<p class="case-id-badge">{{ case.id }}</p>
+<h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
+
+<p>Case {{ other }} has been merged into
+<a href="{% url "case-view" case.id %}">{{ case }}</a>.</p>
+
+{% endblock %}
