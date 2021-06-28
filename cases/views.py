@@ -1,4 +1,5 @@
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
 from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
@@ -62,5 +63,46 @@ def log_action(request, pk):
         {
             "case": case,
             "form": form,
+        },
+    )
+
+
+@staff_member_required
+def merge(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+
+    if request.POST.get("stop"):
+        if "merging_case" in request.session:
+            del request.session["merging_case"]
+            messages.success(request, "We have forgotten your current merging.")
+        return HttpResponseRedirect(case.get_absolute_url())
+
+    if request.POST.get("dupe") and request.session.get("merging_case"):
+        other_id = request.session["merging_case"]["id"]
+        other = Case.objects.get(pk=other_id)
+        Action.objects.create(
+            case=case,
+            case_old=other,
+        )
+        del request.session["merging_case"]
+        return render(
+            request,
+            "cases/merged_thanks.html",
+            {
+                "case": case,
+                "other": other,
+            },
+        )
+
+    request.session["merging_case"] = {
+        "id": case.id,
+        "name": f"#{case.id}",
+    }
+
+    return render(
+        request,
+        "cases/merged_start.html",
+        {
+            "case": case,
         },
     )
