@@ -30,6 +30,11 @@ def case_list(request):
 @staff_member_required
 def case(request, **kwargs):
     case = get_object_or_404(Case.objects.select_related("assigned"), pk=kwargs["pk"])
+
+    # redirect = case.merged_into
+    # if redirect:
+    #    return HttpResponseRedirect(redirect.get_absolute_url())
+
     return render(request, "cases/case_detail.html", context={"case": case})
 
 
