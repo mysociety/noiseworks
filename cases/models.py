@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
+from django.utils.functional import cached_property
 from accounts.models import User
 
 
@@ -89,6 +90,24 @@ class Case(AbstractModel):
             return self.uprn
         else:
             return f"{self.radius}m around ({self.latitude},{self.longitude})"
+
+    @cached_property
+    def merged_into(self):
+        """Return the ID of the final Case that this has been merged into, if any."""
+        query = Action.objects.raw(
+            """WITH RECURSIVE cte AS (
+                SELECT id,case_old_id,case_id FROM cases_action WHERE case_old_id = %s
+                UNION
+                SELECT s.id,s.case_old_id,s.case_id FROM cte JOIN cases_action s ON cte.case_id = s.case_old_id
+            )
+            SELECT * FROM cte """,
+            [self.id],
+        )
+
+        merged = None
+        for action in query:
+            merged = action.case_id
+        return merged
 
     def timeline(self):
         data = []

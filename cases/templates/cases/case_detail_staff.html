@@ -3,6 +3,13 @@
 {% block content %}
 {% with request.session.merging_case as duplicate %}
 
+{% if case.merged_into %}
+<div style="background-color: #fec; padding: 1em; margin-bottom: 1em;">
+    This case has been merged into
+    <a href="{% url "case-view" case.merged_into %}">case #{{ case.merged_into }}</a>.
+</div>
+{% endif %}
+
 {% if duplicate and case.id != duplicate.id %}
 <div style="background-color: #ffe; padding: 1em 1em 0;">
 <form action="{% url "case-merge" case.id %}" method="post">{% csrf_token %}
@@ -24,16 +31,20 @@
     <dd>{{ case.kind_display }}
     <dt>Created
     <dd>{{ case.created|timesince }}
+  {% if not case.merged_into %}
     <dt>Last action
-    <dd>{{ case.last_action.created|timesince }} - {{ case.last_action }}
+    <dd>{{ case.last_action.created|timesince }} – {{ case.last_action }}
     <dt>Assigned
     <dd>{{ case.assigned }}
     <a href="{% url 'case-reassign' case.id %}">Change</a>
+  {% endif %}
 </dl>
 
-<a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
-{% if not duplicate %}
-<a href="{% url "case-merge" case.id %}" class="govuk-button govuk-button--secondary">Merge into another case</a>
+{% if not case.merged_into %}
+    <a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
+    {% if not duplicate and not case.merged_into %}
+        <a href="{% url "case-merge" case.id %}" class="govuk-button govuk-button--secondary">Merge into another case</a>
+    {% endif %}
 {% endif %}
 
 <h2>Noise source</h2>
@@ -44,7 +55,9 @@
 
 <h2>Timeline</h2>
 
-<a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
+{% if not case.merged_into %}
+    <a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
+{% endif %}
 
 <ul>
 {% for entry in case.timeline %}

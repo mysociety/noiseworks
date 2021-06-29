@@ -149,3 +149,6 @@ def test_merging_cases(admin_client, case_1, case_other_uprn):
     response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
     response = admin_client.post(f"/cases/{case_1.id}/merge", {"dupe": 1})
     assertContains(response, "has been merged into")
+
+    response = admin_client.get(f"/cases/{case_other_uprn.id}")
+    assertContains(response, "This case has been merged into")
