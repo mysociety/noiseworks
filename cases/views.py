@@ -1,6 +1,5 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from .filters import CaseFilter
@@ -10,14 +9,15 @@ from .forms import ReassignForm, ActionForm
 
 @staff_member_required
 def case_list(request):
-    qs = Case.objects.prefetch_related(
-        Prefetch(
-            "actions",
-            queryset=Action.objects.select_related("created_by").order_by("-created"),
-            to_attr="_actions_reversed",
-        ),
-    ).select_related("assigned")
+    qs = Case.objects.unmerged()
     f = CaseFilter(request.GET, queryset=qs, request=request)
+    merge_map = Action.objects.get_merged_cases(f.qs)
+    actions_by_case = Action.objects.get_reversed(merge_map)
+
+    # Set the actions for each result to the right ones
+    for case in f.qs:
+        case.actions_reversed = actions_by_case.get(case.id, [])
+
     return render(
         request,
         "cases/case_list_staff.html",

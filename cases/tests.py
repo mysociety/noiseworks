@@ -113,6 +113,8 @@ def test_log_view(admin_client, case_1, action_types):
         {"notes": "Some notes", "type": action_types[0].id},
         follow=True,
     )
+    response = admin_client.get(f"/cases?assigned=others")
+    assertContains(response, "Letter sent")
 
 
 def test_action_output(
@@ -152,3 +154,14 @@ def test_merging_cases(admin_client, case_1, case_other_uprn):
 
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "This case has been merged into")
+
+
+def test_action_manager(case_1, case_other_uprn):
+    a = Action.objects.create(case=case_1, case_old=case_other_uprn)
+    merge_map = Action.objects.get_merged_cases([case_1])
+    assert merge_map == {
+        case_1.id: case_1.id,
+        case_other_uprn.id: case_1.id,
+    }
+    actions = Action.objects.get_reversed(merge_map)
+    assert actions == {case_1.id: [a]}
