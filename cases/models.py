@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -25,6 +26,13 @@ class AbstractModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class CaseManager(models.Manager):
+    def unmerged(self):
+        q = Q(action__isnull=True) | Q(action__case_old_id__isnull=True)
+        qs = self.filter(q).select_related("assigned")
+        return qs
 
 
 class Case(AbstractModel):
@@ -72,6 +80,8 @@ class Case(AbstractModel):
         related_name="assignations",
     )
 
+    objects = CaseManager()
+
     class Meta:
         ordering = ("-id",)
 
@@ -109,6 +119,7 @@ class Case(AbstractModel):
             merged = action.case_id
         return merged
 
+    @cached_property
     def timeline(self):
         data = []
         for action in self.actions_reversed:
@@ -127,11 +138,12 @@ class Case(AbstractModel):
         data = sorted(data, reverse=True, key=lambda x: x["time"])
         return data
 
-    @property
+    @cached_property
     def actions_reversed(self):
-        if not hasattr(self, "_actions_reversed"):
-            self._actions_reversed = list(self.actions.order_by("-created"))
-        return self._actions_reversed
+        actions = Action.objects.get_merged_cases([self])
+        actions = Action.objects.filter(case__in=actions.keys())
+        actions = actions.order_by("-created")
+        return actions
 
     @property
     def last_action(self):
@@ -189,6 +201,39 @@ class ActionManager(models.Manager):
             "created_by", "case", "type", "assigned_old", "assigned_new", "case_old"
         )
         return qs
+
+    def get_reversed(self, merge_map):
+        """Given a mapping of merged/unmerged case IDs, return a mapping of the
+        actions of those cases."""
+        case_ids = merge_map.keys()
+        actions_reversed = self.filter(case__in=case_ids).order_by("-created")
+        actions_by_case = {}
+        for action in actions_reversed:
+            merged_case_id = merge_map[action.case_id]
+            actions_by_case.setdefault(merged_case_id, []).append(action)
+        return actions_by_case
+
+    def get_merged_cases(self, cases):
+        """Given a list of Case IDs, returns a dict mapping other Cases that have
+        been merged into those Cases."""
+        case_ids = map(lambda x: str(x.id), cases)
+        case_ids = ",".join(case_ids)
+        if not case_ids:
+            return {}
+        query = self.raw(
+            """WITH RECURSIVE cte AS (
+                SELECT s.id,s.case_old_id,s.case_id FROM cases_action s WHERE s.case_id IN (%s) AND s.case_old_id IS NOT NULL
+                UNION
+                SELECT s.id,s.case_old_id,cte.case_id FROM cte JOIN cases_action s ON cte.case_old_id = s.case_id AND s.case_old_id IS NOT NULL
+            )
+            SELECT * FROM cte """
+            % case_ids,
+        )
+
+        merge_map = {c.id: c.id for c in cases}
+        for action in query:
+            merge_map[action.case_old_id] = action.case_id
+        return merge_map
 
 
 class Action(AbstractModel):
