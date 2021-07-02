@@ -134,7 +134,7 @@ def test_action_output(
     assert str(a) == f"None, case {case_1.id}, unknown action"
 
 
-def test_merging_cases(admin_client, case_1, case_other_uprn):
+def test_merging_cases(admin_client, case_1, case_other_uprn, action_types):
     response = admin_client.post(
         f"/cases/{case_other_uprn.id}/merge", {"stop": 1}, follow=True
     )
@@ -152,8 +152,11 @@ def test_merging_cases(admin_client, case_1, case_other_uprn):
     response = admin_client.post(f"/cases/{case_1.id}/merge", {"dupe": 1})
     assertContains(response, "has been merged into")
 
+    a = Action.objects.create(case=case_1, notes="Internal note", type=action_types[1])
+
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "This case has been merged into")
+    assertContains(response, "Noise witnessed")
 
 
 def test_action_manager(case_1, case_other_uprn):

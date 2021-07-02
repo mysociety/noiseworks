@@ -102,8 +102,8 @@ class Case(AbstractModel):
             return f"{self.radius}m around ({self.latitude},{self.longitude})"
 
     @cached_property
-    def merged_into(self):
-        """Return the ID of the final Case that this has been merged into, if any."""
+    def merged_into_list(self) -> list:
+        """Return a list of the IDs of the Cases that this has been merged into, if any."""
         query = Action.objects.raw(
             """WITH RECURSIVE cte AS (
                 SELECT id,case_old_id,case_id FROM cases_action WHERE case_old_id = %s
@@ -114,9 +114,16 @@ class Case(AbstractModel):
             [self.id],
         )
 
-        merged = None
+        merged = []
         for action in query:
-            merged = action.case_id
+            merged.append({"id": action.case_id, "at": action.created})
+        return merged
+
+    @cached_property
+    def merged_into(self):
+        """Return the ID of the final Case that this has been merged into, if any."""
+        merged = self.merged_into_list
+        merged = merged[-1]["id"] if merged else None
         return merged
 
     @cached_property
@@ -141,7 +148,10 @@ class Case(AbstractModel):
     @cached_property
     def actions_reversed(self):
         actions = Action.objects.get_merged_cases([self])
-        actions = Action.objects.filter(case__in=actions.keys())
+        query = Q(case__in=actions.keys())
+        for merged in self.merged_into_list:
+            query |= Q(created__gte=merged["at"], case=merged["id"])
+        actions = Action.objects.filter(query)
         actions = actions.order_by("-created")
         return actions
 
