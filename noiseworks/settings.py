@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "crispy_forms_gds",
     "django_filters",
     "accounts",
+    "oauth",
     "cases",
     env("COBRAND"),
 ]
@@ -134,6 +135,16 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 if DEBUG:  # pragma: no cover
     AUTH_PASSWORD_VALIDATORS = []
+
+AUTHLIB_OAUTH_CLIENTS = {
+    "google": {
+        "client_id": env.str("OAUTH_CLIENT_ID", None),
+        "client_secret": env.str("OAUTH_CLIENT_SECRET", None),
+        "authorize_params": {
+            "hd": env.str("OAUTH_CLIENT_DOMAIN", None),
+        },
+    }
+}
 
 
 # Internationalization
