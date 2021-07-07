@@ -4,6 +4,7 @@ import debug_toolbar
 
 urlpatterns = [
     path("cases", include("cases.urls")),
+    path("oauth/", include("oauth.urls")),
     path("admin/", admin.site.urls),
     path("__debug__/", include(debug_toolbar.urls)),
 ]
