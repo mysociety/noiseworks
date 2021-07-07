@@ -1,3 +1,8 @@
 #!/bin/bash
 
-pytest
+if [ "$1" == "--coverage" ]; then
+    poetry run coverage run --source=. --branch -m pytest
+    poetry run coverage report -m
+else
+    poetry run pytest
+fi
