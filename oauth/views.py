@@ -43,5 +43,5 @@ def verify(request):
     user.last_name = userinfo["family_name"]
     user.save()
 
-    login(request, user)
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     return redirect("/")  # XXX

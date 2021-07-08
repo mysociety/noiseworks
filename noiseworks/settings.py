@@ -146,6 +146,13 @@ AUTHLIB_OAUTH_CLIENTS = {
     }
 }
 
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "sesame.backends.ModelBackend",
+]
+
+SESAME_MAX_AGE = 300
+SESAME_ONE_TIME = False
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
