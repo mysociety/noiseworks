@@ -17,6 +17,7 @@ django-filter = "^2.4.0"
 Authlib = "1.0.0a2"
 requests = "^2.25.1"
 django-sesame = "^2.4"
+django-phonenumber-field = {extras = ["phonenumberslite"], version = "^5.2.0"}
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
