@@ -294,6 +294,20 @@ django = ">=2"
 django-pgconnection = ">=1.0.1"
 
 [[package]]
+name = "django-sesame"
+version = "2.4"
+description = "Frictionless authentication with \"Magic Links\" for your Django project."
+category = "main"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.dependencies]
+django = ">=2.2"
+
+[package.extras]
+ua = ["ua-parser (>=0.10)"]
+
+[[package]]
 name = "idna"
 version = "2.10"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -580,7 +594,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "17ef4e214b67ced2d06548282d54afb629b35e4cad0ccf39f1b1316a8105378a"
+content-hash = "d8b0d9c0952603c1d9d94a91a1c7c8f4e77797bf2a381ab521d2f257c20f9446"
 
 [metadata.files]
 appdirs = [
@@ -789,6 +803,10 @@ django-pgconnection = [
 django-pgtrigger = [
     {file = "django-pgtrigger-2.3.2.tar.gz", hash = "sha256:09587d6377c203a73ece6c7c434f57fa335f3551bd899728fe609cba7cd1f4bf"},
     {file = "django_pgtrigger-2.3.2-py3-none-any.whl", hash = "sha256:bc817b11beafde62735de789268479fe70cc481861b384a6c2eade1bebca5d1b"},
+]
+django-sesame = [
+    {file = "django-sesame-2.4.tar.gz", hash = "sha256:4f232ba1c3642b4eef23257af9a2feac36970457d2940f4083c48c6a3d9cb0a3"},
+    {file = "django_sesame-2.4-py3-none-any.whl", hash = "sha256:b0570b610ec2f3602ff12d43b5bca41c4a37a3079e6a0170ceccc69689446b87"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
