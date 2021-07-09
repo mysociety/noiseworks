@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
 from accounts.models import User
@@ -23,8 +24,15 @@ def case_1(db, staff_user_1):
 
 
 @pytest.fixture
+def case_location(db):
+    return Case.objects.create(kind="diy", latitude=51, longitude=-1, radius=100)
+
+
+@pytest.fixture
 def case_other_uprn(db):
-    return Case.objects.create(uprn=10001, kind="other", kind_other="Wombat")
+    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
+        address_for_uprn.return_value = "Flat 4, 2 Example Road, E8 2DP"
+        yield Case.objects.create(uprn=10001, kind="other", kind_other="Wombat")
 
 
 @pytest.fixture
@@ -47,7 +55,7 @@ def test_list(admin_client, case_1):
     assertContains(response, "Cases")
 
 
-def test_assigned_filter(admin_client, admin_user, case_1):
+def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     response = admin_client.get("/cases?assigned=others")
     assertContains(response, f"/cases/{case_1.id}")
     case_1.assigned = admin_user
@@ -73,7 +81,7 @@ def test_case(admin_client, case_1, complaint):
 def test_case_uprn(admin_client, case_other_uprn):
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "Wombat")
-    assertContains(response, "10001")
+    assertContains(response, "Flat 4, 2 Example Road")
 
 
 def test_reassign():
