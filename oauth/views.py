@@ -38,7 +38,7 @@ def verify(request):
     try:
         user = User.objects.get(username=email)
     except User.DoesNotExist:
-        user = User.objects.create_user(username=email, email=email, is_staff=True)
+        user = User.objects.create_user(username=email, is_staff=True)
     user.first_name = userinfo["given_name"]
     user.last_name = userinfo["family_name"]
     user.save()

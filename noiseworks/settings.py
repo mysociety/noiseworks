@@ -150,6 +150,8 @@ AUTHLIB_OAUTH_CLIENTS = {
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
+PHONENUMBER_DEFAULT_REGION = "GB"
+
 LANGUAGE_CODE = "en-gb"
 
 TIME_ZONE = "Europe/London"
