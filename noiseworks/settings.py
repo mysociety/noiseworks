@@ -41,6 +41,8 @@ INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
 
+COBRAND = env("COBRAND")
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -58,7 +60,7 @@ INSTALLED_APPS = [
     "accounts",
     "oauth",
     "cases",
-    env("COBRAND"),
+    COBRAND,
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = (
