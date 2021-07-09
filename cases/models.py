@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils.functional import cached_property
+from noiseworks import cobrand
 from accounts.models import User
 
 
@@ -69,6 +70,7 @@ class Case(AbstractModel):
     longitude = models.FloatField(blank=True, null=True)
     radius = models.IntegerField(blank=True, null=True)
     uprn = models.CharField(max_length=20, blank=True)
+    uprn_cache = models.CharField(max_length=200, blank=True)
     where = models.CharField(max_length=9, choices=WHERE_CHOICES)
     estate = models.CharField(max_length=1, choices=ESTATE_CHOICES)
 
@@ -95,11 +97,19 @@ class Case(AbstractModel):
         else:
             return self.get_kind_display()
 
+    @cached_property
     def location_display(self):
-        if self.uprn:
-            return self.uprn
-        else:
+        if self.uprn_cache:
+            return self.uprn_cache
+        elif self.uprn:
+            addr = cobrand.api.address_for_uprn(self.uprn)
+            self.uprn_cache = addr
+            self.save()
+            return addr
+        elif self.latitude:
             return f"{self.radius}m around ({self.latitude},{self.longitude})"
+        else:
+            return "Unknown location"
 
     @cached_property
     def merged_into_list(self) -> list:
