@@ -195,3 +195,11 @@ LIBSASS_CUSTOM_FUNCTIONS = {
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+COBRAND_SETTINGS = {
+    "address_api": {
+        "url": env.str("ADDRESS_API_URL", "https://example.com/"),
+        "pageAttr": env.str("ADDRESS_API_PAGEATTR", "page_count"),
+        "key": env.str("ADDRESS_API_KEY", "key"),
+    }
+}
