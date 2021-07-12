@@ -155,6 +155,7 @@ AUTHENTICATION_BACKENDS = [
 
 SESAME_MAX_AGE = 300
 SESAME_ONE_TIME = False
+SESAME_SIGNATURE_SIZE = 5
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

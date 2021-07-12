@@ -1,10 +1,13 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
 
 {% block content %}
 
-<p>Please check your email/phone for a magic link
-to authenticate with.</p>
+<p>Please check your email/phone for either a magic link
+you can click or a token you can enter below.</p>
 
+{% error_summary form %}
+{% crispy form %}
 
 {% endblock %}
 
