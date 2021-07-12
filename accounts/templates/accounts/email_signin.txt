@@ -1,3 +1,5 @@
 Please click the following link to access your noise cases.
 
 {{ url }}
+
+Or enter this token: {{ signature }}
