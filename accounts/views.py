@@ -1,4 +1,5 @@
 import base64
+from math import ceil
 from django.conf import settings
 from django.contrib.auth import login, get_user_model
 from django.core.exceptions import PermissionDenied
@@ -15,6 +16,8 @@ User = get_user_model()
 
 
 def token_url(request, token):
+    token_length = ceil((settings.SESAME_SIGNATURE_SIZE + 8) * 4 / 3)
+    token = "A" * (token_length - len(token)) + token
     user = get_user(token)
     if user is None:
         raise PermissionDenied
@@ -52,7 +55,7 @@ def show_form(request):
         signature = bytes_to_base32(data[8:])
 
         url = request.build_absolute_uri(
-            reverse("accounts:token", kwargs={"token": token})
+            reverse("accounts:token", kwargs={"token": token.lstrip("A")})
         )
 
         if username_type == "email":
