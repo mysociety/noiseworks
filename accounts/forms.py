@@ -17,6 +17,7 @@ PhoneNumber.is_mobile = is_mobile
 
 class SignInForm(GDSForm, forms.Form):
     username = forms.CharField(label="Email or mobile number")
+    username_type = None
 
     def clean_username(self):
         username = self.cleaned_data["username"]
@@ -25,6 +26,7 @@ class SignInForm(GDSForm, forms.Form):
         phone_number = to_python(username)
         if phone_number.is_valid():
             if phone_number.is_mobile():
+                self.cleaned_data["username_type"] = "phone"
                 return username
             else:
                 raise ValidationError("Please provide a mobile number")
@@ -32,4 +34,5 @@ class SignInForm(GDSForm, forms.Form):
         # Not a phone number, assume email
         validate_email(username)
 
+        self.cleaned_data["username_type"] = "email"
         return username

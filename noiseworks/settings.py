@@ -205,3 +205,11 @@ COBRAND_SETTINGS = {
         "key": env.str("ADDRESS_API_KEY", "key"),
     }
 }
+
+# Sending messages
+
+EMAIL_HOST = "localhost"
+EMAIL_PORT = 1025
+
+NOTIFY_API_KEY = env.str("NOTIFY_API_KEY", None)
+NOTIFY_TEMPLATE_ID = env.str("NOTIFY_TEMPLATE_ID", None)
