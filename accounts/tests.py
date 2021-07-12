@@ -5,6 +5,7 @@ from pytest_django.asserts import assertContains
 from django.core import mail
 from sesame.tokens import create_token
 from .models import User
+from .forms import CodeForm
 
 pytestmark = pytest.mark.django_db
 
@@ -76,4 +77,29 @@ def test_log_in_by_link_phone(is_valid, client, sms_catcher, settings):
     m = re.search(r"(http[^\s]*)", sms_catcher[0]["personalisation"]["text"])
     url = m.group(1)
     response = client.get(url)
+    assert response.status_code == 302
+
+
+def test_log_in_by_code_errors(client):
+    form = CodeForm({"username": "foo@example.org", "code": "bad"})
+    assert form.errors == {
+        "username": ["Bad request"],
+        "timestamp": ["This field is required."],
+    }
+
+
+def test_log_in_by_code(client):
+    email = "foo@example.org"
+    response = client.post("/a", {"username": email})
+    assertContains(response, "Please check your")
+    m = re.search(b'timestamp[^>]*value="([^"]*)"', response.content)
+    timestamp = m.group(1).decode()
+    m = re.search(r"Or enter this token: ([^\s]*)", mail.outbox[0].body)
+    code = m.group(1)
+    response = client.post(
+        "/a/code", {"username": email, "timestamp": timestamp, "code": "bad"}
+    )
+    response = client.post(
+        "/a/code", {"username": email, "timestamp": timestamp, "code": code}
+    )
     assert response.status_code == 302
