@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from .filters import CaseFilter
-from .models import Case, Action
+from .models import Case, Complaint, Action
 from .forms import ReassignForm, ActionForm
 
 
@@ -118,4 +118,21 @@ def merge(request, pk):
         {
             "case": case,
         },
+    )
+
+
+@staff_member_required
+def complaint(request, pk, complaint):
+    case = get_object_or_404(Case, pk=pk)
+    complaint = get_object_or_404(
+        Complaint.objects.select_related("case"), pk=complaint
+    )
+    merge_map = case.action_merge_map
+    case_ids = merge_map.keys()
+    if complaint.case.id not in case_ids:
+        return HttpResponseRedirect(case.get_absolute_url())
+    return render(
+        request,
+        "cases/complaint_detail.html",
+        context={"case": case, "complaint": complaint},
     )

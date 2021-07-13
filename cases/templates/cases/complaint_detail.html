@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p><a href="{% url "case-view" case.id %}">&lsaquo; Back to case #{{ case.id }}</a></p>
+
+<p class="case-id-badge">{{ case.id }}</p>
+<h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
+
+<h2>Complaint info</h2>
+
+<dl>
+    <dt>Complaint created
+    <dd>{{ complaint.created }}
+    <dt>Complainant
+    <dd>{{ complaint.created_by }}
+    <dt>Happening now</dt>
+    <dd>{{ complaint.happening_now }}</dd>
+    <dt>Happening to a pattern?
+    <dd>{{ complaint.happening_pattern }}
+  {% if complaint.happening_pattern %}
+    <dt>Which days?
+    <dd>{{ complaint.get_days_display|join:", " }}
+    <dt>Which times?
+    <dd>{{ complaint.get_times_display|join:", " }}
+  {% else %}
+    <dt>When does the noise happen?
+    <dd>{{ complaint.happening_description }}
+  {% endif %}
+    <dt>More details
+    <dd>{{ complaint.more_details }}
+</dl>
+
+{% endblock %}
