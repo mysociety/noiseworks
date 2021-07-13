@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p><a href="{% url "case-view" case.id %}">&lsaquo; Back to case #{{ case.id }}</a></p>
+
+<p class="case-id-badge">{{ case.id }}</p>
+<h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
+
+<h2>Complaint info</h2>
+
+<dl class="govuk-summary-list lbh-summary-list">
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Complaint created
+    <dd class="govuk-summary-list__value">{{ complaint.created }}
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Complainant
+    <dd class="govuk-summary-list__value">{{ complaint.created_by }}
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Happening now</dt>
+    <dd class="govuk-summary-list__value">{{ complaint.happening_now }}</dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Happening to a pattern?
+    <dd class="govuk-summary-list__value">{{ complaint.happening_pattern }}
+  </div>
+{% if complaint.happening_pattern %}
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Which days?
+    <dd class="govuk-summary-list__value">{{ complaint.get_days_display|join:", " }}
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Which times?
+    <dd class="govuk-summary-list__value">{{ complaint.get_times_display|join:", " }}
+  </div>
+{% else %}
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">When does the noise happen?
+    <dd class="govuk-summary-list__value">{{ complaint.happening_description }}
+  </div>
+{% endif %}
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">More details
+    <dd class="govuk-summary-list__value">{{ complaint.more_details }}
+  </div>
+</dl>
+
+{% endblock %}

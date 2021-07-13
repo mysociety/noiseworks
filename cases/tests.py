@@ -38,7 +38,11 @@ def case_other_uprn(db):
 @pytest.fixture
 def complaint(db, case_1):
     return Complaint.objects.create(
-        case=case_1, happening_now=True, happening_pattern=False
+        case=case_1,
+        happening_now=True,
+        happening_pattern=True,
+        happening_times=["morning"],
+        happening_days=[5, 6, 7],
     )
 
 
@@ -176,3 +180,13 @@ def test_action_manager(case_1, case_other_uprn):
     }
     actions = Action.objects.get_reversed(merge_map)
     assert actions == {case_1.id: [a]}
+
+
+def test_complaint_view(admin_client, complaint):
+    response = admin_client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
+    assertContains(response, "Friday, Saturday, Sunday")
+
+
+def test_complaint_bad_case(admin_client, case_other_uprn, complaint):
+    response = admin_client.get(f"/cases/{case_other_uprn.id}/complaint/{complaint.id}")
+    assert response.status_code == 302
