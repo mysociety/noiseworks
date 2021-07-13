@@ -145,8 +145,7 @@ class Case(AbstractModel):
                 "summary": str(action),
             }
             data.append(row)
-        complaints = self.complaints.all()
-        for complaint in complaints:
+        for complaint in self.complaints_reversed:
             row = {
                 "time": complaint.created,
                 "summary": f"{complaint.created_by} submitted a complaint",
@@ -156,14 +155,26 @@ class Case(AbstractModel):
         return data
 
     @cached_property
+    def action_merge_map(self):
+        return Action.objects.get_merged_cases([self])
+
+    @cached_property
     def actions_reversed(self):
-        actions = Action.objects.get_merged_cases([self])
+        actions = self.action_merge_map
         query = Q(case__in=actions.keys())
         for merged in self.merged_into_list:
             query |= Q(created__gte=merged["at"], case=merged["id"])
         actions = Action.objects.filter(query)
         actions = actions.order_by("-created")
         return actions
+
+    @cached_property
+    def complaints_reversed(self):
+        actions = self.action_merge_map
+        query = Q(case__in=actions.keys())
+        complaints = Complaint.objects.filter(query)
+        complaints = complaints.order_by("-created")
+        return complaints
 
     @property
     def last_action(self):
