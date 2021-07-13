@@ -147,8 +147,8 @@ class Case(AbstractModel):
             data.append(row)
         for complaint in self.complaints_reversed:
             row = {
+                "complaint": complaint,
                 "time": complaint.created,
-                "summary": f"{complaint.created_by} submitted a complaint",
             }
             data.append(row)
         data = sorted(data, reverse=True, key=lambda x: x["time"])
@@ -215,6 +215,14 @@ class Complaint(AbstractModel):
     )
     happening_description = models.TextField(blank=True)
     more_details = models.TextField(blank=True)
+
+    def get_days_display(self):
+        choices_dict = dict(self.DAY_CHOICES)
+        return list(map(choices_dict.get, self.happening_days))
+
+    def get_times_display(self):
+        choices_dict = dict(self.TIME_CHOICES)
+        return list(map(choices_dict.get, self.happening_times))
 
 
 class ActionType(models.Model):
