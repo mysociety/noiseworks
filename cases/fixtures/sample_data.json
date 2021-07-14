@@ -1,0 +1,123 @@
+[
+  {  "model": "accounts.user", "pk": 1,  "fields": {
+    "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
+    "username": "matthew", "first_name": "Matthew", "last_name": "Matthew",
+    "is_superuser": true,
+    "is_staff": true
+  } },
+  {  "model": "accounts.user", "pk": 2,  "fields": {
+    "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
+    "username": "normaluser1", "first_name": "Norma", "last_name": "User"
+  } },
+  {  "model": "accounts.user", "pk": 3,  "fields": {
+    "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
+    "username": "normaluser2", "first_name": "Norman", "last_name": "Normal"
+  } },
+  {  "model": "accounts.user", "pk": 4,  "fields": {
+    "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
+    "username": "normaluser3", "first_name": "Charlie", "last_name": "Citizen"
+  } },
+  {  "model": "accounts.user", "pk": 5,  "fields": {
+    "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
+    "username": "staffuser1", "first_name": "Staff", "last_name": "User",
+    "is_staff": true
+  } },
+  {  "model": "accounts.user", "pk": 6,  "fields": {
+    "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
+    "username": "staffuser2", "first_name": "Second", "last_name": "Staff",
+    "is_staff": true
+  } },
+  { "model": "cases.actiontype", "pk": 1, "fields": {
+      "name": "Contacted reporters",
+      "common": true
+  } },
+  { "model": "cases.actiontype", "pk": 2, "fields": {
+      "name": "Advisory letter sent",
+      "common": true
+  } },
+  { "model": "cases.actiontype", "pk": 3, "fields": {
+      "name": "Warning letter sent",
+      "common": true
+  } },
+  { "model": "cases.actiontype", "pk": 4, "fields": {
+      "name": "Statutory nuisance witnessed",
+      "common": false
+  } },
+  { "model": "cases.actiontype", "pk": 5, "fields": {
+      "name": "Abatement notice served",
+      "common": false
+  } },
+  { "model": "cases.case", "pk": 1, "fields": {
+      "created": "2021-06-19T23:00:00Z",
+      "created_by": 2,
+      "modified": "2021-06-19T23:00:00Z",
+      "kind": "tv",
+      "uprn": "10008315925",
+      "where": "residence",
+      "estate": "n"
+  } },
+  { "model": "cases.case", "pk": 2, "fields": {
+      "created": "2021-06-22T12:00:00Z",
+      "created_by": 3,
+      "modified": "2021-06-22T12:00:00Z",
+      "kind": "music",
+      "latitude": 51.552268,
+      "longitude": -0.063318,
+      "radius": 100,
+      "where": "business",
+      "estate": "n"
+  } },
+  { "model": "cases.case", "pk": 3, "fields": {
+      "created": "2021-06-28T10:00:00Z",
+      "created_by": 4,
+      "modified": "2021-06-28T10:00:00Z",
+      "kind": "other",
+      "kind_other": "Kazoo",
+      "uprn": "10008315925",
+      "where": "residence",
+      "estate": "n"
+  } },
+  { "model": "cases.complaint", "pk": 1, "fields": {
+      "created": "2021-06-19T23:00:00Z",
+      "created_by": 2,
+      "modified": "2021-06-19T23:00:00Z",
+      "case": 1,
+      "happening_now": true,
+      "happening_pattern": true,
+      "happening_days": [5,6,7],
+      "happening_times": ["evening","night"],
+      "more_details": "Every weekend night"
+  } },
+  { "model": "cases.complaint", "pk": 2, "fields": {
+      "created": "2021-06-26T23:00:00Z",
+      "created_by": 2,
+      "modified": "2021-06-26T23:00:00Z",
+      "case": 1,
+      "happening_now": true,
+      "happening_pattern": true,
+      "happening_days": [5,6,7],
+      "happening_times": ["evening","night"],
+      "more_details": "Every weekend night, again"
+  } },
+  { "model": "cases.complaint", "pk": 3, "fields": {
+      "created": "2021-06-22T12:00:00Z",
+      "created_by": 3,
+      "modified": "2021-06-22T12:00:00Z",
+      "case": 2,
+      "happening_now": true,
+      "happening_pattern": false,
+      "happening_description": "Random times of the day",
+      "more_details": "Blaring out constantly"
+  } },
+  { "model": "cases.complaint", "pk": 4, "fields": {
+      "created": "2021-06-28T10:00:00Z",
+      "created_by": 4,
+      "modified": "2021-06-28T10:00:00Z",
+      "case": 3,
+      "happening_now": false,
+      "happening_pattern": true,
+      "happening_days": [1],
+      "happening_times": ["morning"],
+      "more_details": "Every Monday morning like clockwork"
+  } }
+]
