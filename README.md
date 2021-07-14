@@ -18,13 +18,13 @@ may apparently have an issue with respect to multiple python versions, but it is
 unclear. In the master poetry docs, the warning has been removed. We are not
 really bothered about multiple python versions for this project.
 
-Anyway, once you have poetry installed, `poetry init` will install the dependencies.
+Anyway, once you have poetry installed, `script/setup` will install the dependencies.
 
 ### Running
 
 Private settings are read from environment variables, which can be listed in a local .env file.
 
-* `script/server` to run migrate and the dev server
+* `poetry run script/server` to run migrate and the dev server
 
 ### Tests
 
