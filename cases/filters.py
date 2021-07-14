@@ -25,14 +25,8 @@ class CaseFilter(django_filters.FilterSet):
         ),
         method="assigned_filter",
     )
-    created = django_filters.DateFromToRangeFilter(
-        label="Created",
-        widget=django_filters.widgets.RangeWidget(attrs={"type": "date"}),
-    )
-    modified = django_filters.DateFromToRangeFilter(
-        label="Last updated",
-        widget=django_filters.widgets.RangeWidget(attrs={"type": "date"}),
-    )
+    created = django_filters.DateRangeFilter(label="Created")
+    modified = django_filters.DateRangeFilter(label="Last updated")
 
     class Meta:
         model = Case
