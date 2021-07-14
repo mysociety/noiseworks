@@ -4,19 +4,19 @@ from .forms import FilterForm
 
 
 class CaseFilter(django_filters.FilterSet):
-    search = django_filters.CharFilter(label="Search")
-    status = django_filters.ChoiceFilter(
-        label="Status", choices=(("active", "Active"), ("inactive", "Inactive"))
-    )
-    actions_taken = django_filters.ChoiceFilter(label="Actions taken")
-    ward = django_filters.ChoiceFilter(
-        choices=(
-            ("Ward 1", "Ward 1"),
-            ("Ward 2", "Ward 2"),
-            ("Ward 3", "Ward 3"),
-        ),
-        label="Ward",
-    )
+    # search = django_filters.CharFilter(label="Search")
+    # status = django_filters.ChoiceFilter(
+    #    label="Status", choices=(("active", "Active"), ("inactive", "Inactive"))
+    # )
+    # actions_taken = django_filters.ChoiceFilter(label="Actions taken")
+    # ward = django_filters.ChoiceFilter(
+    #    choices=(
+    #        ("Ward 1", "Ward 1"),
+    #        ("Ward 2", "Ward 2"),
+    #        ("Ward 3", "Ward 3"),
+    #    ),
+    #    label="Ward",
+    # )
     assigned = django_filters.ChoiceFilter(
         choices=(
             ("me", "Assigned to me"),
