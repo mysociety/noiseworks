@@ -8,7 +8,7 @@
         <meta name="HandHeldFriendly" content="true">
         <meta name="mobileoptimized" content="0">
 
-        <meta property="og:url" content="[% c.cobrand.base_url %][% c.req.uri.path %]">
+        <meta property="og:url" content="{{ request.build_absolute_uri }}">
         <meta property="og:title" content="{{ title }}">
         <meta property="og:site_name" content="{{ site_name }}">
         <meta property="og:type" content="website">
