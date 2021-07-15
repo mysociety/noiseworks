@@ -36,6 +36,13 @@ def case_other_uprn(db):
 
 
 @pytest.fixture
+def case_bad_uprn(db):
+    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
+        address_for_uprn.return_value = ""
+        yield Case.objects.create(uprn="bad_uprn", kind="diy")
+
+
+@pytest.fixture
 def complaint(db, case_1):
     return Complaint.objects.create(
         case=case_1,
@@ -86,6 +93,12 @@ def test_case_uprn(admin_client, case_other_uprn):
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "Wombat")
     assertContains(response, "Flat 4, 2 Example Road")
+
+
+def test_bad_uprn(admin_client, case_bad_uprn):
+    response = admin_client.get(f"/cases/{case_bad_uprn.id}")
+    assertContains(response, "DIY")
+    assertContains(response, "bad_uprn")
 
 
 def test_reassign():
