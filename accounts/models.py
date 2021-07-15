@@ -64,3 +64,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_full_name() or self.username
+
+    def get_best_time_display(self):
+        best_time = self.best_time or []
+        choices_dict = dict(self.BEST_TIME_CHOICES)
+        return list(map(choices_dict.get, best_time))

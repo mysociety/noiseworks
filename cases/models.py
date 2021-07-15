@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -13,7 +13,7 @@ class AbstractModel(models.Model):
         User,
         null=True,
         on_delete=models.SET_NULL,
-        related_name="%(class)ss",
+        related_name="created_%(class)s_set",
         editable=False,
     )
     modified = models.DateTimeField(auto_now=True)
@@ -169,10 +169,23 @@ class Case(AbstractModel):
         return actions
 
     @cached_property
-    def complaints_reversed(self):
+    def all_complainants(self):
+        complaints = self.all_complaints
+        return User.objects.filter(complaints__in=complaints).annotate(
+            num_complaints=Count("complaints")
+        )
+
+    @cached_property
+    def all_complaints(self):
+        """The complaints on this case and any cases merged into it"""
         actions = self.action_merge_map
         query = Q(case__in=actions.keys())
-        complaints = Complaint.objects.filter(query)
+        complaints = Complaint.objects.filter(query).select_related("complainant")
+        return complaints
+
+    @cached_property
+    def complaints_reversed(self):
+        complaints = self.all_complaints
         complaints = complaints.order_by("-created")
         return complaints
 
@@ -199,6 +212,14 @@ class Complaint(AbstractModel):
     ]
 
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="complaints")
+    complainant = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="complaints",
+        editable=False,
+    )
+
     happening_now = models.BooleanField()
     happening_pattern = models.BooleanField()
     happening_days = ArrayField(
