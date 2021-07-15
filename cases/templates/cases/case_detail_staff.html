@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 {% with request.session.merging_case as duplicate %}
@@ -53,6 +54,41 @@
 <br>House or shop? {{ case.get_where_display }}
 <br>Hackney Estate? {{ case.get_estate_display }}
 
+<h2>{% blocktranslate count counter=case.all_complainants|length trimmed %}
+    Reporter{% plural %}Reporters
+    {% endblocktranslate %}</h2>
+
+<ul class="list-reporters">
+{% for complainant in case.all_complainants %}
+<li><p>
+    <a href="">{{ complainant }}</a>
+    {% blocktranslate count counter=complainant.num_complaints with count=complainant.num_complaints trimmed %}
+    ({{ count }} case)
+    {% plural %}
+    ({{ count }} cases)
+    {% endblocktranslate %}
+
+    {% if complainant.phone %}
+    <br>{{ complainant.phone.as_national }}
+    {% if complainant.phone_verified %} (verified){% endif %}
+    {% endif %}
+    {% if complainant.email %}
+    <br>{{ complainant.email }}
+        {% if complainant.email_verified %} (verified){% endif %}
+    {% endif %}
+    </p>
+    <p>{{ complainant.address }}</p>
+    <!-- <br>Ward -->
+    <p class="list-reporters__availability">Available
+    {% for time in complainant.get_best_time_display %}
+    {% if not forloop.first %}{% if forloop.last %} or {% else %}, {% endif %}{% endif %}
+    {{ time|lower }}{% empty %}<i>unknown</i>{% endfor %},
+    by {{ complainant.get_best_method_display|default:"unknown"|lower }}
+    </p>
+
+{% endfor %}
+</ul>
+
 <h2>Timeline</h2>
 
 {% if not case.merged_into %}
@@ -62,7 +98,7 @@
 <ul>
 {% for entry in case.timeline %}
 <li>{% if entry.complaint %}
-    {{ entry.complaint.created_by }} submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a>
+    {{ entry.complaint.complainant }} submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a>
     {% else %}
     {{ entry.summary }}
     {% endif %}

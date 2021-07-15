@@ -7,11 +7,17 @@
   } },
   {  "model": "accounts.user", "pk": 2,  "fields": {
     "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
-    "username": "normaluser1", "first_name": "Norma", "last_name": "User"
+    "address": "Flat 1, A Street, Hackney",
+    "best_time": ["weekend", "evening"], "best_method": "email",
+    "phone": "+447700900002",
+    "email": "norma@example.org", "email_verified": true,
+    "username": "norma@example.org", "first_name": "Norma", "last_name": "User"
   } },
   {  "model": "accounts.user", "pk": 3,  "fields": {
     "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
-    "username": "normaluser2", "first_name": "Norman", "last_name": "Normal"
+    "best_time": ["evening"], "best_method": "phone",
+    "phone": "+447700900001", "phone_verified": true,
+    "username": "+447700900001", "first_name": "Norman", "last_name": "Normal"
   } },
   {  "model": "accounts.user", "pk": 4,  "fields": {
     "password": "pbkdf2_sha256$260000$7pUCfLtUsMxl1oXV78w4dK$NHN6yjFwdcpetVItp6dxI8kEuA8788RH5cQEB7ECx+o=",
@@ -93,6 +99,7 @@
       "created_by": 2,
       "modified": "2021-06-26T23:00:00Z",
       "case": 1,
+      "complainant": 2,
       "happening_now": true,
       "happening_pattern": true,
       "happening_days": [5,6,7],
@@ -104,6 +111,7 @@
       "created_by": 3,
       "modified": "2021-06-22T12:00:00Z",
       "case": 2,
+      "complainant": 3,
       "happening_now": true,
       "happening_pattern": false,
       "happening_description": "Random times of the day",
@@ -114,6 +122,7 @@
       "created_by": 4,
       "modified": "2021-06-28T10:00:00Z",
       "case": 3,
+      "complainant": 4,
       "happening_now": false,
       "happening_pattern": true,
       "happening_days": [1],

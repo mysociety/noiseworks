@@ -19,8 +19,24 @@ def staff_user_2(db):
 
 
 @pytest.fixture
-def case_1(db, staff_user_1):
-    return Case.objects.create(kind="diy", assigned=staff_user_1)
+def normal_user(db):
+    return User.objects.create(
+        username="normal@example.org",
+        email="normal@example.org",
+        email_verified=True,
+        phone="+447700900123",
+        first_name="Normal",
+        last_name="User",
+        best_time=["weekends"],
+        best_method="phone",
+    )
+
+
+@pytest.fixture
+def case_1(db, staff_user_1, normal_user):
+    return Case.objects.create(
+        kind="diy", assigned=staff_user_1, created_by=normal_user
+    )
 
 
 @pytest.fixture
@@ -43,9 +59,10 @@ def case_bad_uprn(db):
 
 
 @pytest.fixture
-def complaint(db, case_1):
+def complaint(db, case_1, normal_user):
     return Complaint.objects.create(
         case=case_1,
+        complainant=normal_user,
         happening_now=True,
         happening_pattern=True,
         happening_times=["morning"],
@@ -87,6 +104,8 @@ def test_case_not_found(admin_client):
 def test_case(admin_client, case_1, complaint):
     response = admin_client.get(f"/cases/{case_1.id}")
     assertContains(response, "DIY")
+    assertContains(response, "Normal User")
+    assertContains(response, "Available weekends, by phone", html=True)
 
 
 def test_case_uprn(admin_client, case_other_uprn):
