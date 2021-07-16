@@ -77,28 +77,36 @@ def merge(request, pk):
     case = get_object_or_404(Case, pk=pk)
 
     if request.POST.get("stop"):
-        if "merging_case" in request.session:
-            del request.session["merging_case"]
-            messages.success(request, "We have forgotten your current merging.")
-        return HttpResponseRedirect(case.get_absolute_url())
+        return merge_stop(request, case)
+    elif request.POST.get("dupe") and request.session.get("merging_case"):
+        return merge_action(request, case)
+    else:
+        return merge_start(request, case)
 
-    if request.POST.get("dupe") and request.session.get("merging_case"):
-        other_id = request.session["merging_case"]["id"]
-        other = Case.objects.get(pk=other_id)
-        Action.objects.create(
-            case=case,
-            case_old=other,
-        )
+
+def merge_stop(request, case):
+    if "merging_case" in request.session:
         del request.session["merging_case"]
-        return render(
-            request,
-            "cases/merged_thanks.html",
-            {
-                "case": case,
-                "other": other,
-            },
-        )
+        messages.success(request, "We have forgotten your current merging.")
+    return HttpResponseRedirect(case.get_absolute_url())
 
+
+def merge_action(request, case):
+    other_id = request.session["merging_case"]["id"]
+    other = Case.objects.get(pk=other_id)
+    other.merge_into(case)
+    del request.session["merging_case"]
+    return render(
+        request,
+        "cases/merged_thanks.html",
+        {
+            "case": case,
+            "other": other,
+        },
+    )
+
+
+def merge_start(request, case):
     request.session["merging_case"] = {
         "id": case.id,
         "name": f"#{case.id}",
