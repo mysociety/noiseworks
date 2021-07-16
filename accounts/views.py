@@ -22,7 +22,7 @@ def token_url(request, token):
     if user is None:
         raise PermissionDenied
     login(request, user)
-    return redirect("/")
+    return redirect(reverse("cases"))
 
 
 def code(request):
@@ -30,7 +30,7 @@ def code(request):
     if form.is_valid():
         user = form.user
         login(request, user)
-        return redirect("/")
+        return redirect(reverse("cases"))
     return render(request, "accounts/form_token.html", {"form": form})
 
 
