@@ -43,7 +43,6 @@ class ReassignForm(GDSForm, forms.ModelForm):
     def save(self, case, user):
         super().save()
         Action.objects.create(
-            created_by=user,
             case=self.instance,
             assigned_old=self.current_assigned,
             assigned_new=self.instance.assigned,
@@ -67,5 +66,4 @@ class ActionForm(GDSForm, forms.ModelForm):
 
     def save(self, case, user):
         self.instance.case = case
-        self.instance.created_by = user
         super().save()

@@ -86,7 +86,6 @@ def merge(request, pk):
         other_id = request.session["merging_case"]["id"]
         other = Case.objects.get(pk=other_id)
         Action.objects.create(
-            created_by=request.user,
             case=case,
             case_old=other,
         )
