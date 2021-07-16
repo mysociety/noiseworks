@@ -26,3 +26,29 @@
 .list-reporters p.list-reporters__availability {
     color: #666;
 }
+
+
+ul.case-list-user {
+    margin: 0;
+    padding: 0;
+}
+ul.case-list-user li {
+    list-style-type: none;
+    padding-bottom: 1em;
+    border-bottom: solid 2px #eee;
+}
+
+dl.inline {
+    dt {
+        display: inline;
+        font-weight: normal;
+        margin-right: 0.5em;
+    }
+    dd {
+        display: inline;
+        font-weight: bold;
+        &:after {
+            content: "\A"; white-space: pre;
+        }
+    }
+}

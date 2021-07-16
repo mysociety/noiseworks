@@ -35,6 +35,11 @@ class CaseManager(models.Manager):
         qs = self.filter(q).select_related("assigned")
         return qs
 
+    def by_complainant(self, user):
+        return self.filter(complaints__complainant=user).annotate(
+            reoccurrences=Count("complaints") - 1
+        )
+
 
 class Case(AbstractModel):
     KIND_CHOICES = [
@@ -175,7 +180,7 @@ class Case(AbstractModel):
     def all_complainants(self):
         complaints = self.all_complaints
         return User.objects.filter(complaints__in=complaints).annotate(
-            num_complaints=Count("complaints")
+            num_cases=Count("complaints__case", distinct=True)
         )
 
     @cached_property
@@ -220,7 +225,6 @@ class Complaint(AbstractModel):
         null=True,
         on_delete=models.SET_NULL,
         related_name="complaints",
-        editable=False,
     )
 
     happening_now = models.BooleanField()
