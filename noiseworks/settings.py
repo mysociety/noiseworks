@@ -153,6 +153,8 @@ AUTHENTICATION_BACKENDS = [
     "sesame.backends.ModelBackend",
 ]
 
+LOGIN_URL = "/a"
+
 SESAME_MAX_AGE = 300
 SESAME_ONE_TIME = False
 SESAME_SIGNATURE_SIZE = 5
