@@ -119,9 +119,9 @@ class Case(AbstractModel):
         """Return a list of the IDs of the Cases that this has been merged into, if any."""
         query = Action.objects.raw(
             """WITH RECURSIVE cte AS (
-                SELECT id,case_old_id,case_id FROM cases_action WHERE case_old_id = %s
+                SELECT id,created,case_old_id,case_id FROM cases_action WHERE case_old_id = %s
                 UNION
-                SELECT s.id,s.case_old_id,s.case_id FROM cte JOIN cases_action s ON cte.case_id = s.case_old_id
+                SELECT s.id,s.created,s.case_old_id,s.case_id FROM cte JOIN cases_action s ON cte.case_id = s.case_old_id
             )
             SELECT * FROM cte """,
             [self.id],
