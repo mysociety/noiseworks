@@ -46,9 +46,26 @@ def case_list_staff(request):
     )
 
 
+@login_required(redirect_field_name="nxt")
+def case(request, pk):
+    if request.user.is_staff:
+        return case_staff(request, pk)
+    else:
+        return case_user(request, pk)
+
+
+@login_required
+def case_user(request, pk):
+    qs = Case.objects.by_complainant(request.user)
+    qs = qs.select_related("assigned")
+    case = get_object_or_404(qs, pk=pk)
+    return render(request, "cases/case_detail_user.html", context={"case": case})
+
+
 @staff_member_required
-def case(request, **kwargs):
-    case = get_object_or_404(Case.objects.select_related("assigned"), pk=kwargs["pk"])
+def case_staff(request, pk):
+    qs = Case.objects.select_related("assigned")
+    case = get_object_or_404(qs, pk=pk)
 
     # redirect = case.merged_into
     # if redirect:
@@ -140,7 +157,7 @@ def merge_start(request, case):
     )
 
 
-@staff_member_required
+@login_required
 def complaint(request, pk, complaint):
     case = get_object_or_404(Case, pk=pk)
     complaint = get_object_or_404(

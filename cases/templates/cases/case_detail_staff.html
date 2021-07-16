@@ -96,7 +96,7 @@
 {% endif %}
 
 <ul>
-{% for entry in case.timeline %}
+{% for entry in case.timeline_staff %}
 <li>{% if entry.complaint %}
     {{ entry.complaint.complainant }} submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a>
     {% else %}
