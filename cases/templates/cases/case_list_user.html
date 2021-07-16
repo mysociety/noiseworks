@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<h1>Your noise reports</h1>
+
+<ul class="case-list-user">
+{% for case in cases %}
+    <li>
+        <h2><a href="{% url 'case-view' case.id %}">
+            {{ case.kind_display }} at {{ case.location_display }}
+        </a></h2>
+        <dl class="inline">
+        <dt>Case reference</dt>
+        <dd>{{ case.id }}</dd>
+        <dt>Reported</dt>
+        <dd>{{ case.created|timesince }} ago</dd>
+        <dt>Reoccurrences</dt>
+        <dd>
+        {% if case.reoccurrences == 0 %}
+        None
+        {% else %}
+        {% blocktranslate with reoccurrences=case.reoccurrences count counter=case.reoccurrences trimmed %}
+        {{ reoccurrences }} reoccurrence
+        {% plural %}
+        {{ reoccurrences }} reoccurrences
+        {% endblocktranslate %}
+        {% endif %}
+        </dd>
+        </dl>
+    </li>
+{% empty %}
+    <li><p>No cases yet.</p></li>
+{% endfor %}
+</ul>
+
+<h2>Report a new noise issue</h2>
+
+<p>If you are experiencing new noise nuisance, not present in the list above,
+you can <a href="">report a new noise issue</a>.</p>
+
+{% endblock %}

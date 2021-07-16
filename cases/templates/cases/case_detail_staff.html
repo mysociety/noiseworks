@@ -62,10 +62,10 @@
 {% for complainant in case.all_complainants %}
 <li><p>
     <a href="">{{ complainant }}</a>
-    {% blocktranslate count counter=complainant.num_complaints with count=complainant.num_complaints trimmed %}
-    ({{ count }} case)
+    {% blocktranslate count counter=complainant.num_cases with cases=complainant.num_cases trimmed %}
+    ({{ cases }} case)
     {% plural %}
-    ({{ count }} cases)
+    ({{ cases }} cases)
     {% endblocktranslate %}
 
     {% if complainant.phone %}
