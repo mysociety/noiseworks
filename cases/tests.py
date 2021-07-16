@@ -222,3 +222,9 @@ def test_complaint_view(admin_client, complaint):
 def test_complaint_bad_case(admin_client, case_other_uprn, complaint):
     response = admin_client.get(f"/cases/{case_other_uprn.id}/complaint/{complaint.id}")
     assert response.status_code == 302
+
+
+def test_case_list_user_view(client, normal_user, complaint):
+    client.force_login(normal_user)
+    response = client.get("/cases")
+    assertContains(response, "DIY")

@@ -1,4 +1,5 @@
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
@@ -7,8 +8,26 @@ from .models import Case, Complaint, Action
 from .forms import ReassignForm, ActionForm
 
 
-@staff_member_required
+@login_required(redirect_field_name="nxt")
 def case_list(request):
+    if request.user.is_staff:
+        return case_list_staff(request)
+    else:
+        return case_list_user(request)
+
+
+@login_required
+def case_list_user(request):
+    cases = Case.objects.by_complainant(request.user)
+    return render(
+        request,
+        "cases/case_list_user.html",
+        {"cases": cases},
+    )
+
+
+@staff_member_required
+def case_list_staff(request):
     qs = Case.objects.unmerged()
     f = CaseFilter(request.GET, queryset=qs, request=request)
     merge_map = Action.objects.get_merged_cases(f.qs)
