@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<p><a href="{% url "cases" %}">&lsaquo; Back to your noise reports</a></p>
+
+<h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
+
+<dl class="inline">
+    <dt>Case reference</dt>
+    <dd>{{ case.id }}</dd>
+    <dt>Reported</dt>
+    <dd>{{ case.created|timesince }} ago</dd>
+    <dt>Reoccurrences</dt>
+    <dd>
+    {% if case.reoccurrences == 0 %}
+    None
+    {% else %}
+    {% blocktranslate with reoccurrences=case.reoccurrences count counter=case.reoccurrences trimmed %}
+    {{ reoccurrences }} reoccurrence
+    {% plural %}
+    {{ reoccurrences }} reoccurrences
+    {% endblocktranslate %}
+    {% endif %}
+    </dd>
+</dl>
+
+<h2>Case log</h2>
+
+<ul>
+{% for entry in case.timeline_user %}
+<li>{% if entry.complaint %}
+        {% if forloop.last %}
+            Your original noise report
+            <a href="{% url "complaint" case.id entry.complaint.id %}">Show details</a>
+        {% else %}
+            You reported a <a href="{% url "complaint" case.id entry.complaint.id %}">reoccurrence</a> of the noise
+        {% endif %}
+    {% else %}
+        {{ entry.summary }}
+    {% endif %}
+    <br><small>{{ entry.time }}</small>
+{% endfor %}
+</ul>
+
+{% endblock %}

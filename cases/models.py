@@ -144,16 +144,15 @@ class Case(AbstractModel):
         merged = merged[-1]["id"] if merged else None
         return merged
 
-    @cached_property
-    def timeline(self):
+    def _timeline(self, actions, action_fn, complaints):
         data = []
-        for action in self.actions_reversed:
+        for action in actions:
             row = {
                 "time": action.created,
-                "summary": str(action),
+                "summary": action_fn(action),
             }
             data.append(row)
-        for complaint in self.complaints_reversed:
+        for complaint in complaints:
             row = {
                 "complaint": complaint,
                 "time": complaint.created,
@@ -161,6 +160,22 @@ class Case(AbstractModel):
             data.append(row)
         data = sorted(data, reverse=True, key=lambda x: x["time"])
         return data
+
+    @cached_property
+    def timeline_user(self):
+        """User timeline shows all manual actions, and only their own complaints"""
+
+        def action_fn(action):
+            return action.type.name
+
+        return self._timeline(
+            self.actions_manual_reversed, action_fn, self.complaints_reversed
+        )
+
+    @cached_property
+    def timeline_staff(self):
+        """Staff timeline shows all actions and complaints on the case and its merged cases"""
+        return self._timeline(self.actions_reversed, str, self.all_complaints_reversed)
 
     @cached_property
     def action_merge_map(self):
@@ -174,6 +189,12 @@ class Case(AbstractModel):
             query |= Q(created__gte=merged["at"], case=merged["id"])
         actions = Action.objects.filter(query)
         actions = actions.order_by("-created")
+        return actions
+
+    @cached_property
+    def actions_manual_reversed(self):
+        actions = self.actions_reversed
+        actions = actions.get_manual()
         return actions
 
     @cached_property
@@ -193,6 +214,12 @@ class Case(AbstractModel):
 
     @cached_property
     def complaints_reversed(self):
+        complaints = self.complaints
+        complaints = complaints.order_by("-created")
+        return complaints
+
+    @cached_property
+    def all_complaints_reversed(self):
         complaints = self.all_complaints
         complaints = complaints.order_by("-created")
         return complaints
@@ -261,6 +288,11 @@ class ActionType(models.Model):
         return self.name
 
 
+class ActionQuerySet(models.QuerySet):
+    def get_manual(self):
+        return self.filter(type_id__isnull=False)
+
+
 class ActionManager(models.Manager):
     def get_queryset(self):
         qs = super().get_queryset()
@@ -327,7 +359,7 @@ class Action(AbstractModel):
     # Merge
     case_old = models.ForeignKey(Case, blank=True, null=True, on_delete=models.PROTECT)
 
-    objects = ActionManager()
+    objects = ActionManager.from_queryset(ActionQuerySet)()
 
     def __str__(self):
         old = self.assigned_old
