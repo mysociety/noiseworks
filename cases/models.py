@@ -111,6 +111,9 @@ class Case(AbstractModel):
         else:
             return "Unknown location"
 
+    def merge_into(self, other):
+        Action.objects.create(case_old=self, case=other)
+
     @cached_property
     def merged_into_list(self) -> list:
         """Return a list of the IDs of the Cases that this has been merged into, if any."""
