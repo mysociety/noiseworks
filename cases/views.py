@@ -38,17 +38,10 @@ def case(request, **kwargs):
     return render(request, "cases/case_detail.html", context={"case": case})
 
 
-def get_form(form_class, request, **kwargs):
-    if request.method == "POST":
-        return form_class(request.POST, **kwargs)
-    else:
-        return form_class(**kwargs)
-
-
 @staff_member_required
 def reassign(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = get_form(ReassignForm, request, instance=case)
+    form = ReassignForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save(case=case, user=request.user)
         return HttpResponseRedirect(case.get_absolute_url())
@@ -65,7 +58,7 @@ def reassign(request, pk):
 @staff_member_required
 def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = get_form(ActionForm, request)
+    form = ActionForm(request.POST or None)
     if form.is_valid():
         form.save(case=case, user=request.user)
         return HttpResponseRedirect(case.get_absolute_url())
