@@ -1,0 +1,100 @@
+$lbh-global-styles: true;
+$lbh-asset-path: "/static/hackney";
+//$lbh-safely-embed: true;
+
+@import "node_modules/lbh-frontend/lbh/all";
+
+// Footer
+
+footer {
+    background-color: lbh-colour("lbh-primary-hover");
+    color: #fff;
+    padding: govuk-spacing(6);
+}
+.noiseworks-footer {
+    text-align: right;
+}
+
+a.platform-logo {
+    vertical-align: middle;
+    display: inline-block;
+    background-position: top left;
+    background-repeat: no-repeat;
+    background-size: auto 1.8em;
+    background-image: inline-image("noiseworks-logo-single-colour-light.png");
+    width: 8em;
+    height: 0;
+    padding-top: 2em;
+    overflow: hidden;
+    margin-left: 0.25em;
+    padding-right: 0.25em;
+}
+
+// Generic classes
+
+.case-id-badge {
+    background-color: #00664f;
+    color: #fff;
+    display: inline-block;
+    padding: 0.5em 1em;
+    font-size: smaller;
+    font-weight: bold;
+}
+
+dl {
+    font-family: $lbh-font-family;
+}
+dt {
+    font-weight: bold;
+}
+dd {
+    //margin: 0 0 1em;
+}
+
+dl.inline {
+    dt {
+        display: inline;
+        font-weight: normal;
+        margin-right: 0.5em;
+    }
+    dd {
+        display: inline;
+        font-weight: bold;
+        &:after {
+            content: "\A"; white-space: pre;
+        }
+    }
+}
+
+// Case page
+
+.list-reporters {
+    margin: 0;
+    padding: 0;
+}
+.list-reporters li {
+    background-color: #f8f8f8;
+    list-style-type: none;
+    padding: 0.5em;
+}
+.list-reporters p {
+    margin: 0 0 0.5em;
+}
+.list-reporters p:last-child {
+    margin-bottom: 0;
+}
+.list-reporters p.list-reporters__availability {
+    color: #666;
+}
+
+// Case list page
+
+ul.case-list-user {
+    margin: 0;
+    padding: 0;
+}
+ul.case-list-user li {
+    list-style-type: none;
+    padding-bottom: 1em;
+    border-bottom: solid 2px #eee;
+}

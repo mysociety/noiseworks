@@ -6,10 +6,5 @@ __pycache__/
 .env
 .venv
 
-# CSS
-/cobrand_*/static/*.css
-/cobrand_*/static/*.css.map
-*.auto.*
-
 /.coverage
 /htmlcov
