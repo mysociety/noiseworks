@@ -7,6 +7,12 @@ from noiseworks import cobrand
 from accounts.models import User
 
 
+def ward_name_to_id(ward):
+    wards = cobrand.api.wards()
+    wards = {ward["name"]: ward["gss"] for ward in wards}
+    return wards.get(ward)
+
+
 class AbstractModel(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(
@@ -76,6 +82,7 @@ class Case(AbstractModel):
     radius = models.IntegerField(blank=True, null=True)
     uprn = models.CharField(max_length=20, blank=True)
     uprn_cache = models.CharField(max_length=200, blank=True)
+    ward = models.CharField(max_length=9, blank=True)
     where = models.CharField(max_length=9, choices=WHERE_CHOICES)
     estate = models.CharField(max_length=1, choices=ESTATE_CHOICES)
 
@@ -110,6 +117,7 @@ class Case(AbstractModel):
             addr = cobrand.api.address_for_uprn(self.uprn)
             if addr["string"]:
                 self.uprn_cache = addr["string"]
+                self.ward = ward_name_to_id(addr["ward"])
                 self.save()
             return addr["string"] or self.uprn
         elif self.latitude:

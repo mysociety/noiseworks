@@ -76,3 +76,29 @@ def addresses_for_postcode(postcode):
         return {"error": "Sorry, that postcode appears to lie outside Hackney"}
 
     return {"addresses": addresses}
+
+
+def wards():
+    return (
+        {"id": 144390, "gss": "E05009367", "name": "Brownswood"},
+        {"id": 144387, "gss": "E05009368", "name": "Cazenove"},
+        {"id": 144384, "gss": "E05009369", "name": "Clissold"},
+        {"id": 144392, "gss": "E05009370", "name": "Dalston"},
+        {"id": 144381, "gss": "E05009371", "name": "De Beauvoir"},
+        {"id": 144394, "gss": "E05009372", "name": "Hackney Central"},
+        {"id": 144385, "gss": "E05009373", "name": "Hackney Downs"},
+        {"id": 144383, "gss": "E05009374", "name": "Hackney Wick"},
+        {"id": 144380, "gss": "E05009375", "name": "Haggerston"},
+        {"id": 144395, "gss": "E05009376", "name": "Homerton"},
+        {"id": 144379, "gss": "E05009377", "name": "Hoxton East & Shoreditch"},
+        {"id": 144391, "gss": "E05009378", "name": "Hoxton West"},
+        {"id": 144389, "gss": "E05009379", "name": "King's Park"},
+        {"id": 144386, "gss": "E05009380", "name": "Lea Bridge"},
+        {"id": 144382, "gss": "E05009381", "name": "London Fields"},
+        {"id": 144396, "gss": "E05009382", "name": "Shacklewell"},
+        {"id": 144388, "gss": "E05009383", "name": "Springfield"},
+        {"id": 144399, "gss": "E05009384", "name": "Stamford Hill West"},
+        {"id": 144397, "gss": "E05009385", "name": "Stoke Newington"},
+        {"id": 144393, "gss": "E05009386", "name": "Victoria"},
+        {"id": 144398, "gss": "E05009387", "name": "Woodberry Down"},
+    )
