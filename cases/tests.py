@@ -58,14 +58,17 @@ def case_location(db):
 @pytest.fixture
 def case_other_uprn(db):
     with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
-        address_for_uprn.return_value = "Flat 4, 2 Example Road, E8 2DP"
+        address_for_uprn.return_value = {
+            "string": "Flat 4, 2 Example Road, E8 2DP",
+            "ward": "Hackney Central",
+        }
         yield Case.objects.create(uprn=10001, kind="other", kind_other="Wombat")
 
 
 @pytest.fixture
 def case_bad_uprn(db):
     with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
-        address_for_uprn.return_value = ""
+        address_for_uprn.return_value = {"string": "", "ward": ""}
         yield Case.objects.create(uprn="bad_uprn", kind="diy")
 
 

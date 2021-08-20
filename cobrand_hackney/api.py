@@ -21,14 +21,18 @@ def address_for_uprn(uprn):
 
     s = requests.Session()
     s.headers.update({"Authorization": key})
-    r = s.get(url, params={"uprn": uprn})
+    r = s.get(url, params={"uprn": uprn, "format": "detailed"})
     data = r.json()
     addresses = data["data"]["address"]
     if not addresses:
-        return ""
+        return {"string": "", "ward": ""}
 
-    address = construct_address(addresses[0], include_postcode=True)
-    return address
+    address = addresses[0]
+    address_string = construct_address(address, include_postcode=True)
+    return {
+        "ward": address["ward"],
+        "string": address_string,
+    }
 
 
 def addresses_for_postcode(postcode):

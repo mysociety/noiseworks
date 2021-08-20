@@ -62,9 +62,15 @@ def test_addresses_api_uprn_blank(requests_mock):
             "statusCode": 200,
         },
     )
-    assert address_for_uprn("1234") == ""
+    assert address_for_uprn("1234") == {
+        "string": "",
+        "ward": "",
+    }
 
 
 def test_addresses_api_uprn(requests_mock, make_api_result):
     requests_mock.get(re.compile("uprn=10008315925"), json=make_api_result())
-    assert address_for_uprn("10008315925") == "Line 1, Line 2, Line 3, E8 1DY"
+    assert address_for_uprn("10008315925") == {
+        "string": "Line 1, Line 2, Line 3, E8 1DY",
+        "ward": "Hackney Central",
+    }
