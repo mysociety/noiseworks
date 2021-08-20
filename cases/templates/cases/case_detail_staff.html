@@ -5,10 +5,12 @@
 {% with request.session.merging_case as duplicate %}
 
 {% if case.merged_into %}
-<div style="background-color: #fec; padding: 1em; margin-bottom: 1em;">
-    This case has been merged into
-    <a href="{% url "case-view" case.merged_into %}">case #{{ case.merged_into }}</a>.
-</div>
+<section class="lbh-page-announcement lbh-page-announcement--info">
+    <div class="lbh-page-announcement__content">
+        This case has been merged into
+        <a href="{% url "case-view" case.merged_into %}">case #{{ case.merged_into }}</a>.
+    </div>
+</section>
 {% endif %}
 
 {% if duplicate and case.id != duplicate.id %}
@@ -50,9 +52,11 @@
 
 <h2>Noise source</h2>
 
+<p>
 {{ case.location_display }}
 <br>House or shop? {{ case.get_where_display }}
 <br>Hackney Estate? {{ case.get_estate_display }}
+</p>
 
 <h2>{% blocktranslate count counter=case.all_complainants|length trimmed %}
     Reporter{% plural %}Reporters
@@ -95,16 +99,20 @@
     <a href="{% url "case-log-action" case.id %}" class="govuk-button">Log an action</a>
 {% endif %}
 
-<ul>
+<ol class="lbh-timeline">
+<!-- lbh-timeline__event- -action-needed (grey box) -major (black filled) -minor (small filled) -gap-below (dotted line) -->
 {% for entry in case.timeline_staff %}
-<li>{% if entry.complaint %}
+<li class="lbh-timeline__event">
+    <h3>{% if entry.complaint %}
     {{ entry.complaint.complainant }} submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a>
     {% else %}
     {{ entry.summary }}
     {% endif %}
-    <br><small>{{ entry.time }}</small>
+    </h3>
+    <p>{{ entry.time }}</p>
+</li>
 {% endfor %}
-</ul>
+</ol>
 
 {% endwith %}
 {% endblock %}

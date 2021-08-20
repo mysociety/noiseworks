@@ -195,6 +195,10 @@ COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
 LIBSASS_CUSTOM_FUNCTIONS = {
     "inline-image": inline_image,
 }
+LIBSASS_ADDITIONAL_INCLUDE_PATHS = [
+    "/opt/npmsetup",  # XXX For docker-compose
+    str(BASE_DIR / COBRAND),
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
