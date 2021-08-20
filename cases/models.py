@@ -108,9 +108,12 @@ class Case(AbstractModel):
             return self.uprn_cache
         elif self.uprn:
             addr = cobrand.api.address_for_uprn(self.uprn)
-            self.uprn_cache = addr
-            self.save()
-            return addr or self.uprn
+            if addr["string"]:
+                self.uprn_cache = addr["string"]
+                self.latitude = addr["latitude"]
+                self.longitude = addr["longitude"]
+                self.save()
+            return addr["string"] or self.uprn
         elif self.latitude:
             return f"{self.radius}m around ({self.latitude},{self.longitude})"
         else:
