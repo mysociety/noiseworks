@@ -1,6 +1,15 @@
+from django import forms
 import django_filters
 from .models import Case
 from .forms import FilterForm
+from noiseworks import cobrand
+
+
+def get_wards():
+    wards = cobrand.api.wards()
+    wards = {ward["gss"]: ward["name"] for ward in wards}
+    wards["outside"] = "Outside Hackney"
+    return wards
 
 
 class CaseFilter(django_filters.FilterSet):
@@ -11,6 +20,11 @@ class CaseFilter(django_filters.FilterSet):
             ("none", "Unassigned"),
         ),
         method="assigned_filter",
+    )
+    ward = django_filters.MultipleChoiceFilter(
+        choices=list(get_wards().items()),
+        label="Area",
+        widget=forms.CheckboxSelectMultiple,
     )
     created = django_filters.DateRangeFilter(label="Created")
     modified = django_filters.DateRangeFilter(label="Last updated")
