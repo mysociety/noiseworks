@@ -28,9 +28,11 @@
 
 <h2>Case log</h2>
 
-<ul>
+<ol class="lbh-timeline">
+<!-- lbh-timeline__event- -action-needed (grey box) -major (black filled) -minor (small filled) -gap-below (dotted line) -->
 {% for entry in case.timeline_user %}
-<li>{% if entry.complaint %}
+<li class="lbh-timeline__event">
+    <h3>{% if entry.complaint %}
         {% if forloop.last %}
             Your original noise report
             <a href="{% url "complaint" case.id entry.complaint.id %}">Show details</a>
@@ -40,8 +42,10 @@
     {% else %}
         {{ entry.summary }}
     {% endif %}
-    <br><small>{{ entry.time }}</small>
+    </h3>
+    <p>{{ entry.time }}</p>
+</li>
 {% endfor %}
-</ul>
+</ol>
 
 {% endblock %}

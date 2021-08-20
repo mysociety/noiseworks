@@ -5,7 +5,7 @@ from django.contrib.staticfiles import finders
 
 def inline_image(url):
     path = finders.find(url)
-    if path is None:
+    if path is None:  # pragma: no cover
         return ""
     data = open(path, "rb").read()
     data = base64.b64encode(data).decode("utf-8")
