@@ -55,22 +55,23 @@ INSTALLED_APPS = [
     "pgconnection",
     "pgtrigger",
     "crispy_forms",
-    "crispy_forms_gds",
     "django_filters",
     "accounts",
     "oauth",
     "cases",
     COBRAND,
+    "crispy_forms_gds",
 ]
 
-CRISPY_ALLOWED_TEMPLATE_PACKS = (
-    "bootstrap",
-    "bootstrap3",
-    "bootstrap4",
-    "uni_form",
-    "gds",
-)
+CRISPY_ALLOWED_TEMPLATE_PACKS = ("gds",)
 CRISPY_TEMPLATE_PACK = "gds"
+CRISPY_CLASS_CONVERTERS = {
+    "select": "govuk-select lbh-select",
+    "textinput": "govuk-input lbh-input",
+    "emailinput": "govuk-input lbh-input",
+    "textarea": "govuk-textarea lbh-textarea",
+    "clearablefileinput": "govuk-file-upload lbh-file-upload",
+}
 
 AUTH_USER_MODEL = "accounts.User"
 
