@@ -8,9 +8,18 @@ $lbh-asset-path: "/static/hackney";
     @extend .govuk-back-link;
     @extend .lbh-back-link;
 }
+.nw-button {
+    @extend .govuk-button;
+    @extend .lbh-button;
+}
+.nw-button--secondary {
+    @extend .govuk-button--secondary;
+    @extend .lbh-button--secondary;
+}
 .nw-page-announcement { @extend .lbh-page-announcement; }
 .nw-page-announcement--info { @extend .lbh-page-announcement--info; }
 .nw-page-announcement__content { @extend .lbh-page-announcement__content; }
+.nw-link--no-visited-state { @extend .lbh-link--no-visited-state; }
 
 // Footer
 
