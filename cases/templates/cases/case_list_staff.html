@@ -8,7 +8,7 @@
 <ul>
 {% for case in filter.qs %}
     <li>
-        <a href="{% url 'case-view' case.id %}">
+        <a href="{% url 'case-view' case.id %}" class="nw-link--no-visited-state">
             <span class="case-id-badge">{{ case.id }}</span>
             <br>
             {{ case.kind_display }} at {{ case.location_display }}
