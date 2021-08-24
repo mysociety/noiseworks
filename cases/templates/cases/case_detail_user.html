@@ -3,7 +3,9 @@
 
 {% block content %}
 
-<p><a href="{% url "cases" %}">&lsaquo; Back to your noise reports</a></p>
+<div>
+    <a href="{% url "cases" %}" class="nw-back-link">Back to your noise reports</a>
+</div>
 
 <h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
 

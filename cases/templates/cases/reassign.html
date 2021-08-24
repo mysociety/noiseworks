@@ -3,7 +3,9 @@
 
 {% block content %}
 
-<p><a href="{% url "case-view" case.id %}">&lsaquo; Cancel</a></p>
+<div>
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel</a>
+</div>
 
 <p class="case-id-badge">{{ case.id }}</p>
 

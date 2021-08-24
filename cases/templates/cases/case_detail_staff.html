@@ -22,7 +22,11 @@
 </div>
 {% endif %}
 
-<p><a href="{% url "cases" %}">&lsaquo; Back to all cases</a></p>
+<!--
+<div>
+    <a href="{% url "cases" %}" class="nw-back-link">Back to all cases</a>
+</div>
+-->
 
 <p class="case-id-badge">{{ case.id }}</p>
 <h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
