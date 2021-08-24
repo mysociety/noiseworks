@@ -5,8 +5,8 @@
 {% with request.session.merging_case as duplicate %}
 
 {% if case.merged_into %}
-<section class="lbh-page-announcement lbh-page-announcement--info">
-    <div class="lbh-page-announcement__content">
+<section class="nw-page-announcement nw-page-announcement--info">
+    <div class="nw-page-announcement__content">
         This case has been merged into
         <a href="{% url "case-view" case.merged_into %}">case #{{ case.merged_into }}</a>.
     </div>

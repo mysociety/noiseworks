@@ -8,6 +8,9 @@ $lbh-asset-path: "/static/hackney";
     @extend .govuk-back-link;
     @extend .lbh-back-link;
 }
+.nw-page-announcement { @extend .lbh-page-announcement; }
+.nw-page-announcement--info { @extend .lbh-page-announcement--info; }
+.nw-page-announcement__content { @extend .lbh-page-announcement__content; }
 
 // Footer
 
