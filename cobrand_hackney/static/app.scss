@@ -4,6 +4,11 @@ $lbh-asset-path: "/static/hackney";
 
 @import "node_modules/lbh-frontend/lbh/all";
 
+.nw-back-link {
+    @extend .govuk-back-link;
+    @extend .lbh-back-link;
+}
+
 // Footer
 
 footer {

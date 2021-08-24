@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<p><a href="{% url "case-view" case.id %}">&lsaquo; Back to case #{{ case.id }}</a></p>
+<p><a href="{% url "case-view" case.id %}" class="nw-back-link">Back to case #{{ case.id }}</a></p>
 
 <p class="case-id-badge">{{ case.id }}</p>
 <h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
