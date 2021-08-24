@@ -11,4 +11,6 @@ class GDSForm:
         super().__init__(*args, **kwargs)
 
         self.helper = FormHelper(self)
-        self.helper.add_input(Submit("", self.submit_text))
+        self.helper.add_input(
+            Submit("", self.submit_text, css_class="lbh-button")
+        )  # XXX Hackney
