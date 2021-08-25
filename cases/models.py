@@ -161,6 +161,7 @@ class Case(AbstractModel):
             row = {
                 "time": action.created,
                 "summary": action_fn(action),
+                "action": action,
             }
             data.append(row)
         for complaint in complaints:
