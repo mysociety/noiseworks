@@ -1,0 +1,41 @@
+.lbh-timeline {
+    font-size: 1.2em;
+
+    .lbh-button {
+        margin: 0.5em 0;
+    }
+}
+
+.lbh-timeline * + * {
+    margin-top: 0;
+}
+
+.case-numbers {
+    background-color: lbh-colour("lbh-grey-3");
+    display: inline-block;
+    width: 1.5em;
+    line-height: 1.5em;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 0.9em;
+    padding:0.2em;
+    font-weight: 600;
+}
+
+.citizen {
+    color: lbh-colour("lbh-a01");
+    font-weight: 600;
+}
+
+.lbh-details {
+    .govuk-details__summary-text {
+        font-size: 0.9em;
+    }
+    
+    .govuk-details__text {
+        background-color: lbh-colour("lbh-h04");
+        border-left: none;
+        font-size: 0.9em;
+        border-radius: 0.25em;
+    }
+}

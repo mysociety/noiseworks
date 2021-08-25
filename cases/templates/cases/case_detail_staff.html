@@ -114,5 +114,79 @@
 {% endfor %}
 </ol>
 
+<!-- Timeline example implementation -->
+
+<h2 class="lbh-heading-h2 section-heading">Timeline</h2>
+
+<ol class="lbh-timeline">
+    <li class="lbh-timeline__event lbh-timeline__event--minor">
+        <p class="lbh-body-s">Now</p>
+        <button class="govuk-button lbh-button">Log an action</button>
+    </li>
+    <li class="lbh-timeline__event lbh-timeline__event--minor">
+        <a href="#" class="lbh-link lbh-link--no-visited-state">Steven Silver</a>
+        <span class="case-numbers">0</span>
+        <span class="case-info">assigned case to me</span>
+        <a href="#" class="lbh-link lbh-link--no-visited-state">Me</a>
+        <span class="case-numbers">27</span>
+        
+        <p class="lbh-body-s">1 day ago - 27th August 2021</p>
+        <details class="govuk-details lbh-details" data-module="govuk-details">
+            <summary class="lbh-body govuk-details__summary">
+              <span class="govuk-details__summary-text"> Case notes </span>
+            </summary>
+            <div class="govuk-details__text">
+              Aliyah, could you investigate on your next OOH shift?
+            </div>
+        </details>
+    </li>
+    <li class="lbh-timeline__event">
+        <a href="#" class="lbh-link lbh-link--no-visited-state">Steven Silver</a>
+        <span class="case-numbers">0</span>
+        <span class="case-info">responded to <span class="citizen">Bob Black</span> with template "Receipt"</span>
+
+        <details class="govuk-details lbh-details" data-module="govuk-details">
+            <summary class="lbh-body govuk-details__summary">
+              <span class="govuk-details__summary-text"> Case notes </span>
+            </summary>
+            <div class="govuk-details__text">
+              Some notes for case officers goes here.
+            </div>
+          </details>
+        
+        <p class="lbh-body-s">1 day ago - 27th August 2021</p>
+    </li>
+    <li class="lbh-timeline__event">
+        <span class="citizen">Bob Black</span>
+        <span class="case-info">submitted a complaint</span>
+
+        <details class="govuk-details lbh-details" data-module="govuk-details">
+            <summary class="lbh-body govuk-details__summary">
+              <span class="govuk-details__summary-text"> Case notes </span>
+            </summary>
+            <div class="govuk-details__text">
+              Some notes for case officers goes here.
+            </div>
+          </details>
+        
+        <p class="lbh-body-s">2 days ago - 25th August 2021</p>
+    </li>
+    <li class="lbh-timeline__event lbh-timeline__event--minor">
+        <a href="#" class="lbh-link lbh-link--no-visited-state">Steven Silver</a>
+        <span class="case-numbers">0</span>
+        <span class="case-info">Left a private note</span>
+        
+        <p class="lbh-body-s">8 days ago - 20th August 2021</p>
+        <details class="govuk-details lbh-details" data-module="govuk-details">
+            <summary class="lbh-body govuk-details__summary">
+              <span class="govuk-details__summary-text"> Case notes </span>
+            </summary>
+            <div class="govuk-details__text">
+              Mrs White called CSC today for follow-up. Dog has still been barking on and off.
+            </div>
+        </details>
+    </li>
+  </ol>
+
 {% endwith %}
 {% endblock %}
