@@ -93,100 +93,71 @@
 {% endfor %}
 </ul>
 
-<h2>Timeline</h2>
-
-{% if not case.merged_into %}
-    <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
-{% endif %}
-
-<ol class="lbh-timeline">
-<!-- lbh-timeline__event- -action-needed (grey box) -major (black filled) -minor (small filled) -gap-below (dotted line) -->
-{% for entry in case.timeline_staff %}
-<li class="lbh-timeline__event">
-    <h3>{% if entry.complaint %}
-    {{ entry.complaint.complainant }} submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a>
-    {% else %}
-    {{ entry.summary }}
-    {% endif %}
-    </h3>
-    <p>{{ entry.time }}</p>
-</li>
-{% endfor %}
-</ol>
-
-<!-- Timeline example implementation -->
-
 <h2 class="lbh-heading-h2 section-heading">Timeline</h2>
 
 <ol class="lbh-timeline">
+<!-- lbh-timeline__event- -action-needed (grey box) -major (black filled) -minor (small filled) -gap-below (dotted line) -->
+  {% if not case.merged_into %}
     <li class="lbh-timeline__event lbh-timeline__event--minor">
         <p class="lbh-body-s">Now</p>
-        <button class="govuk-button lbh-button">Log an action</button>
+        <a href="{% url "case-log-action" case.id %}" class="govuk-button lbh-button">Log an action</a>
     </li>
-    <li class="lbh-timeline__event lbh-timeline__event--minor">
-        <a href="#" class="lbh-link lbh-link--no-visited-state">Steven Silver</a>
-        <span class="case-numbers">0</span>
-        <span class="case-info">assigned case to me</span>
-        <a href="#" class="lbh-link lbh-link--no-visited-state">Me</a>
-        <span class="case-numbers">27</span>
-        
-        <p class="lbh-body-s">1 day ago - 27th August 2021</p>
+  {% endif %}
+{% for entry in case.timeline_staff %}
+<li class="lbh-timeline__event">
+  {% if entry.complaint %}
+    <span class="citizen">{{ entry.complaint.complainant }}</span>
+    <span class="case-info">submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a></span>
         <details class="govuk-details lbh-details" data-module="govuk-details">
             <summary class="lbh-body govuk-details__summary">
-              <span class="govuk-details__summary-text"> Case notes </span>
+              <span class="govuk-details__summary-text"> Complaint details </span>
             </summary>
             <div class="govuk-details__text">
-              Aliyah, could you investigate on your next OOH shift?
-            </div>
-        </details>
-    </li>
-    <li class="lbh-timeline__event">
-        <a href="#" class="lbh-link lbh-link--no-visited-state">Steven Silver</a>
-        <span class="case-numbers">0</span>
-        <span class="case-info">responded to <span class="citizen">Bob Black</span> with template "Receipt"</span>
-
-        <details class="govuk-details lbh-details" data-module="govuk-details">
-            <summary class="lbh-body govuk-details__summary">
-              <span class="govuk-details__summary-text"> Case notes </span>
-            </summary>
-            <div class="govuk-details__text">
-              Some notes for case officers goes here.
+              Summary of complaint here?
             </div>
           </details>
         
-        <p class="lbh-body-s">1 day ago - 27th August 2021</p>
-    </li>
-    <li class="lbh-timeline__event">
-        <span class="citizen">Bob Black</span>
-        <span class="case-info">submitted a complaint</span>
-
-        <details class="govuk-details lbh-details" data-module="govuk-details">
-            <summary class="lbh-body govuk-details__summary">
-              <span class="govuk-details__summary-text"> Case notes </span>
-            </summary>
-            <div class="govuk-details__text">
-              Some notes for case officers goes here.
-            </div>
-          </details>
-        
-        <p class="lbh-body-s">2 days ago - 25th August 2021</p>
-    </li>
-    <li class="lbh-timeline__event lbh-timeline__event--minor">
-        <a href="#" class="lbh-link lbh-link--no-visited-state">Steven Silver</a>
-        <span class="case-numbers">0</span>
-        <span class="case-info">Left a private note</span>
-        
-        <p class="lbh-body-s">8 days ago - 20th August 2021</p>
-        <details class="govuk-details lbh-details" data-module="govuk-details">
-            <summary class="lbh-body govuk-details__summary">
-              <span class="govuk-details__summary-text"> Case notes </span>
-            </summary>
-            <div class="govuk-details__text">
-              Mrs White called CSC today for follow-up. Dog has still been barking on and off.
-            </div>
-        </details>
-    </li>
-  </ol>
+    {% elif request.user.is_staff %}
+        {% if entry.action.assigned_old and entry.action.assigned_new %}
+            f"{self.created_by} reassigned case {self.case_id} from {old} to {new}"
+        {% elif entry.action.assigned_new %}
+            <a href="#" class="lbh-link lbh-link--no-visited-state">{{ entry.action.created_by }}</a>
+            <span class="case-numbers">?</span>
+            <span class="case-info">assigned case #{{ case.id }} to</span>
+            <a href="#" class="lbh-link lbh-link--no-visited-state">{{ entry.action.assigned_new }}</a>
+            <span class="case-numbers">?</span>
+        {% elif entry.action.assigned_old %}
+            {self.created_by} unassigned {old} from case {self.case_id}"
+        {% elif entry.action.case_old %}
+            <a href="#" class="lbh-link lbh-link--no-visited-state">{{ entry.action.created_by }}</a>
+            <span class="case-numbers">?</span>
+            <span class="case-info">merged case #{{ entry.action.case_old_id }} into
+                case #{{ entry.action.case_id }}
+            </span>
+        {% elif entry.action.type %}
+            <a href="#" class="lbh-link lbh-link--no-visited-state">{{ entry.action.created_by }}</a>
+            <span class="case-numbers">?</span>
+            <span class="case-info">{{ entry.action.type.name }}, case #{{ entry.action.case_id }}</span>
+        {% else %}
+            {{ entry.summary }}
+        {% endif %}
+        {% if entry.action.notes %}
+            <details class="govuk-details lbh-details" data-module="govuk-details">
+                <summary class="lbh-body govuk-details__summary">
+                  <span class="govuk-details__summary-text"> Internal notes </span>
+                </summary>
+                <div class="govuk-details__text">
+                    {{ entry.action.notes }}
+                </div>
+            </details>
+        {% endif %}
+    {% else %}
+        {{ entry.summary }}
+    {% endif %}
+    <p class="lbh-body-s">{{ entry.time }}</p>
+</li>
+{% endfor %}
+</ol>
 
 {% endwith %}
 {% endblock %}
