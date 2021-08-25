@@ -97,23 +97,46 @@
 {% endfor %}
 </ul>
 
-<h2>Timeline</h2>
-
-{% if not case.merged_into %}
-    <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
-{% endif %}
+<h2 class="lbh-heading-h2 section-heading">Timeline</h2>
 
 <ol class="lbh-timeline">
 <!-- lbh-timeline__event- -action-needed (grey box) -major (black filled) -minor (small filled) -gap-below (dotted line) -->
+  {% if not case.merged_into %}
+    <li class="lbh-timeline__event lbh-timeline__event--minor">
+        <p class="lbh-body-m">Now</p>
+        <a href="{% url "case-log-action" case.id %}" class="govuk-button lbh-button">Log an action</a>
+    </li>
+  {% endif %}
 {% for entry in case.timeline_staff %}
 <li class="lbh-timeline__event">
-    <h3>{% if entry.complaint %}
-    {{ entry.complaint.complainant }} submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a>
+  {% if entry.complaint %}
+    <span class="citizen">{{ entry.complaint.complainant }}</span>
+    <span class="case-info">submitted a <a href="{% url "complaint" case.id entry.complaint.id %}">complaint</a></span>
+        <details class="govuk-details lbh-details" data-module="govuk-details">
+            <summary class="lbh-body govuk-details__summary">
+              <span class="govuk-details__summary-text"> Complaint details </span>
+            </summary>
+            <div class="govuk-details__text">
+              Summary of complaint here?
+            </div>
+          </details>
+
+    {% elif request.user.is_staff %}
+        {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
+        {% if entry.action.notes %}
+            <details class="govuk-details lbh-details" data-module="govuk-details">
+                <summary class="lbh-body govuk-details__summary">
+                  <span class="govuk-details__summary-text"> Internal notes </span>
+                </summary>
+                <div class="govuk-details__text">
+                    {{ entry.action.notes }}
+                </div>
+            </details>
+        {% endif %}
     {% else %}
-    {{ entry.summary }}
+        {{ entry.summary }}
     {% endif %}
-    </h3>
-    <p>{{ entry.time }}</p>
+    <p class="lbh-body-m">{{ entry.time }}</p>
 </li>
 {% endfor %}
 </ol>

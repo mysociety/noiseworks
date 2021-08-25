@@ -1,0 +1,24 @@
+{% if action.assigned_old and action.assigned_new %}
+    f"{self.created_by} reassigned case {self.case_id} from {old} to {new}"
+{% elif action.assigned_new %}
+    <a href="#" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <!-- <span class="case-numbers">?</span> -->
+    <span class="case-info">assigned case #{{ case.id }} to</span>
+    <a href="#" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_new }}</a>
+    <!-- <span class="case-numbers">?</span> -->
+{% elif action.assigned_old %}
+    {self.created_by} unassigned {old} from case {self.case_id}"
+{% elif action.case_old %}
+    <a href="#" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <!-- <span class="case-numbers">?</span> -->
+    <span class="case-info">merged case #{{ action.case_old_id }} into
+        case #{{ action.case_id }}
+    </span>
+{% elif action.type %}
+    <a href="#" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>,
+    <!-- <span class="case-numbers">?</span> -->
+    <span class="case-info">{{ action.type.name }}, case #{{ action.case_id }}</span>
+{% else %}
+    {{ summary }}
+{% endif %}
+

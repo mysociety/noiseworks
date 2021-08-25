@@ -21,6 +21,14 @@ $lbh-asset-path: "/static/hackney";
 .nw-page-announcement__content { @extend .lbh-page-announcement__content; }
 .nw-link--no-visited-state { @extend .lbh-link--no-visited-state; }
 
+// Custom styles
+@import "timeline";
+@import "sections";
+
+span {
+    font-family: $lbh-font-family;
+}
+
 // Footer
 
 footer {
