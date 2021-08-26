@@ -46,7 +46,7 @@ def normal_user_2(db):
 @pytest.fixture
 def case_1(db, staff_user_1, normal_user):
     return Case.objects.create(
-        kind="diy", assigned=staff_user_1, created_by=normal_user
+        kind="diy", assigned=staff_user_1, created_by=normal_user, ward="E05009373"
     )
 
 
@@ -114,6 +114,19 @@ def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     case_1.assigned = None
     case_1.save()
     response = admin_client.get("/cases?assigned=none")
+    assertContains(response, f"/cases/{case_1.id}")
+
+
+def test_ward_filter(admin_client, admin_user, case_1):
+    case_1.assigned = admin_user
+    case_1.save()
+    admin_user.wards = ["E05009374"]
+    admin_user.save()
+    response = admin_client.get("/cases")
+    assertNotContains(response, f"/cases/{case_1.id}")
+    admin_user.wards = ["E05009372",case_1.ward]
+    admin_user.save()
+    response = admin_client.get("/cases")
     assertContains(response, f"/cases/{case_1.id}")
 
 

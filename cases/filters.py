@@ -40,6 +40,9 @@ class CaseFilter(django_filters.FilterSet):
 
     def __init__(self, data, *args, **kwargs):
         data = data.copy()
+        user = kwargs["request"].user
+        if user.wards and not data:
+            data.setlistdefault("ward", user.wards)
         data.setdefault("assigned", "me")
         super().__init__(data, *args, **kwargs)
         self.filters["kind"].label = "Noise type"
