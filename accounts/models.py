@@ -48,6 +48,7 @@ class User(AbstractUser):
     phone = PhoneNumberField(blank=True)
     email_verified = models.BooleanField(default=False)
     phone_verified = models.BooleanField(default=False)
+    # Reporter things
     uprn = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     best_time = ArrayField(
@@ -58,6 +59,12 @@ class User(AbstractUser):
     )
     best_method = models.CharField(
         choices=BEST_METHOD_CHOICES, max_length=5, null=True, blank=True
+    )
+    # Staff things
+    wards = ArrayField(
+        models.CharField(max_length=9),
+        null=True,
+        blank=True,
     )
 
     objects = UserManager()
