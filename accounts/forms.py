@@ -7,6 +7,7 @@ from phonenumber_field.phonenumber import PhoneNumber, to_python
 from sesame.utils import get_user
 from noiseworks.base32 import base32_to_bytes, bytes_to_base32
 from noiseworks.forms import GDSForm
+from noiseworks import cobrand
 from .models import User
 
 
@@ -83,3 +84,36 @@ class CodeForm(GDSForm, forms.Form):
         if user is None:
             raise ValidationError("Incorrect or expired code")
         self.user = user
+
+
+def get_wards():
+    wards = cobrand.api.wards()
+    wards = {ward["gss"]: ward["name"] for ward in wards}
+    return list(wards.items())
+
+
+class EditForm(GDSForm, forms.ModelForm):
+    best_time = forms.MultipleChoiceField(
+        choices=User.BEST_TIME_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+    wards = forms.MultipleChoiceField(
+        choices=get_wards, widget=forms.CheckboxSelectMultiple, required=False
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "email_verified",
+            "phone",
+            "phone_verified",
+            "uprn",
+            "address",
+            "best_time",
+            "best_method",
+            "wards",
+        )
