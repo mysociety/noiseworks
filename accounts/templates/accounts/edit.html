@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+<h1>Edit user</h1>
+
+{% error_summary form %}
+{% crispy form %}
+
+{% endblock %}

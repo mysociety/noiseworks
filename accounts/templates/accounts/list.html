@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Users</h1>
+
+<ul class="govuk-list lbh-list">
+{% for user in users %}
+<li><a href="{% url "accounts:edit" user.id %}" class="nw-link--no-visited-state">{{ user }}</a>
+{% endfor %}
+</ul>
+
+{% endblock %}

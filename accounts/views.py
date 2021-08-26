@@ -3,14 +3,14 @@ from math import ceil
 from django.conf import settings
 from django.contrib.auth import login, get_user_model
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseNotAllowed, HttpResponseRedirect
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 from sesame.tokens import create_token
 from sesame.utils import get_user
 from noiseworks.base32 import bytes_to_base32
 from noiseworks.message import send_sms, send_email
-from .forms import SignInForm, CodeForm
+from .forms import SignInForm, CodeForm, EditForm
 
 User = get_user_model()
 
@@ -76,3 +76,17 @@ def show_form(request):
 
     template = "accounts/form_signin.html"
     return render(request, template, {"form": form})
+
+
+def edit(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    form = EditForm(request.POST or None, instance=user)
+    if form.is_valid():
+        form.save()
+        return HttpResponseRedirect(reverse("accounts:list"))
+    return render(request, "accounts/edit.html", {"form": form})
+
+
+def list(request):
+    users = User.objects.all()
+    return render(request, "accounts/list.html", {"users": users})

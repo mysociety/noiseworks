@@ -103,3 +103,17 @@ def test_log_in_by_code(client):
         "/a/code", {"username": email, "timestamp": timestamp, "code": code}
     )
     assert response.status_code == 302
+
+
+def test_basic_user_editing(admin_client, staff_user):
+    response = admin_client.get("/a/list")
+    response = admin_client.get(f"/a/{staff_user.id}/edit")
+    response = admin_client.post(
+        f"/a/{staff_user.id}/edit",
+        {
+            "best_time": ["weekday", "evening"],
+            "wards": ["E05009378", "E05009374"],
+            "best_method": "email",
+        },
+    )
+    assert response.status_code == 302
