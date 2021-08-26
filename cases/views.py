@@ -79,7 +79,7 @@ def reassign(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = ReassignForm(request.POST or None, instance=case)
     if form.is_valid():
-        form.save(case=case, user=request.user)
+        form.save()
         return HttpResponseRedirect(case.get_absolute_url())
     return render(
         request,
@@ -96,7 +96,7 @@ def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = ActionForm(request.POST or None)
     if form.is_valid():
-        form.save(case=case, user=request.user)
+        form.save(case=case)
         return HttpResponseRedirect(case.get_absolute_url())
     return render(
         request,

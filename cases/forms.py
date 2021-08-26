@@ -40,7 +40,7 @@ class ReassignForm(GDSForm, forms.ModelForm):
 
         self.helper.legend_size = "xl"
 
-    def save(self, case, user):
+    def save(self):
         super().save()
         Action.objects.create(
             case=self.instance,
@@ -64,6 +64,6 @@ class ActionForm(GDSForm, forms.ModelForm):
         self.fields["notes"].label = "Internal notes"
         self.fields["notes"].required = True
 
-    def save(self, case, user):
+    def save(self, case):
         self.instance.case = case
         super().save()
