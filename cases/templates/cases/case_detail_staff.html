@@ -31,68 +31,133 @@
 <p class="case-id-badge">{{ case.id }}</p>
 <h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
 
-<h2>Case info</h2>
+<h2 class="lbh-heading-h2 section-heading">Case info</h2>
 
-<dl>
-    <dt>Type
-    <dd>{{ case.kind_display }}
-    <dt>Created
-    <dd>{{ case.created|timesince }}
+<dl class="govuk-summary-list lbh-summary-list">
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Type</dt>
+    <dd class="govuk-summary-list__value">{{ case.kind_display }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="govuk-link" href="#">
+        Change<span class="govuk-visually-hidden"> type</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Created</dt>
+    <dd class="govuk-summary-list__value">{{ case.created|timesince }}</dd>
+    <dd class="govuk-summary-list__actions"></dd>
+  </div>
   {% if not case.merged_into %}
-    <dt>Last action
-    <dd>{{ case.last_action.created|timesince }} – {{ case.last_action }}
-    <dt>Assigned
-    <dd>{{ case.assigned }}
-    <a href="{% url 'case-reassign' case.id %}" class="nw-link--no-visited-state">Change</a>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Last action</dt>
+    <dd class="govuk-summary-list__value">
+        {{ case.last_action.created|timesince }} –
+        {% include "cases/_case_action_summary.html" with action=case.last_action %}
+    </dd>
+    <dd class="govuk-summary-list__actions"></dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Assigned</dt>
+    <dd class="govuk-summary-list__value"><a href="#" class="lbh-link lbh-link--no-visited-state">{{ case.assigned }}</a></dd>
+    <dd class="govuk-summary-list__actions">
+    <a class="govuk-link nw-link--no-visited-state" href="{% url "case-reassign" case.id %}">
+        Change<span class="govuk-visually-hidden"> assignment</span>
+      </a>
+    </dd>
+  </div>
   {% endif %}
 </dl>
 
 {% if not case.merged_into %}
-    <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
+
+    <a href="{% url "case-log-action" case.id %}" class="govuk-button lbh-button">Log an action</a>
     {% if not duplicate and not case.merged_into %}
-        <a href="{% url "case-merge" case.id %}" class="nw-button">Merge into another case</a>
+        <a href="{% url "case-merge" case.id %}" class="govuk-button govuk-button--secondary lbh-button lbh-button--secondary">Merge into another case</a>
     {% endif %}
 {% endif %}
 
-<h2>Noise source</h2>
+<h2 class="lbh-heading-h2 section-heading">Noise Source</h2>
 
-<p>
-{{ case.location_display }}
-<br>House or shop? {{ case.get_where_display }}
-<br>Hackney Estate? {{ case.get_estate_display }}
-</p>
+<dl class="govuk-summary-list lbh-summary-list">
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">Address</dt>
+      <dd class="govuk-summary-list__value">
+      <p class="govuk-body">{{ case.location_display }}
+<p>House or shop? {{ case.get_where_display }}
+<p>Hackney Estate? {{ case.get_estate_display }}
+      </p>
+        <p class="text-smaller">{{ case.ward }} ward</p>
+      </dd>
+      <dd class="govuk-summary-list__actions">
+        <a class="govuk-link" href="#">
+          Change
+        </a>
+        <a href="#" class="govuk-button govuk-secondary lbh-button lbh-button--secondary">View on map</a>
+      </dd>
+    </div>
+<!--
+    <div class="govuk-summary-list__row govuk-summary-list__row--warning">
+        <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar-warning.svg" class="icon-avatar-warning" alt=""></dt>
+        <dd class="govuk-summary-list__value">
+          <p class="govuk-body"><a href="#" class="lbh-link lbh-link--no-visited-state">Walter White (4 cases)</a> </p>
+          <p class="govuk-body">07700 900123</p>
+          <p class="text-smaller">(No email address)</p>
+          <p class="govuk-body">Flat 5</p>
+          <p class="govuk-body">
+            2 Crosby Walk<br />
+            E8 3DW
+          </p>
+          <p class="text-smaller">(Dalston Ward)</p>
+          <p class="p-warning">Complex needs</p>
 
-<h2>{% blocktranslate count counter=case.all_complainants|length trimmed %}
+        </dd>
+        <dd class="govuk-summary-list__actions">
+        </dd>
+      </div>
+-->
+</dl>
+
+<h2 class="lbh-heading-h2 section-heading">{% blocktranslate count counter=case.all_complainants|length trimmed %}
     Reporter{% plural %}Reporters
     {% endblocktranslate %}</h2>
 
 <ul class="list-reporters">
 {% for complainant in case.all_complainants %}
-<li><p>
-    <a href="">{{ complainant }}</a>
-    {% blocktranslate count counter=complainant.num_cases with cases=complainant.num_cases trimmed %}
-    ({{ cases }} case)
-    {% plural %}
-    ({{ cases }} cases)
-    {% endblocktranslate %}
+<li>
 
-    {% if complainant.phone %}
-    <br>{{ complainant.phone.as_national }}
-    {% if complainant.phone_verified %} (verified){% endif %}
-    {% endif %}
-    {% if complainant.email %}
-    <br>{{ complainant.email }}
-        {% if complainant.email_verified %} (verified){% endif %}
-    {% endif %}
-    </p>
-    <p>{{ complainant.address }}</p>
-    <!-- <br>Ward -->
-    <p class="list-reporters__availability">Available
-    {% for time in complainant.get_best_time_display %}
-    {% if not forloop.first %}{% if forloop.last %} or {% else %}, {% endif %}{% endif %}
-    {{ time|lower }}{% empty %}<i>unknown</i>{% endfor %},
-    by {{ complainant.get_best_method_display|default:"unknown"|lower }}
-    </p>
+<dl class="govuk-summary-list lbh-summary-list">
+    <div class="govuk-summary-list__row govuk-summary-list__row--lbh-grey-4">
+        <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar.svg" class="icon-avatar" alt=""></dt>
+        <dd class="govuk-summary-list__value">
+          <p class="govuk-body"><a href="#" class="lbh-link lbh-link--no-visited-state">{{ complainant }}</a>
+            {% blocktranslate count counter=complainant.num_cases with cases=complainant.num_cases trimmed %}
+            ({{ cases }} case)
+            {% plural %}
+            ({{ cases }} cases)
+            {% endblocktranslate %}
+          </p>
+        {% if complainant.phone %}
+          <p class="govuk-body">{{ complainant.phone.as_national }}
+            {% if complainant.phone_verified %} (verified){% endif %}
+        {% endif %}
+        {% if complainant.email %}
+          <p class="govuk-body">{{ complainant.email }}
+            {% if complainant.email_verified %} (verified){% endif %}
+        {% endif %}
+        <p class="govuk-body">{{ complainant.address }}</p>
+          <p class="text-smaller">(Ward)</p>
+          <p class="text-smaller">Available
+            {% for time in complainant.get_best_time_display %}
+            {% if not forloop.first %}{% if forloop.last %} or {% else %}, {% endif %}{% endif %}
+            {{ time|lower }}{% empty %}<i>unknown</i>{% endfor %},
+            by {{ complainant.get_best_method_display|default:"unknown"|lower }}
+          </p>
+        </dd>
+        <dd class="govuk-summary-list__actions">
+        </dd>
+      </div>
+  </dl>
 
 {% endfor %}
 </ul>
