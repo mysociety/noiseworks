@@ -22,6 +22,10 @@ $lbh-asset-path: "/static/hackney";
 .nw-link--no-visited-state { @extend .lbh-link--no-visited-state; }
 
 // Custom styles
+@import "variables";
+@import "colours";
+@import "typography";
+
 @import "timeline";
 @import "sections";
 
