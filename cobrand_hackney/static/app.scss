@@ -97,23 +97,8 @@ dl.inline {
 
 // Case page
 
-.list-reporters {
-    margin: 0;
-    padding: 0;
-}
 .list-reporters li {
-    background-color: #f8f8f8;
     list-style-type: none;
-    padding: 0.5em;
-}
-.list-reporters p {
-    margin: 0 0 0.5em;
-}
-.list-reporters p:last-child {
-    margin-bottom: 0;
-}
-.list-reporters p.list-reporters__availability {
-    color: #666;
 }
 
 // Case list page
