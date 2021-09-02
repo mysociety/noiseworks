@@ -3,13 +3,16 @@
 
 {% block content %}
 
-<p><a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel</a></p>
+<div>
+    <a href="{% url "case-view" case.id %}" class="govuk-back-link lbh-back-link">Cancel, back to case</a>
+</div>
 
 <p class="case-id-badge">{{ case.id }}</p>
-<h1>Log an action</h1>
+<h1 style="margin-top: 0">Log an action</h1>
 
 {% error_summary form %}
 {% crispy form %}
 
-{% endblock %}
 
+
+{% endblock %}
