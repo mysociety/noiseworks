@@ -1,6 +1,8 @@
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
+from django.template import Context, Template
+from django.http import HttpRequest
 from accounts.models import User
 from .models import Case, Complaint, ActionType, Action
 from .forms import ReassignForm
@@ -274,3 +276,12 @@ def test_case_details_other_user_view(client, case_1, normal_user_2):
     client.force_login(normal_user_2)
     response = client.get(f"/cases/{case_1.id}")
     assert response.status_code == 404
+
+
+def test_param_replace():
+    request = HttpRequest()
+    request.GET.update({"param": "value", "page": 10, "delete": "yes"})
+    context = Context({"request": request})
+    template = Template("{% load page_filter %}{% param_replace page=123 delete='' %}")
+    rendered_template = template.render(context)
+    assert rendered_template == "param=value&amp;page=123"
