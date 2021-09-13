@@ -8,8 +8,12 @@
 
 <h1>Cases</h1>
 
+      {% if qs %}
+        {% include "cases/_pagination.html" %}
+      {% endif %}
+
 <ul class="nw-case-list">
-{% for case in filter.qs %}
+{% for case in qs %}
     <li class="nw-case-list__item">
         <a href="{% url 'case-view' case.id %}" class="nw-case-list__header nw-link--no-visited-state">
             <span class="case-id-badge">{{ case.id }}</span>
@@ -34,6 +38,10 @@
     <li><p>No cases yet.</p></li>
 {% endfor %}
 </ul>
+
+      {% if qs %}
+        {% include "cases/_pagination.html" %}
+      {% endif %}
 
     </div>
     <div class="govuk-grid-column-one-third">

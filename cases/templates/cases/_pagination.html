@@ -1,0 +1,43 @@
+{% load humanize page_filter %}
+
+<nav class="lbh-pagination">
+    <div class="lbh-pagination__summary">Showing {{ qs.start_index }}—{{ qs.end_index }} of {{ qs.paginator.count|intcomma }} results</div>
+  <ul class="lbh-pagination__list">
+    {% if qs.has_previous %}
+    <li class="lbh-pagination__item">
+        <a class="lbh-pagination__link" href="?{% param_replace page=qs.previous_page_number %}" aria-label="Previous page">
+        <span aria-hidden="true" role="presentation">&laquo;</span>
+        Previous
+      </a>
+    </li>
+    {% endif %}
+
+    {% for i in qs.paginator.page_range %}
+        {% if qs.number == i %}
+            <li class="lbh-pagination__item">
+                <a
+                    class="lbh-pagination__link lbh-pagination__link--current"
+                    href="#"
+                    aria-current="true"
+                    aria-label="Page {{ i }}, current page"
+                  >
+                  {{ i }}
+                </a>
+            </li>
+        {% elif i > qs.number|add:'-3' and i < qs.number|add:'3' %}
+            <li class="lbh-pagination__item">
+                <a class="lbh-pagination__link" href="?{% param_replace page=i %}" aria-label="Page {{ i }}">{{ i }}</a>
+            </li>
+        {% endif %}
+    {% endfor %}
+
+    {% if qs.has_next %}
+    <li class="lbh-pagination__item">
+        <a class="lbh-pagination__link" href="?{% param_replace page=qs.next_page_number %}" aria-label="Next page">
+        Next
+        <span aria-hidden="true" role="presentation">&raquo;</span>
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>

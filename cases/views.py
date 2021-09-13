@@ -1,6 +1,7 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from .filters import CaseFilter
@@ -30,11 +31,16 @@ def case_list_user(request):
 def case_list_staff(request):
     qs = Case.objects.unmerged()
     f = CaseFilter(request.GET, queryset=qs, request=request)
-    merge_map = Action.objects.get_merged_cases(f.qs)
+
+    paginator = Paginator(f.qs, 20)
+    page_number = request.GET.get("page")
+    qs = paginator.get_page(page_number)
+
+    merge_map = Action.objects.get_merged_cases(qs)
     actions_by_case = Action.objects.get_reversed(merge_map)
 
     # Set the actions for each result to the right ones
-    for case in f.qs:
+    for case in qs:
         case.actions_reversed = actions_by_case.get(case.id, [])
 
     return render(
@@ -42,6 +48,7 @@ def case_list_staff(request):
         "cases/case_list_staff.html",
         {
             "filter": f,
+            "qs": qs,
         },
     )
 
