@@ -84,7 +84,7 @@ class Case(AbstractModel):
     uprn_cache = models.CharField(max_length=200, blank=True)
     ward = models.CharField(max_length=9, blank=True)
     where = models.CharField(max_length=9, choices=WHERE_CHOICES)
-    estate = models.CharField(max_length=1, choices=ESTATE_CHOICES)
+    estate = models.CharField(max_length=1, choices=ESTATE_CHOICES, blank=True)
 
     assigned = models.ForeignKey(
         User,
