@@ -8,19 +8,26 @@
 
 <h1>Cases</h1>
 
-<ul>
+<ul class="nw-case-list">
 {% for case in filter.qs %}
-    <li>
-        <a href="{% url 'case-view' case.id %}" class="nw-link--no-visited-state">
+    <li class="nw-case-list__item">
+        <a href="{% url 'case-view' case.id %}" class="nw-case-list__header nw-link--no-visited-state">
             <span class="case-id-badge">{{ case.id }}</span>
-            <br>
-            {{ case.kind_display }} at {{ case.location_display }}
+            <span class="case-list__title">{{ case.kind_display }} at {{ case.location_display }}</span>
         </a>
-        <dl>
-        <dt>Last action</dt>
-        <dd>{{ case.last_action.created|timesince }} - {{ case.last_action|truncatewords:10 }}
-        <dt>Assigned</dt>
-        <dd>{{ case.assigned }}</dd>
+        <dl class="govuk-summary-list govuk-summary-list--no-border lbh-summary-list">
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Last action</dt>
+                <dd class="govuk-summary-list__value">{% if case.last_action %}
+                    {{ case.last_action.created|timesince }} &ndash; {{ case.last_action|truncatewords:10 }}
+                {% else %}
+                    No actions
+                    {% endif %}</dd>
+            </div>
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Assigned</dt>
+                <dd class="govuk-summary-list__value">{{ case.assigned|default:"No-one" }}</dd>
+            </div>
         </dl>
     </li>
 {% empty %}
