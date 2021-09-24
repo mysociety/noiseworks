@@ -59,7 +59,13 @@
   </div>
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Assigned</dt>
-    <dd class="govuk-summary-list__value"><a href="#" class="lbh-link lbh-link--no-visited-state">{{ case.assigned }}</a></dd>
+    <dd class="govuk-summary-list__value">
+      {% if case.assigned %}
+        <a href="{% url "cases" %}?assigned={{ case.assigned.id }}" class="lbh-link lbh-link--no-visited-state">{{ case.assigned }}</a>
+      {% else %}
+        {{ case.assigned }}
+      {% endif %}
+    </dd>
     <dd class="govuk-summary-list__actions">
     <a class="govuk-link nw-link--no-visited-state" href="{% url "case-reassign" case.id %}">
         Change<span class="govuk-visually-hidden"> assignment</span>
