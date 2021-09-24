@@ -3,6 +3,7 @@ import django_filters
 from .models import Case
 from .forms import FilterForm
 from noiseworks import cobrand
+from accounts.models import User
 
 
 def get_wards():
@@ -14,11 +15,11 @@ def get_wards():
 
 class CaseFilter(django_filters.FilterSet):
     assigned = django_filters.ChoiceFilter(
-        choices=(
+        choices=[
             ("me", "Assigned to me"),
             ("others", "Assigned to others"),
             ("none", "Unassigned"),
-        ),
+        ],
         method="assigned_filter",
     )
     ward = django_filters.MultipleChoiceFilter(
@@ -46,11 +47,18 @@ class CaseFilter(django_filters.FilterSet):
         data.setdefault("assigned", "me")
         super().__init__(data, *args, **kwargs)
         self.filters["kind"].label = "Noise type"
+        try:
+            user = User.objects.get(id=data["assigned"])
+            self.filters["assigned"].extra["choices"].append((user.id, user))
+        except (User.DoesNotExist, ValueError):
+            pass
 
     def assigned_filter(self, queryset, name, value):
         if value == "me":
             return queryset.filter(assigned=self.request.user)
         elif value == "others":
             return queryset.exclude(assigned=self.request.user).exclude(assigned=None)
-        else:
+        elif value == "none":
             return queryset.filter(assigned=None)
+        else:
+            return queryset.filter(assigned=value)

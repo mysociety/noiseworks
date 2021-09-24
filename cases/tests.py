@@ -115,6 +115,8 @@ def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     case_1.save()
     response = admin_client.get("/cases")
     assertContains(response, f"/cases/{case_1.id}")
+    response = admin_client.get(f"/cases?assigned={admin_user.id}")
+    assertContains(response, f"/cases/{case_1.id}")
     case_1.assigned = None
     case_1.save()
     response = admin_client.get("/cases?assigned=none")
