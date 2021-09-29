@@ -111,6 +111,7 @@ class Case(AbstractModel):
 
     @cached_property
     def location_display(self):
+        #return "[anonymized location]"
         if self.uprn_cache:
             return self.uprn_cache
         elif self.uprn:
