@@ -1,4 +1,8 @@
-
+.env
+.git/
+.github/
+.gitignore
+.static/
 conf/env.sh
 conf/env.sh.deployed
 conf/stack.yml
