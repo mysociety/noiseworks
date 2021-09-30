@@ -12,7 +12,7 @@
 {% for case in qs %}
     <li class="nw-case-list__item">
         <a href="{% url 'case-view' case.id %}" class="nw-case-list__header nw-link--no-visited-state">
-            <span class="case-id-badge">{{ case.id }}</span>
+            <span class="nw-tag--id">{{ case.id }}</span>
             <span class="case-list__title">{{ case.kind_display }} at {{ case.location_display }}</span>
         </a>
         <dl class="govuk-summary-list govuk-summary-list--no-border lbh-summary-list">
