@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+cd $(dirname $0)/..
+
+# Flag we're doing a build.
+export BUILD_COMMIT=$(git log -1 --pretty=%h)
+
+echo "==> Building application image..."
+docker build . -t mysocietyorg/noiseworks:latest -t mysocietyorg/noiseworks:${BUILD_COMMIT}
