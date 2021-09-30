@@ -12,13 +12,13 @@ ENV PYTHONUNBUFFERED=1 \
 ENV PATH="$VENV_PATH/bin:$PATH"
 RUN pip install poetry==$POETRY_VERSION
 WORKDIR $PYSETUP_PATH
-COPY poetry.lock pyproject.toml .
+COPY poetry.lock pyproject.toml ./
 RUN poetry install --no-root
 
 FROM node:14-bullseye AS builder-node
 ENV NPMSETUP_PATH="/opt/npmsetup"
 WORKDIR $NPMSETUP_PATH
-COPY cobrand_hackney/package.json cobrand_hackney/package-lock.json .
+COPY cobrand_hackney/package.json cobrand_hackney/package-lock.json ./
 RUN npm install
 
 FROM python:3.9-slim
