@@ -14,9 +14,16 @@
     {% compress css %}
         <link rel="stylesheet" type="text/x-scss" href="{% static 'app.scss' %}">
     {% endcompress %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
 
     {% compress js inline %}
     {% endcompress %}
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script src="https://unpkg.com/dom-focus-lock@1.0.4/umd/index.js"></script>
 
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ title }}">
@@ -156,7 +163,10 @@
     </footer>
 
     <!-- Put your path to the LBHFrontend JS File in the src attribute here -->
-    <script src=""></script>
+    <!-- <script src=""></script> -->
+    {% compress js %}
+    <script src="{% static 'js.js' %}"></script>
+    {% endcompress %}
     <script>
 //      window.LBHFrontend.initAll();
     </script>

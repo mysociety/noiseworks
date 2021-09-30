@@ -85,6 +85,8 @@
 
 <h2 class="lbh-heading-h2 section-heading">Noise Source</h2>
 
+<div class="case-detail__map" id="map"><div id="leaflet"></div></div>
+
 <dl class="govuk-summary-list lbh-summary-list">
     <div class="govuk-summary-list__row">
       <dt class="govuk-summary-list__key">Address</dt>
@@ -94,14 +96,78 @@
 <p>Hackney Estate? {{ case.get_estate_display }}
       </p>
         <p class="text-smaller">{{ case.ward }} ward</p>
+
+<div class="case-detail__map__overlay">
+    <div aria-modal="true" role="dialog" tabindex="-1" aria-label="Case location" class="lbh-dialog">
+        <h2 class="lbh-heading-h2 lbh-dialog__title">Noise source</h2>
+        <div class="nw-dialog__contents">
+            <p class="govuk-body">{{ case.location_display }}</p>
+        </div>
+        <!--
+        <div class="lbh-dialog__actions">
+        </div>
+        -->
+        <button class="lbh-dialog__close">
+            <span class="govuk-visually-hidden">Close</span>
+            <svg width="18" height="18" viewBox="0 0 13 13" fill="none"><path d="M-0.0501709 1.36379L1.36404 -0.050415L12.6778 11.2633L11.2635 12.6775L-0.0501709 1.36379Z" fill="#0B0C0C"></path><path d="M11.2635 -0.050293L12.6778 1.36392L1.36404 12.6776L-0.0501709 11.2634L11.2635 -0.050293Z" fill="#0B0C0C"></path></svg>
+        </button>
+    </div>
+</div>
+
       </dd>
       <dd class="govuk-summary-list__actions">
         <a class="govuk-link" href="#">
           Change
         </a>
+        <div class="case-detail__map__button">
         <a href="#" class="govuk-button govuk-secondary lbh-button lbh-button--secondary">View on map</a>
+        </div>
       </dd>
     </div>
+
+<script>
+var nw = nw || {};
+(function(){
+    var point = new L.LatLng({{ case.latitude|floatformat:-6 }}, {{ case.longitude|floatformat:-6 }});
+    var map = nw.map = new L.Map("leaflet", {
+        center: point,
+        zoom: 17
+    });
+    map.zoomControl.setPosition('topright');
+    map.attributionControl.setPrefix('');
+
+    /*
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+		maxZoom: 19
+    }).addTo(map);
+    */
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        tileSize: 512,
+        maxZoom: 19,
+        zoomOffset: -1,
+        id: 'mapbox/streets-v11',
+        accessToken: 'pk.eyJ1IjoibGJoZWxld2lzIiwiYSI6ImNqeXJkN25uNjA5M3Uzb251bWVyejJ3YW8ifQ.uzO8I54w64U6QkNknW32FA'
+    }).addTo(map);
+
+  {% if case.uprn %}
+    var mapIcon = L.icon({
+      iconUrl: "/static/hackney/images/contact/map-marker.svg",
+      iconSize: [48, 48],
+      iconAnchor: [24, 48]
+    });
+    var marker = L.marker(point, { icon: mapIcon, interactive: false });
+    map.addLayer(marker);
+  {% else %}
+    var circle = L.circle(point, { radius: {{ case.radius }}, color: '#00664f' });
+    map.addLayer(circle);
+    map.fitBounds(circle.getBounds());
+  {% endif %}
+
+})();
+</script>
+
 <!--
     <div class="govuk-summary-list__row govuk-summary-list__row--warning">
         <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar-warning.svg" class="icon-avatar-warning" alt=""></dt>
