@@ -8,3 +8,8 @@ __pycache__/
 
 /.coverage
 /htmlcov
+
+conf/env.sh
+conf/env.sh.deployed
+conf/stack.yml
+conf/stack.yml.deployed
