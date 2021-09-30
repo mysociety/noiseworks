@@ -98,6 +98,50 @@ dl.inline {
     list-style-type: none;
 }
 
+.case-detail__map {
+    display: none;
+    height: 400px;
+    margin: 1rem 0;
+    @include govuk-media-query($from: tablet) {
+        display: block;
+    }
+    #leaflet {
+        height: 100%;
+    }
+    * + * { margin-top: 0; } // XXX
+}
+.leaflet-marker-icon {
+    cursor: grab;
+}
+
+.case-detail__map__button {
+    @include govuk-media-query($from: tablet) {
+        display: none;
+    }
+}
+
+.case-detail__map__overlay {
+  touch-action: none;
+  display: none;
+  background: hsla(0, 0%, 0%, 0.33);
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+  z-index: 1;
+  margin-top: 0;
+  * + * { margin-top: 0; } // XXX
+}
+.lbh-dialog {
+  box-sizing: border-box;
+  margin: 1em auto;
+  background: white;
+  padding: 1rem;
+  outline: none;
+}
+
 // Case list page
 
 ul.case-list-user {
