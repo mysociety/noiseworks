@@ -16,9 +16,10 @@ services:
       retries: 5
   web:
     build: .
-    command: /app/script/server
+    command: /app/script/server --development
     volumes:
       - .:/app
+      - node_modules:/app/cobrand_hackney/node_modules/
     ports:
       - "8000:8000"
     depends_on:
@@ -33,3 +34,4 @@ services:
 
 volumes:
   pgdata:
+  node_modules:
