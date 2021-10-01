@@ -6,7 +6,15 @@ This repository houses a Django project, running against a PostgreSQL database.
 
 ## Local Development
 
-### Code dependencies
+### Natively
+
+In summary, with more details below:
+
+1. Install poetry
+2. `script/setup` to install dependencies
+3. `poetry run script/server` to run a server
+
+#### Code dependencies
 
 This repository is using poetry for python package management. There is an
 installer for it (though they're switching to a new one, which sounds better),
@@ -20,11 +28,26 @@ really bothered about multiple python versions for this project.
 
 Anyway, once you have poetry installed, `script/setup` will install the dependencies.
 
-### Running
+#### Running
 
 Private settings are read from environment variables, which can be listed in a local .env file.
 
 * `poetry run script/server` to run migrate and the dev server
+
+The first time you run `script/server`, you will be asked if you want to run
+via Docker or natively. (Your choice is stored in `.env` as the `DEVENV`
+variable.)
+
+### Docker
+
+1. Run `script/server`
+
+The first time you do this, you will be asked if you want to run via Docker or
+natively. (Your choice is stored in `.env` as the `DEVENV` variable.) Running
+with Docker, `script/server` will remove stopped containers, remove the
+`node_modules` volume (so it stays up to date with any changes) and runs
+`docker-compose up` which creates database and web containers, with the web
+container running migrate and the Django development server.
 
 ### Tests
 

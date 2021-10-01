@@ -6,6 +6,8 @@ set -e
 # check that we are in the expected directory
 cd `dirname $0`/..
 
+script/bootstrap
+
 (cd cobrand_hackney && npm install)
 poetry install --no-root
 poetry run python manage.py migrate
