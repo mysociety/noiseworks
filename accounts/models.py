@@ -69,6 +69,9 @@ class User(AbstractUser):
 
     objects = UserManager()
 
+    class Meta:
+        ordering = ("first_name", "last_name")
+
     def __str__(self):
         return self.get_full_name() or self.username
 

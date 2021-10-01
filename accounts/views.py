@@ -9,6 +9,7 @@ from django.urls import reverse
 from sesame.tokens import create_token
 from sesame.utils import get_user
 from noiseworks.base32 import bytes_to_base32
+from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_sms, send_email
 from .forms import SignInForm, CodeForm, EditForm
 
@@ -78,6 +79,7 @@ def show_form(request):
     return render(request, template, {"form": form})
 
 
+@staff_member_required
 def edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     form = EditForm(request.POST or None, instance=user)
@@ -87,6 +89,7 @@ def edit(request, user_id):
     return render(request, "accounts/edit.html", {"form": form})
 
 
+@staff_member_required
 def list(request):
-    users = User.objects.all()
+    users = User.objects.filter(is_staff=True)
     return render(request, "accounts/list.html", {"users": users})
