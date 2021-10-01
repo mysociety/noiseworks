@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y \
     binutils gdal-bin libproj-dev git \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
-COPY --from=builder-node $NPMSETUP_PATH $NPMSETUP_PATH
 WORKDIR /app
+COPY --from=builder-node $NPMSETUP_PATH cobrand_hackney/
 COPY . .
 #RUN ./manage.py collectstatic --no-input
