@@ -1,3 +1,4 @@
+import re
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
@@ -163,16 +164,29 @@ def test_reassign():
     assert form.errors["assigned"] == ["This field is required."]
 
 
-def test_reassign_bad_user(case_1, staff_user_1):
+def test_reassign_same_user(case_1, staff_user_1):
     form = ReassignForm(instance=case_1, data={"assigned": staff_user_1.id})
-    assert form.errors["assigned"] == [
-        "Select a valid choice. That choice is not one of the available choices."
-    ]
+    form.save()
+    assert Action.objects.count() == 0
 
 
 def test_reassign_success(case_1, staff_user_2):
     form = ReassignForm(instance=case_1, data={"assigned": staff_user_2.id})
     assert form.is_valid()
+
+
+def test_reassign_ward_list(admin_client, admin_user, case_1, staff_user_1):
+    admin_user.wards = ["E05009372", case_1.ward]
+    admin_user.save()
+    response = admin_client.get(f"/cases/{case_1.id}/reassign")
+    assert re.search(
+        r'(?s)id="id_assigned_1"\s+value="'
+        + str(admin_user.id)
+        + r'".*?<div class="govuk-radios__divider">or</div>.*?id="id_assigned_2"\s+value="'
+        + str(staff_user_1.id)
+        + '"',
+        response.content.decode("utf-8"),
+    )
 
 
 def test_reassign_view(admin_client, case_1, staff_user_2):

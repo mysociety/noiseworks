@@ -1,6 +1,7 @@
 from django import forms
 from accounts.models import User
 from .models import Case, Action
+from crispy_forms_gds.choices import Choice
 from noiseworks.forms import GDSForm
 
 
@@ -23,10 +24,10 @@ class ReassignForm(GDSForm, forms.ModelForm):
         model = Case
         fields = ["assigned"]
 
-    assigned = forms.ModelChoiceField(
+    assigned = forms.ChoiceField(
         label="Reassign to",
         widget=forms.RadioSelect,
-        queryset=None,
+        help_text="This ward’s team members shown first",
     )
 
     def __init__(self, *args, **kwargs):
@@ -34,19 +35,35 @@ class ReassignForm(GDSForm, forms.ModelForm):
 
         self.current_assigned = self.instance.assigned
         staff_users = User.objects.filter(is_staff=True, is_active=True)
-        if self.instance.assigned:
-            staff_users = staff_users.exclude(id=self.instance.assigned.id)
-        self.fields["assigned"].queryset = staff_users
+        ward_staff = []
+        other_staff = []
+        for user in staff_users:
+            if user.wards and self.instance.ward in user.wards:
+                ward_staff.append(Choice(user.id, user))
+            else:
+                other_staff.append(Choice(user.id, user))
+        if ward_staff:
+            ward_staff[-1].divider = "or"
+        self.fields["assigned"].choices = ward_staff + other_staff
 
         self.helper.legend_size = "xl"
 
+    def clean_assigned(self):
+        assigned = self.cleaned_data["assigned"]
+        assigned = User.objects.get(id=assigned)
+        return assigned
+
     def save(self):
         super().save()
-        Action.objects.create(
-            case=self.instance,
-            assigned_old=self.current_assigned,
-            assigned_new=self.instance.assigned,
-        )
+        if (
+            not self.current_assigned
+            or self.current_assigned.id != self.instance.assigned.id
+        ):
+            Action.objects.create(
+                case=self.instance,
+                assigned_old=self.current_assigned,
+                assigned_new=self.instance.assigned,
+            )
 
 
 class ActionForm(GDSForm, forms.ModelForm):
