@@ -1,5 +1,9 @@
 {% if action.assigned_old and action.assigned_new %}
-    f"{self.created_by} reassigned case {self.case_id} from {old} to {new}"
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <span class="case-info">reassigned case #{{ case.id }} from</span>
+    <a href="{% url "cases" %}?assigned={{ action.assigned_old.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_old }}</a>
+    <span class="case-info">to</span>
+    <a href="{% url "cases" %}?assigned={{ action.assigned_new.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_new }}</a>
 {% elif action.assigned_new %}
     <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
     <!-- <span class="case-numbers">?</span> -->
@@ -7,7 +11,10 @@
     <a href="{% url "cases" %}?assigned={{ action.assigned_new.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_new }}</a>
     <!-- <span class="case-numbers">?</span> -->
 {% elif action.assigned_old %}
-    {self.created_by} unassigned {old} from case {self.case_id}"
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <span class="case-info">unassigned</span>
+    <a href="{% url "cases" %}?assigned={{ action.assigned_old.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_old }}</a>
+    <span class="case-info">from case #{{ case.id }}</span>
 {% elif action.case_old %}
     <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
     <!-- <span class="case-numbers">?</span> -->
