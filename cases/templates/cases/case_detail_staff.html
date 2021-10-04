@@ -33,7 +33,7 @@
 
 <h2 class="lbh-heading-h2 section-heading">Case info</h2>
 
-<dl class="govuk-summary-list lbh-summary-list">
+<dl class="nw-summary-list">
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Type</dt>
     <dd class="govuk-summary-list__value">{{ case.kind_display }}</dd>
@@ -77,9 +77,9 @@
 
 {% if not case.merged_into %}
 
-    <a href="{% url "case-log-action" case.id %}" class="govuk-button lbh-button">Log an action</a>
+    <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
     {% if not duplicate and not case.merged_into %}
-        <a href="{% url "case-merge" case.id %}" class="govuk-button govuk-button--secondary lbh-button lbh-button--secondary">Merge into another case</a>
+        <a href="{% url "case-merge" case.id %}" class="nw-button nw-button--secondary">Merge into another case</a>
     {% endif %}
 {% endif %}
 
@@ -87,7 +87,7 @@
 
 <div class="case-detail__map" id="map"><div id="leaflet"></div></div>
 
-<dl class="govuk-summary-list lbh-summary-list">
+<dl class="nw-summary-list">
     <div class="govuk-summary-list__row">
       <dt class="govuk-summary-list__key">Address</dt>
       <dd class="govuk-summary-list__value">
@@ -122,7 +122,7 @@
           Change
         </a>
         <div class="case-detail__map__button">
-        <a href="#" class="govuk-button govuk-secondary lbh-button lbh-button--secondary">View on map</a>
+        <a href="#" class="nw-button nw-button--secondary">View on map</a>
         </div>
       </dd>
     </div>
@@ -200,7 +200,7 @@ var nw = nw || {};
 {% for complainant in case.all_complainants %}
 <li>
 
-<dl class="govuk-summary-list lbh-summary-list">
+<dl class="nw-summary-list">
     <div class="govuk-summary-list__row govuk-summary-list__row--lbh-grey-4">
         <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar.svg" class="icon-avatar" alt=""></dt>
         <dd class="govuk-summary-list__value">
