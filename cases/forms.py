@@ -94,13 +94,30 @@ class ActionForm(GDSForm, forms.ModelForm):
         model = Action
         fields = ["type", "notes"]
 
+    type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["type"].empty_label = None
-        self.fields["type"].widget = forms.RadioSelect()
-        self.fields["type"].required = True
+
+        action_types = ActionType.objects.order_by("name")
+        common = []
+        other = []
+        for typ in action_types:
+            if typ.common:
+                common.append(Choice(typ.id, typ))
+            else:
+                other.append(Choice(typ.id, typ))
+        if common:
+            common[-1].divider = "or"
+        self.fields["type"].choices = common + other
+
         self.fields["notes"].label = "Internal notes"
         self.fields["notes"].required = True
+
+    def clean_type(self):
+        type = self.cleaned_data["type"]
+        type = ActionType.objects.get(id=type)
+        return type
 
     def save(self, case):
         self.instance.case = case
