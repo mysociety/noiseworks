@@ -36,6 +36,10 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
+if env.str("BUGS_EMAIL", None):  # pragma: no cover
+    SERVER_EMAIL = env("BUGS_EMAIL")
+    ADMINS = (("mySociety bugs", env("BUGS_EMAIL")),)
+
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -220,8 +224,9 @@ COBRAND_SETTINGS = {
 
 # Sending messages
 
-EMAIL_HOST = "localhost"
-EMAIL_PORT = 1025
+EMAIL_HOST = env.str("EMAIL_HOST", "localhost")
+EMAIL_PORT = env.str("EMAIL_PORT", 1025)
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", "")
 
 NOTIFY_API_KEY = env.str("NOTIFY_API_KEY", None)
 NOTIFY_TEMPLATE_ID = env.str("NOTIFY_TEMPLATE_ID", None)
