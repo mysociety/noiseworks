@@ -6,7 +6,7 @@ from django.template import Context, Template
 from django.http import HttpRequest
 from accounts.models import User
 from .models import Case, Complaint, ActionType, Action
-from .forms import ReassignForm
+from .forms import ReassignForm, ActionForm
 
 pytestmark = pytest.mark.django_db
 
@@ -211,6 +211,11 @@ def test_log_view(admin_client, case_1, action_types):
     )
     response = admin_client.get(f"/cases?assigned=others")
     assertContains(response, "Letter sent")
+
+
+def test_log_form(case_1):
+    form = ActionForm(instance=case_1, data={"notes": "hmm"})
+    assert form.errors["type"] == ["This field is required."]
 
 
 def test_action_output(
