@@ -1,6 +1,6 @@
 from django import forms
 from accounts.models import User
-from .models import Case, Action
+from .models import Case, Action, ActionType
 from crispy_forms_gds.choices import Choice
 from noiseworks.forms import GDSForm
 
@@ -64,6 +64,27 @@ class ReassignForm(GDSForm, forms.ModelForm):
                 assigned_old=self.current_assigned,
                 assigned_new=self.instance.assigned,
             )
+
+
+class KindForm(GDSForm, forms.ModelForm):
+    """Update the kind of case"""
+
+    submit_text = "Update"
+
+    class Meta:
+        model = Case
+        fields = ["kind", "kind_other"]
+
+    kind = forms.ChoiceField(
+        label="Type",
+        widget=forms.RadioSelect,
+        choices=Case.KIND_CHOICES,
+    )
+
+    def save(self):
+        super().save()
+        typ, _ = ActionType.objects.get_or_create(name="Edit case")
+        Action.objects.create(case=self.instance, type=typ, notes="Updated type")
 
 
 class ActionForm(GDSForm, forms.ModelForm):

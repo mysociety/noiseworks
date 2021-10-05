@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+<div>
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel</a>
+</div>
+
+<p class="nw-tag--id">{{ case.id }}</p>
+
+{% error_summary form %}
+
+<fieldset class="govuk-fieldset lbh-fieldset">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--xl">
+        <h1 class="govuk-fieldset__heading">Change type</h1>
+    </legend>
+    {% crispy form %}
+</fieldset>
+
+<script>
+    document.querySelectorAll('input[name="kind"]').forEach(function(i) {
+        i.addEventListener('change', function(e) {
+            if (e.currentTarget.value == "other") {
+                document.getElementById('div_id_kind_other').style.display = 'block';
+            } else {
+                document.getElementById('div_id_kind_other').style.display = 'none';
+            }
+        });
+    });
+    var el = document.querySelector('input[name="kind"]:checked');
+    el.dispatchEvent(new Event('change'));
+</script>
+
+{% endblock %}
+

@@ -73,8 +73,8 @@ class Case(AbstractModel):
     ]
 
     # Type
-    kind = models.CharField(max_length=10, choices=KIND_CHOICES)
-    kind_other = models.CharField(max_length=100, blank=True)
+    kind = models.CharField("Type", max_length=10, choices=KIND_CHOICES)
+    kind_other = models.CharField("Other type", max_length=100, blank=True)
 
     # Location
     latitude = models.FloatField(blank=True, null=True)

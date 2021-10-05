@@ -22,7 +22,7 @@
         case #{{ action.case_id }}
     </span>
 {% elif action.type %}
-    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>,
     <!-- <span class="case-numbers">?</span> -->
     <span class="case-info">{{ action.type.name }}, case #{{ action.case_id }}</span>
 {% else %}

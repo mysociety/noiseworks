@@ -38,7 +38,7 @@
     <dt class="govuk-summary-list__key">Type</dt>
     <dd class="govuk-summary-list__value">{{ case.kind_display }}</dd>
     <dd class="govuk-summary-list__actions">
-      <a class="govuk-link" href="#">
+        <a class="govuk-link" href="{% url "case-edit-kind" case.id %}">
         Change<span class="govuk-visually-hidden"> type</span>
       </a>
     </dd>
