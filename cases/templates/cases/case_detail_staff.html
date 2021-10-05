@@ -255,7 +255,15 @@ var nw = nw || {};
               <span class="govuk-details__summary-text"> Complaint details </span>
             </summary>
             <div class="govuk-details__text">
-              Summary of complaint here?
+                {{ entry.complaint.happening_now|yesno:"Happening now,Not happening now" }},
+                {{ entry.complaint.happening_pattern|yesno:"to a pattern,not to a pattern" }}.
+                {% if entry.complaint.happening_pattern %}
+                    {{ entry.complaint.get_days_display|join:", " }};
+                    {{ entry.complaint.get_times_display|join:", " }}.
+                {% elif entry.complaint.happening_description %}
+                    {{ entry.complaint.happening_description }}.
+                {% endif %}
+                {{ entry.complaint.more_details }}
             </div>
           </details>
 
