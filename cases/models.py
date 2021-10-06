@@ -293,8 +293,17 @@ class Complaint(AbstractModel):
 
 
 class ActionType(models.Model):
+    VISIBILITY_CHOICES = [
+        ("public", "Public"),
+        ("staff", "Staff"),
+        ("internal", "Internal"),
+    ]
+
     name = models.CharField(max_length=100)
     common = models.BooleanField(default=False)
+    visibility = models.CharField(
+        max_length=10, choices=VISIBILITY_CHOICES, default="staff"
+    )
 
     def __str__(self):
         return self.name
