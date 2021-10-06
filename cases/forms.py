@@ -99,7 +99,9 @@ class ActionForm(GDSForm, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        action_types = ActionType.objects.order_by("name")
+        action_types = ActionType.objects.exclude(visibility="internal").order_by(
+            "name"
+        )
         common = []
         other = []
         for typ in action_types:
