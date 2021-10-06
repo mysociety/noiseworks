@@ -1,0 +1,23 @@
+[
+    {"model": "cases.actiontype", "pk": 1, "fields": {"name": "Contacted reporter", "common": true}},
+    {"model": "cases.actiontype", "pk": 2, "fields": {"name": "Contacted perpetrator", "common": false}},
+    {"model": "cases.actiontype", "pk": 3, "fields": {"name": "Noise abated", "common": false}},
+    {"model": "cases.actiontype", "pk": 4, "fields": {"name": "Noise machine installed", "common": false}},
+    {"model": "cases.actiontype", "pk": 5, "fields": {"name": "Noise machine results gathered", "common": false}},
+    {"model": "cases.actiontype", "pk": 6, "fields": {"name": "Sound test performed", "common": false}},
+    {"model": "cases.actiontype", "pk": 7, "fields": {"name": "Statutory nuisance witnessed", "common": true}},
+    {"model": "cases.actiontype", "pk": 8, "fields": {"name": "Advisory letter sent", "common": true}},
+    {"model": "cases.actiontype", "pk": 9, "fields": {"name": "Warning letter sent", "common": true}},
+    {"model": "cases.actiontype", "pk": 10, "fields": {"name": "Abatement Notice “Section 80” served", "common": true}},
+    {"model": "cases.actiontype", "pk": 11, "fields": {"name": "Breach of Abatement Notice", "common": false}},
+    {"model": "cases.actiontype", "pk": 12, "fields": {"name": "Community Protection Warning served", "common": false}},
+    {"model": "cases.actiontype", "pk": 13, "fields": {"name": "Community Protection Notice served", "common": false}},
+    {"model": "cases.actiontype", "pk": 14, "fields": {"name": "Breach of Community Protection Notice", "common": false}},
+    {"model": "cases.actiontype", "pk": 15, "fields": {"name": "Warrant application", "common": false}},
+    {"model": "cases.actiontype", "pk": 16, "fields": {"name": "Seizure of equipment", "common": false}},
+    {"model": "cases.actiontype", "pk": 17, "fields": {"name": "Prosecution", "common": false}},
+    {"model": "cases.actiontype", "pk": 18, "fields": {"name": "Member’s Enquiry / Mayor’s Enquiry received", "common": false}},
+    {"model": "cases.actiontype", "pk": 19, "fields": {"name": "Community Trigger received", "common": false}},
+    {"model": "cases.actiontype", "pk": 20, "fields": {"name": "Case referred to another partner (eg Police, Housing)", "common": false}},
+    {"model": "cases.actiontype", "pk": 21, "fields": {"name": "Case closed", "common": false}}
+]
