@@ -35,7 +35,15 @@
         </dl>
     </li>
 {% empty %}
-    <li><p>No cases yet.</p></li>
+  {% if filter.form.cleaned_data.assigned == "me" %}
+    <li>
+        <p>There are no cases assigned to you.</p>
+        <p><a href="{% url "cases" %}?assigned=none">Show unassigned cases</a>
+        <p><a href="{% url "cases" %}?assigned=">Show all cases</a>
+    </li>
+  {% else %}
+    <li><p>There are no cases to show.</p></li>
+  {% endif %}
 {% endfor %}
 </ul>
 
