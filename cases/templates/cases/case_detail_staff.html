@@ -219,7 +219,7 @@ var nw = nw || {};
           <p class="govuk-body">{{ complainant.email }}
             {% if complainant.email_verified %} (verified){% endif %}
         {% endif %}
-        <p class="govuk-body">{{ complainant.address }}</p>
+        <p class="govuk-body">{{ complainant.address_display }}</p>
           <p class="text-smaller">Available
             {% for time in complainant.get_best_time_display %}
             {% if not forloop.first %}{% if forloop.last %} or {% else %}, {% endif %}{% endif %}
