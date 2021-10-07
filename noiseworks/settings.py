@@ -22,8 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
+    ALLOWED_HOSTS=(list, []),
 )
-environ.Env.read_env(str(BASE_DIR / ".env"))
+environ.Env.read_env(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -35,7 +36,13 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = []
+if env.str("BUGS_EMAIL", None):  # pragma: no cover
+    SERVER_EMAIL = env("BUGS_EMAIL")
+    ADMINS = (("mySociety bugs", env("BUGS_EMAIL")),)
+
+ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INTERNAL_IPS = ["127.0.0.1"]
 
@@ -217,8 +224,9 @@ COBRAND_SETTINGS = {
 
 # Sending messages
 
-EMAIL_HOST = "localhost"
-EMAIL_PORT = 1025
+EMAIL_HOST = env.str("EMAIL_HOST", "localhost")
+EMAIL_PORT = env.str("EMAIL_PORT", 1025)
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", "")
 
 MAPIT_API_KEY = env.str("MAPIT_API_KEY", None)
 

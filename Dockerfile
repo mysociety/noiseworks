@@ -12,13 +12,13 @@ ENV PYTHONUNBUFFERED=1 \
 ENV PATH="$VENV_PATH/bin:$PATH"
 RUN pip install poetry==$POETRY_VERSION
 WORKDIR $PYSETUP_PATH
-COPY poetry.lock pyproject.toml .
+COPY poetry.lock pyproject.toml ./
 RUN poetry install --no-root
 
 FROM node:14-bullseye AS builder-node
 ENV NPMSETUP_PATH="/opt/npmsetup"
 WORKDIR $NPMSETUP_PATH
-COPY cobrand_hackney/package.json cobrand_hackney/package-lock.json .
+COPY cobrand_hackney/package.json cobrand_hackney/package-lock.json ./
 RUN npm install
 
 FROM python:3.9-slim
@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y \
     binutils gdal-bin libproj-dev git \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
-COPY --from=builder-node $NPMSETUP_PATH $NPMSETUP_PATH
 WORKDIR /app
+COPY --from=builder-node $NPMSETUP_PATH cobrand_hackney/
 COPY . .
 #RUN ./manage.py collectstatic --no-input
