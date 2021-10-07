@@ -25,8 +25,8 @@
                 <dd class="govuk-summary-list__value">{% if case.last_action %}
                     {{ case.last_action.created|timesince }} ago &ndash; {{ case.last_action|truncatewords:10 }}
                 {% else %}
-                    No actions
-                    {% endif %}</dd>
+                    {{ case.created|timesince }} ago &ndash; initial case submitted
+                {% endif %}</dd>
             </div>
             <div class="govuk-summary-list__row">
                 <dt class="govuk-summary-list__key">Assigned</dt>

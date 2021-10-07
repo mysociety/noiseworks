@@ -51,10 +51,12 @@
   {% if not case.merged_into %}
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Last action</dt>
-    <dd class="govuk-summary-list__value">
+    <dd class="govuk-summary-list__value">{% if case.last_action %}
         {{ case.last_action.created|timesince }} ago –
         {% include "cases/_case_action_summary.html" with action=case.last_action %}
-    </dd>
+    {% else %}
+        {{ case.created|timesince }} ago &ndash; initial case submitted
+    {% endif %}</dd>
     <dd class="govuk-summary-list__actions"></dd>
   </div>
   <div class="govuk-summary-list__row">
