@@ -29,7 +29,7 @@ requests-mock = "^1.9.3"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "noiseworks.settings"
-python_files = ["tests.py"]
+python_files = ["tests.py", "test_*.py"]
 filterwarnings = [
     "ignore:'[^']*' defines default_app_config = '[^']*'. Django now detects this configuration automatically. You can remove default_app_config.:PendingDeprecationWarning",
     "ignore::django.utils.deprecation.RemovedInDjango40Warning",

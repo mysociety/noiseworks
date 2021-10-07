@@ -5,7 +5,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.utils import timezone
-from cases.models import Case, Complaint
+from cases.models import Case, Complaint, Action, ActionType
+from noiseworks import cobrand
 from accounts.models import User
 
 
@@ -16,6 +17,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--number", type=int)
         parser.add_argument("--commit", action="store_true")
+        parser.add_argument("--fixed", action="store_true")
         parser.add_argument("--uprns", help="File containing list of UPRNs to use")
 
     def handle(self, *args, **options):
@@ -25,14 +27,20 @@ class Command(BaseCommand):
         N = options["number"]
         if not N:
             raise CommandError("Please specify a number of cases to create")
+        self.commit = options["commit"]
+        if options["fixed"]:  # pragma: no cover
+            random.seed(44)
 
-        field = Case._meta.get_field("created")
-        field.auto_now_add = False
-        field = Case._meta.get_field("modified")
-        field.auto_now = False
+        for model in (Case, Complaint, Action):
+            field = model._meta.get_field("created")
+            field.auto_now_add = False
+            field = model._meta.get_field("modified")
+            field.auto_now = False
+
+        self.set_up_staff_users()
 
         dates = []
-        date = timezone.now()
+        date = self.now = timezone.now()
         for i in range(N):
             dates.insert(0, date)
             date -= timedelta(minutes=random.randint(1, 360))
@@ -43,31 +51,36 @@ class Command(BaseCommand):
             case = Case(
                 kind=self._pick_kind(),
                 where=self._pick_where(),
+                created=dates[i],
+                modified=dates[i],
             )
             if case.where == "residence":
                 case.estate = self._pick_estate()
             if case.kind == "other":
                 case.kind_other = "Other type of noise"
 
-            case.created = dates[i]
-            case.modified = dates[i]
-
             if random.randint(0, 2) == 0:
                 # Location
-                case.latitude, case.longitude = self._pick_location()
+                case.latitude, case.longitude, case.ward = self._pick_location()
                 case.radius = self._pick_radius()
-                display = case.location_display
             else:
                 self._pick_uprn(case)
+
+            # Assign all cases created apart from most recent 10
+            if i < N - 10:
+                case.assigned = self.staff_for_ward[case.ward]
+
+            if options["commit"]:
+                case.save()
+
+            # Actions for the assignment, and others as well
+            self.add_actions(case, dates[i], i < N - 10, i < N - 20)
 
             complaints = self._num_complaints()
 
             self.stdout.write(
-                f"Creating case {case.kind}, {case.where}, {case.location_display}, with {complaints} occurrences"
+                f"Creating case #{case.id}, {case.kind}, {case.where}, {case.location_display}, with {complaints} occurrences"
             )
-
-            if options["commit"]:
-                case.save()
 
             if not user or random.randint(1, 4) != 1:
                 id += 1
@@ -84,6 +97,7 @@ class Command(BaseCommand):
                 if options["commit"]:
                     user.save()
 
+            complaint_date = dates[i]
             for c in range(complaints):
                 complaint = Complaint(
                     case=case,
@@ -91,7 +105,11 @@ class Command(BaseCommand):
                     happening_now=self._pick_happening_now(),
                     happening_pattern=self._pick_happening_pattern(),
                     more_details="",
+                    created=complaint_date,
+                    modified=complaint_date,
                 )
+                complaint_date += timedelta(minutes=random.randint(1, 10080))
+
                 if complaint.happening_pattern:
                     complaint.happening_days = self._pick_happening_days()
                     complaint.happening_times = self._pick_happening_times()
@@ -102,6 +120,13 @@ class Command(BaseCommand):
 
                 if options["commit"]:
                     complaint.save()
+
+        # Reinstate auto fields (in case called with call_command)
+        for model in (Case, Complaint, Action):
+            field = model._meta.get_field("created")
+            field.auto_now_add = True
+            field = model._meta.get_field("modified")
+            field.auto_now = True
 
     # Case
 
@@ -155,9 +180,13 @@ class Command(BaseCommand):
             if "error" in data.keys():
                 raise Exception("Error calling MapIt")
             if "2508" in data.keys():
-                return lat, lon
-            if random.randint(1, 99) == 1:
-                return lat, lon
+                ward = None
+                for area in data.values():
+                    if area["type"] == "LBW":
+                        ward = area["codes"]["gss"]
+                return lat, lon, ward
+            if random.randint(1, 99) == 1:  # pragma: no cover
+                return lat, lon, "outside"
 
     def _pick_radius(self):
         r = random.randint(1, 10)
@@ -225,6 +254,40 @@ class Command(BaseCommand):
 
     # User
 
+    def set_up_staff_users(self):
+        user = self.create(
+            User,
+            username=f"auto-staff-outside@noiseworks",
+            defaults={
+                "email": f"auto-staff-outside@noiseworks",
+                "first_name": "Staff User",
+                "last_name": f"Outside",
+                "email_verified": 1,
+                "is_staff": True,
+            },
+        )
+        staff_for_ward = {"outside": user}
+        wards = list(map(lambda x: x["gss"], cobrand.api.wards()))
+        wards.append(None)  # This is so if wards uneven, last is included
+        for pair in zip(wards[::2], wards[1::2]):
+            pair = list(filter(None, pair))
+            last_name = "".join(map(lambda x: x[-2:], pair))
+            user = self.create(
+                User,
+                username=f"auto-staff-{pair[0]}@noiseworks",
+                defaults={
+                    "email": f"auto-staff-{pair[0]}@noiseworks",
+                    "first_name": "Staff User",
+                    "last_name": last_name,
+                    "email_verified": 1,
+                    "wards": pair,
+                    "is_staff": True,
+                },
+            )
+            for ward in pair:
+                staff_for_ward[ward] = user
+        self.staff_for_ward = staff_for_ward
+
     def _pick_best_method(self):
         if random.randint(1, 2) == 1:
             return "email"
@@ -257,15 +320,47 @@ class Command(BaseCommand):
             else:
                 del user.__dict__["address_display"]  # Not get stuck in cached loop
 
+    # Actions
+
+    def add_actions(self, case, date, one_action, two_actions):
+        if one_action:
+            action_date = date + timedelta(hours=random.randint(1, 4))
+            self.create_action(case, action_date, assigned=case.assigned)
+            action_date += timedelta(hours=random.randint(1, 4))
+            type = ActionType.objects.get(name="Contacted reporter")
+            self.create_action(case, action_date, type=type)
+        if two_actions:
+            action_date += timedelta(hours=random.randint(24, 168))
+            type = ActionType.objects.exclude(
+                name__in=("Contacted reporter", "Edit case")
+            ).order_by("?")[0]
+            self.create_action(case, action_date, type=type)
+
+    def create_action(self, case, date, type=None, assigned=None):
+        if date > self.now:
+            date = self.now
+        action = Action(
+            case=case, created_by=case.assigned, created=date, modified=date
+        )
+        if type:
+            action.type = type
+            action.notes = "Internal notes about this action would be here"
+        else:
+            action.assigned_new = assigned
+        if self.commit:
+            action.save()
+
+    # Helpers
+
     @property
     def uprns(self):
         return self._uprns
 
     def load_uprns(self, uprns_file=None):
         uprns = []
-        with open(uprns_file) as f:
-            for line in f:
-                uprns.append(int(line))
+        f = hasattr(uprns_file, "read") and uprns_file or open(uprns_file)
+        for line in f:
+            uprns.append(int(line))
         self._uprns = uprns
 
     def _mapit_call(self, e, n):
@@ -274,3 +369,10 @@ class Command(BaseCommand):
             f"https://mapit.mysociety.org/point/27700/{e},{n}?api_key={key}"
         ).json()
         return d
+
+    def create(self, model, defaults=None, **kwargs):
+        if self.commit:
+            obj, _ = model.objects.get_or_create(**kwargs, defaults=defaults)
+        else:
+            obj = model(**kwargs, **defaults)
+        return obj
