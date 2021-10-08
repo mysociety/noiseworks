@@ -127,6 +127,12 @@ class Case(AbstractModel):
         else:
             return "Unknown location"
 
+    def get_ward_display(self):
+        wards = cobrand.api.wards()
+        wards = {ward["gss"]: ward["name"] for ward in wards}
+        wards["outside"] = "Outside Hackney"
+        return wards.get(self.ward, self.ward)
+
     def merge_into(self, other):
         Action.objects.create(case_old=self, case=other)
 

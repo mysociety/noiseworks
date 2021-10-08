@@ -92,14 +92,7 @@
 <dl class="nw-summary-list">
     <div class="govuk-summary-list__row">
       <dt class="govuk-summary-list__key">Address</dt>
-      <dd class="govuk-summary-list__value">
-      <p class="govuk-body">{{ case.location_display }}
-<p>House or shop? {{ case.get_where_display }}
-{% if case.where == 'residence' %}
-<p>Hackney Estate? {{ case.get_estate_display }}
-{% endif %}
-</p>
-        <p class="text-smaller">{{ case.ward }} ward</p>
+      <dd class="govuk-summary-list__value">{{ case.location_display }}
 
 <div class="case-detail__map__overlay">
     <div aria-modal="true" role="dialog" tabindex="-1" aria-label="Case location" class="lbh-dialog">
@@ -127,6 +120,23 @@
         <a href="#" class="nw-button nw-button--secondary">View on map</a>
         </div>
       </dd>
+    </div>
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">House or shop?</dt>
+      <dd class="govuk-summary-list__value">{{ case.get_where_display }}</dd>
+      <dd class="govuk-summary-list__actions"></dd>
+    </div>
+  {% if case.where == 'residence' %}
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">Hackney Estate?</dt>
+      <dd class="govuk-summary-list__value">{{ case.get_estate_display }}</dd>
+      <dd class="govuk-summary-list__actions"></dd>
+    </div>
+  {% endif %}
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">Ward</dt>
+      <dd class="govuk-summary-list__value"><a href="{% url "cases" %}?assigned=&amp;ward={{ case.ward }}">{{ case.get_ward_display }}</a></dd>
+      <dd class="govuk-summary-list__actions"></dd>
     </div>
 
 <script>
