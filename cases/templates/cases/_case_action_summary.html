@@ -1,28 +1,28 @@
 {% if action.assigned_old and action.assigned_new %}
-    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="nw-link--no-visited-state">{{ action.created_by }}</a>
     <span class="case-info">reassigned case #{{ case.id }} from</span>
-    <a href="{% url "cases" %}?assigned={{ action.assigned_old.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_old }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.assigned_old.id }}" class="nw-link--no-visited-state">{{ action.assigned_old }}</a>
     <span class="case-info">to</span>
-    <a href="{% url "cases" %}?assigned={{ action.assigned_new.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_new }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.assigned_new.id }}" class="nw-link--no-visited-state">{{ action.assigned_new }}</a>
 {% elif action.assigned_new %}
-    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="nw-link--no-visited-state">{{ action.created_by }}</a>
     <!-- <span class="case-numbers">?</span> -->
     <span class="case-info">assigned case #{{ case.id }} to</span>
-    <a href="{% url "cases" %}?assigned={{ action.assigned_new.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_new }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.assigned_new.id }}" class="nw-link--no-visited-state">{{ action.assigned_new }}</a>
     <!-- <span class="case-numbers">?</span> -->
 {% elif action.assigned_old %}
-    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="nw-link--no-visited-state">{{ action.created_by }}</a>
     <span class="case-info">unassigned</span>
-    <a href="{% url "cases" %}?assigned={{ action.assigned_old.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.assigned_old }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.assigned_old.id }}" class="nw-link--no-visited-state">{{ action.assigned_old }}</a>
     <span class="case-info">from case #{{ case.id }}</span>
 {% elif action.case_old %}
-    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="nw-link--no-visited-state">{{ action.created_by }}</a>
     <!-- <span class="case-numbers">?</span> -->
     <span class="case-info">merged case #{{ action.case_old_id }} into
         case #{{ action.case_id }}
     </span>
 {% elif action.type %}
-    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="lbh-link lbh-link--no-visited-state">{{ action.created_by }}</a>,
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="nw-link--no-visited-state">{{ action.created_by }}</a>,
     <!-- <span class="case-numbers">?</span> -->
     <span class="case-info">{{ action.type.name }}, case #{{ action.case_id }}</span>
 {% else %}

@@ -38,7 +38,7 @@
     <dt class="govuk-summary-list__key">Type</dt>
     <dd class="govuk-summary-list__value">{{ case.kind_display }}</dd>
     <dd class="govuk-summary-list__actions">
-        <a class="govuk-link" href="{% url "case-edit-kind" case.id %}">
+        <a class="nw-link--no-visited-state" href="{% url "case-edit-kind" case.id %}">
         Change<span class="govuk-visually-hidden"> type</span>
       </a>
     </dd>
@@ -63,13 +63,13 @@
     <dt class="govuk-summary-list__key">Assigned</dt>
     <dd class="govuk-summary-list__value">
       {% if case.assigned %}
-        <a href="{% url "cases" %}?assigned={{ case.assigned.id }}" class="lbh-link lbh-link--no-visited-state">{{ case.assigned }}</a>
+        <a href="{% url "cases" %}?assigned={{ case.assigned.id }}" class="nw-link--no-visited-state">{{ case.assigned }}</a>
       {% else %}
         {{ case.assigned }}
       {% endif %}
     </dd>
     <dd class="govuk-summary-list__actions">
-    <a class="govuk-link nw-link--no-visited-state" href="{% url "case-reassign" case.id %}">
+    <a class="nw-link--no-visited-state" href="{% url "case-reassign" case.id %}">
         Change<span class="govuk-visually-hidden"> assignment</span>
       </a>
     </dd>
@@ -186,7 +186,7 @@ var nw = nw || {};
     <div class="govuk-summary-list__row govuk-summary-list__row--warning">
         <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar-warning.svg" class="icon-avatar-warning" alt=""></dt>
         <dd class="govuk-summary-list__value">
-          <p class="govuk-body"><a href="#" class="lbh-link lbh-link--no-visited-state">Walter White (4 cases)</a> </p>
+          <p class="govuk-body">Walter White (4 cases)</p>
           <p class="govuk-body">07700 900123</p>
           <p class="text-smaller">(No email address)</p>
           <p class="govuk-body">Flat 5</p>
@@ -216,7 +216,7 @@ var nw = nw || {};
     <div class="govuk-summary-list__row govuk-summary-list__row--lbh-grey-4">
         <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar.svg" class="icon-avatar" alt=""></dt>
         <dd class="govuk-summary-list__value">
-          <p class="govuk-body"><a href="#" class="lbh-link lbh-link--no-visited-state">{{ complainant }}</a>
+          <p class="govuk-body">{{ complainant }}
             {% blocktranslate count counter=complainant.num_cases with cases=complainant.num_cases trimmed %}
             ({{ cases }} case)
             {% plural %}
