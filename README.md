@@ -49,6 +49,20 @@ with Docker, `script/server` will remove stopped containers, remove the
 `docker-compose up` which creates database and web containers, with the web
 container running migrate and the Django development server.
 
+If there has been a change to a Python or Node package since your local Docker
+image was last built, you’ll need to rebuild the image:
+
+    docker-compose build
+    script/server  # Outside docker
+
+### Adding fake data
+
+1. Get hold of a text file of UPRNs, one UPRN per line.
+
+2. Ensure you have a `MAPIT_API_KEY` in your `.env` file.
+
+3. Run `./manage.py add_random_cases --uprns UPRN_FILE --number 100 --commit`
+
 ### Tests
 
 * `script/test` or `script/test --coverage` to run the tests (100% coverage at present).
