@@ -13,6 +13,7 @@ class FilterForm(GDSForm, forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.form_method = "GET"
+        self.helper.checkboxes_small = True
 
 
 class ReassignForm(GDSForm, forms.ModelForm):
