@@ -225,3 +225,14 @@ ul.case-list-user li {
         padding-bottom: 0.3rem;
     }
 }
+
+// Fix uneven space around first and last pagination numbers.
+.lbh-pagination__item {
+    &:first-of-type a {
+        padding: 0 5px 0 0;
+    }
+
+    &:last-of-type a {
+        padding: 0 0 0 5px;
+    }
+}
