@@ -179,7 +179,8 @@ TIME_ZONE = "Europe/London"
 
 USE_I18N = True
 
-USE_L10N = True
+USE_L10N = False
+DATETIME_FORMAT = "D, j M Y, P"
 
 USE_TZ = True
 

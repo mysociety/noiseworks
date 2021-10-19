@@ -45,17 +45,17 @@
   </div>
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Created</dt>
-    <dd class="govuk-summary-list__value">{{ case.created|timesince }} ago</dd>
+    <dd class="govuk-summary-list__value">{{ case.created }}</dd>
     <dd class="govuk-summary-list__actions"></dd>
   </div>
   {% if not case.merged_into %}
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Last action</dt>
     <dd class="govuk-summary-list__value">{% if case.last_action %}
-        {{ case.last_action.created|timesince }} ago –
+        {{ case.last_action.created }} –
         {% include "cases/_case_action_summary.html" with action=case.last_action %}
     {% else %}
-        {{ case.created|timesince }} ago &ndash; initial case submitted
+        {{ case.created }} &ndash; initial case submitted
     {% endif %}</dd>
     <dd class="govuk-summary-list__actions"></dd>
   </div>
