@@ -22,6 +22,7 @@ class CaseFilter(django_filters.FilterSet):
         ],
         method="assigned_filter",
     )
+    uprn = django_filters.CharFilter()
     ward = django_filters.MultipleChoiceFilter(
         choices=list(get_wards().items()),
         label="Area",
@@ -56,6 +57,9 @@ class CaseFilter(django_filters.FilterSet):
             self.filters["assigned"].extra["choices"].append((user.id, user))
         except (User.DoesNotExist, ValueError):
             pass
+        uprn = data.get("uprn")
+        if not uprn:
+            self.filters["uprn"].extra["widget"] = forms.HiddenInput
 
     def assigned_filter(self, queryset, name, value):
         if value == "me":
