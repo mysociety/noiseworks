@@ -217,6 +217,16 @@ ul.case-list-user li {
 }
 
 .case-filters {
+    margin-top: 1rem;
+
+    @include govuk-media-query($from: tablet) {
+        padding-right: 1rem;
+    }
+
+    @include govuk-media-query($from: desktop) {
+        padding-right: 2rem;
+    }
+
     .lbh-select {
         width: 100%;
     }
