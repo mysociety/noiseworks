@@ -208,6 +208,17 @@ ul.case-list-user li {
     }
 }
 
+.nw-case-list__empty {
+    border-bottom: solid 2px #ccc;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+    text-align: center;
+
+    p + p {
+        margin-top: 1em;
+    }
+}
+
 .case-list__title {
     display: block;
     margin-top: 0.5rem;
