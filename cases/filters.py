@@ -34,7 +34,7 @@ class CaseFilter(django_filters.FilterSet):
     class Meta:
         model = Case
         form = FilterForm
-        fields = ["kind"]
+        fields = ["kind", "where", "estate"]
 
     def __init__(self, data, *args, **kwargs):
         data = data.copy()
@@ -52,6 +52,8 @@ class CaseFilter(django_filters.FilterSet):
         data.setdefault("assigned", "me")
         super().__init__(data, *args, **kwargs)
         self.filters["kind"].label = "Noise type"
+        self.filters["where"].label = "Noise location type"
+        self.filters["estate"].label = "Hackney Estates property?"
         try:
             user = User.objects.get(id=data["assigned"])
             self.filters["assigned"].extra["choices"].append((user.id, user))
