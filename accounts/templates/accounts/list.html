@@ -4,7 +4,7 @@
 
 <h1>Staff users</h1>
 
-<ul class="govuk-list lbh-list">
+<ul class="nw-list">
 {% for user in users %}
 <li><a href="{% url "accounts:edit" user.id %}" class="nw-link--no-visited-state">{{ user }}</a>
 {% endfor %}

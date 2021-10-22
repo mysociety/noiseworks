@@ -172,11 +172,25 @@ def merge_start(request, case):
         "name": f"#{case.id}",
     }
 
+    cases_same_uprn = Case.objects.filter(uprn=case.uprn).exclude(id=case.id)
+    print(cases_same_uprn)
+    # TODO Umm, why have I done this.
+    # This approximates a 500m-sided square centred on the case
+    cases_nearby = Case.objects.filter(
+        latitude__gte=case.latitude - 1 / 1112.59 * 2.5,
+        latitude__lte=case.latitude + 1 / 1112.59 * 2.5,
+        longitude__gte=case.longitude - 1 / 693.61 * 2.5,
+        longitude__lte=case.longitude + 1 / 693.61 * 2.5,
+    ).exclude(id=case.id)
+    print(cases_nearby)
+
     return render(
         request,
         "cases/merged_start.html",
         {
             "case": case,
+            "cases_same_uprn": cases_same_uprn,
+            "cases_nearby": cases_nearby,
         },
     )
 

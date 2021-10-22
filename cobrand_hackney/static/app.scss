@@ -4,6 +4,14 @@ $lbh-asset-path: "/static/hackney";
 
 @import "node_modules/lbh-frontend/lbh/all";
 
+.nw-list {
+    @extend .govuk-list;
+    @extend .lbh-list;
+}
+.nw-list--bullet {
+    @extend .govuk-list--bullet;
+    @extend .lbh-list--bullet;
+}
 .nw-summary-list {
     @extend .govuk-summary-list;
     @extend .lbh-summary-list;

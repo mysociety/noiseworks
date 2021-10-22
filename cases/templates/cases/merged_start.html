@@ -14,4 +14,24 @@ please now visit the case you wish to merge
 this case into and
 and <strong>click the button</strong> that will have appeared there.</p>
 
+<p><a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">Show all cases</a></p>
+
+{% if case.uprn and cases_same_uprn %}
+<h2>Other cases at the same property</h2>
+<ul class="nw-list nw-list--bullet">
+{% for case in cases_same_uprn %}
+<li><a href="{% url "case-view" case.id %}">{{ case.kind_display }} at {{ case.location_display }}</a>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if cases_nearby %}
+<h2>Nearby cases</h2>
+<ul class="nw-list nw-list--bullet">
+{% for case in cases_nearby %}
+<li><a href="{% url "case-view" case.id %}">{{ case.kind_display }} at {{ case.location_display }}</a>
+{% endfor %}
+</ul>
+{% endif %}
+
 {% endblock %}
