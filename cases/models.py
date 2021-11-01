@@ -1,4 +1,5 @@
-from django.db import models
+from django.contrib.gis.db import models
+from django.contrib.gis.geos import Point
 from django.db.models import Q, Count
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
@@ -77,8 +78,7 @@ class Case(AbstractModel):
     kind_other = models.CharField("Other type", max_length=100, blank=True)
 
     # Location
-    latitude = models.FloatField(blank=True, null=True)
-    longitude = models.FloatField(blank=True, null=True)
+    point = models.PointField(blank=True, null=True, srid=27700)
     radius = models.IntegerField(blank=True, null=True)
     uprn = models.CharField(max_length=20, blank=True)
     uprn_cache = models.CharField(max_length=200, blank=True)
@@ -117,15 +117,19 @@ class Case(AbstractModel):
             addr = cobrand.api.address_for_uprn(self.uprn)
             if addr["string"]:
                 self.uprn_cache = addr["string"]
-                self.latitude = addr["latitude"]
-                self.longitude = addr["longitude"]
+                self.point = Point(addr["longitude"], addr["latitude"], srid=4326)
                 self.ward = ward_name_to_id(addr["ward"])
                 self.save()
             return addr["string"] or self.uprn
-        elif self.latitude:
-            return f"{self.radius}m around ({self.latitude},{self.longitude})"
+        elif self.point:
+            return f"{self.radius}m around ({self.point.x:.0f},{self.point.y:.0f})"
         else:
             return "Unknown location"
+
+    @property
+    def point_as_latlon_string(self):
+        p = self.point.transform(4326, clone=True)
+        return f"{p[1]:.6f},{p[0]:.6f}"
 
     def get_ward_display(self):
         wards = cobrand.api.wards()

@@ -61,7 +61,7 @@ class Command(BaseCommand):
 
             if random.randint(0, 2) == 0:
                 # Location
-                case.latitude, case.longitude, case.ward = self._pick_location()
+                case.point, case.ward = self._pick_location()
                 case.radius = self._pick_radius()
             else:
                 self._pick_uprn(case)
@@ -174,8 +174,7 @@ class Command(BaseCommand):
         while True:
             e = random.randint(531480, 537642)
             n = random.randint(181839, 188327)
-            p = Point(e, n, srid=27700).transform(4326, clone=True)
-            lat, lon = round(p[1], 6), round(p[0], 6)
+            p = Point(e, n, srid=27700)
             data = self._mapit_call(e, n)
             if "error" in data.keys():
                 raise Exception("Error calling MapIt")
@@ -184,9 +183,9 @@ class Command(BaseCommand):
                 for area in data.values():
                     if area["type"] == "LBW":
                         ward = area["codes"]["gss"]
-                return lat, lon, ward
+                return p, ward
             if random.randint(1, 99) == 1:  # pragma: no cover
-                return lat, lon, "outside"
+                return p, "outside"
 
     def _pick_radius(self):
         r = random.randint(1, 10)

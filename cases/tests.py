@@ -2,6 +2,7 @@ import re
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
+from django.contrib.gis.geos import Point
 from django.template import Context, Template
 from django.http import HttpRequest
 from accounts.models import User
@@ -55,7 +56,7 @@ def case_1(db, staff_user_1, normal_user):
 
 @pytest.fixture
 def case_location(db):
-    return Case.objects.create(kind="diy", latitude=51, longitude=-1, radius=100)
+    return Case.objects.create(kind="diy", point=Point(470267, 122766), radius=100)
 
 
 @pytest.fixture

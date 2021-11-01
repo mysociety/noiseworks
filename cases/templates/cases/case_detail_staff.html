@@ -144,10 +144,11 @@
       <dd class="govuk-summary-list__actions"></dd>
     </div>
 
+{% if case.point %}
 <script>
 var nw = nw || {};
 (function(){
-    var point = new L.LatLng({{ case.latitude|floatformat:-6 }}, {{ case.longitude|floatformat:-6 }});
+    var point = new L.LatLng({{ case.point_as_latlon_string }});
     var map = nw.map = new L.Map("leaflet", {
         center: point,
         zoom: 17
@@ -186,6 +187,7 @@ var nw = nw || {};
 
 })();
 </script>
+{% endif %}
 
 <!--
     <div class="govuk-summary-list__row govuk-summary-list__row--warning">

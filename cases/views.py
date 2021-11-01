@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.gis.measure import D
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
@@ -173,16 +174,9 @@ def merge_start(request, case):
     }
 
     cases_same_uprn = Case.objects.filter(uprn=case.uprn).exclude(id=case.id)
-    print(cases_same_uprn)
-    # TODO Umm, why have I done this.
-    # This approximates a 500m-sided square centred on the case
-    cases_nearby = Case.objects.filter(
-        latitude__gte=case.latitude - 1 / 1112.59 * 2.5,
-        latitude__lte=case.latitude + 1 / 1112.59 * 2.5,
-        longitude__gte=case.longitude - 1 / 693.61 * 2.5,
-        longitude__lte=case.longitude + 1 / 693.61 * 2.5,
-    ).exclude(id=case.id)
-    print(cases_nearby)
+    cases_nearby = Case.objects.filter(point__dwithin=(case.point, D(m=500))).exclude(
+        id=case.id
+    )
 
     return render(
         request,
