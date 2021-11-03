@@ -63,6 +63,7 @@ class Command(BaseCommand):
                 # Location
                 case.point, case.ward = self._pick_location()
                 case.radius = self._pick_radius()
+                display = case.location_display
             else:
                 self._pick_uprn(case)
 
@@ -134,7 +135,7 @@ class Command(BaseCommand):
         while True:
             case.uprn = random.choice(self.uprns)
             display = case.location_display
-            if case.uprn_cache:
+            if case.location_cache:
                 break
             else:
                 del case.__dict__["location_display"]  # Not get stuck in cached loop

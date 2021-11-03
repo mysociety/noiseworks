@@ -15,6 +15,9 @@
 <fieldset class="govuk-fieldset lbh-fieldset">
     <legend class="govuk-fieldset__legend govuk-fieldset__legend--xl">
         <h1 class="govuk-fieldset__heading">Change location</h1>
+        <p>{{ case.location_display }}
+        {% if case.uprn %}({{ case.uprn }}){% endif %}
+        </p>
     </legend>
 <div class="case-detail__map" id="map"><div id="leaflet"></div></div>
 
@@ -30,8 +33,6 @@
   </ul>
   <section class="govuk-tabs__panel{% if not case.uprn and not form.addresses.errors and not form.postcode.errors %} govuk-tabs__panel--hidden{% endif %}" id="property">
     <h2 class="lbh-heading-h2">Property</h2>
-
-{% if case.uprn %}<p>{{ case.uprn_cache }} ({{ case.uprn }})</p>{% endif %}
 
 {{ form.postcode|as_crispy_field }}
 {% if form.addresses.errors %}

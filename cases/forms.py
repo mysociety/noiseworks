@@ -176,11 +176,11 @@ class LocationForm(LogActionMixin, GDSForm, forms.ModelForm):
         if self.cleaned_data.get("addresses"):
             self.cleaned_data["radius"] = None
             self.cleaned_data["uprn"] = self.cleaned_data["addresses"]
-            self.instance.uprn_cache = ""
+            self.instance.location_cache = ""
             del self.cleaned_data["addresses"]
         if self.cleaned_data.get("radius"):
             self.cleaned_data["uprn"] = ""
-            self.instance.uprn_cache = ""
+            self.instance.location_cache = ""
         return self.cleaned_data
 
     def clean_addresses(self):

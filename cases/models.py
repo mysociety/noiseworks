@@ -81,7 +81,7 @@ class Case(AbstractModel):
     point = models.PointField(blank=True, null=True, srid=27700)
     radius = models.IntegerField(blank=True, null=True)
     uprn = models.CharField(max_length=20, blank=True)
-    uprn_cache = models.CharField(max_length=200, blank=True)
+    location_cache = models.CharField(max_length=200, blank=True)
     ward = models.CharField(max_length=9, blank=True)
     where = models.CharField(max_length=9, choices=WHERE_CHOICES)
     estate = models.CharField(max_length=1, choices=ESTATE_CHOICES, blank=True)
@@ -111,17 +111,18 @@ class Case(AbstractModel):
 
     @cached_property
     def location_display(self):
-        if self.uprn_cache:
-            return self.uprn_cache
+        if self.location_cache:
+            return self.location_cache
         elif self.uprn:
             addr = cobrand.api.address_for_uprn(self.uprn)
             if addr["string"]:
-                self.uprn_cache = addr["string"]
+                self.location_cache = addr["string"]
                 self.point = Point(addr["longitude"], addr["latitude"], srid=4326)
                 self.ward = ward_name_to_id(addr["ward"])
                 self.save()
             return addr["string"] or self.uprn
         elif self.point:
+            # Look up description of point here, store in location_cache
             return f"{self.radius}m around ({self.point.x:.0f},{self.point.y:.0f})"
         else:
             return "Unknown location"
