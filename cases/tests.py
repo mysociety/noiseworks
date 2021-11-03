@@ -309,8 +309,3 @@ def test_param_replace():
     template = Template("{% load page_filter %}{% param_replace page=123 delete='' %}")
     rendered_template = template.render(context)
     assert rendered_template == "param=value&amp;page=123"
-
-
-def test_edit_kind(admin_client, case_1):
-    admin_client.get(f"/cases/{case_1.id}/edit-kind")
-    admin_client.post(f"/cases/{case_1.id}/edit-kind", {"kind": "music"})

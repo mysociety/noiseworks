@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+<div>
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel</a>
+</div>
+
+<p class="nw-tag--id">{{ case.id }}</p>
+
+{% error_summary form %}
+
+<form method="post">{% csrf_token %}
+<fieldset class="govuk-fieldset lbh-fieldset">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--xl">
+        <h1 class="govuk-fieldset__heading">Change location</h1>
+    </legend>
+<div class="case-detail__map" id="map"><div id="leaflet"></div></div>
+
+<div class="govuk-tabs lbh-tabs" data-module="govuk-tabs">
+  <h2 class="govuk-tabs__title">Contents</h2>
+  <ul class="govuk-tabs__list">
+    <li class="govuk-tabs__list-item{% if case.uprn or form.addresses.errors or form.postcode.errors %} govuk-tabs__list-item--selected{% endif %}">
+      <a class="govuk-tabs__tab" href="#property">Property</a>
+    </li>
+    <li class="govuk-tabs__list-item{% if not case.uprn and not form.addresses.errors and not form.postcode.errors %} govuk-tabs__list-item--selected{% endif %}">
+      <a class="govuk-tabs__tab" href="#circle">Circle</a>
+    </li>
+  </ul>
+  <section class="govuk-tabs__panel{% if not case.uprn and not form.addresses.errors and not form.postcode.errors %} govuk-tabs__panel--hidden{% endif %}" id="property">
+    <h2 class="lbh-heading-h2">Property</h2>
+
+{% if case.uprn %}<p>{{ case.uprn_cache }} ({{ case.uprn }})</p>{% endif %}
+
+{{ form.postcode|as_crispy_field }}
+{% if form.addresses.errors %}
+{{ form.addresses|as_crispy_field }}
+{% endif %}
+{{ form.uprn|as_crispy_field }}
+  </section>
+  <section class="govuk-tabs__panel{% if case.uprn or form.addresses.errors or form.postcode.errors %} govuk-tabs__panel--hidden{% endif %}" id="circle">
+    <h2 class="lbh-heading-h2">Circle</h2>
+{{ form.point|as_crispy_field }}
+{{ form.radius|as_crispy_field }}
+  </section>
+</div>
+{{ form.where|as_crispy_field }}
+{{ form.estate|as_crispy_field }}
+
+<input class="nw-button" type="submit" value="Update">
+
+</fieldset>
+</form>
+
+<script>
+var nw = nw || {};
+document.querySelectorAll('.govuk-tabs__tab').forEach(function(tab) {
+    tab.addEventListener('click', function(e) {
+        e.preventDefault();
+        var href = tab.getAttribute('href'); // not .href
+        var id = href.substring(1);
+        document.querySelectorAll('.govuk-tabs__tab').forEach(function(t) {
+            if (t.getAttribute('href') == href) {
+                t.parentNode.classList.add('govuk-tabs__list-item--selected');
+            } else {
+                t.parentNode.classList.remove('govuk-tabs__list-item--selected');
+            }
+        });
+        document.querySelectorAll('.govuk-tabs__panel').forEach(function(p) {
+            if (p.id == id) {
+                p.classList.remove('govuk-tabs__panel--hidden');
+            } else {
+                p.classList.add('govuk-tabs__panel--hidden');
+            }
+        });
+        nw.react();
+    });
+});
+
+(function(){
+    var point = new L.LatLng({{ case.point_as_latlon_string }});
+    var map = nw.map = new L.Map("leaflet", {
+        center: point,
+        zoom: 17
+    });
+    map.zoomControl.setPosition('topright');
+    map.attributionControl.setPrefix('');
+
+    var layer;
+    if (nw.MAP_TYPE === 'osm') {
+        layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        });
+    } else {
+        layer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            tileSize: 512,
+            maxZoom: 19,
+            zoomOffset: -1,
+            id: 'mapbox/streets-v11',
+            accessToken: 'pk.eyJ1IjoibGJoZWxld2lzIiwiYSI6ImNqeXJkN25uNjA5M3Uzb251bWVyejJ3YW8ifQ.uzO8I54w64U6QkNknW32FA'
+        });
+    }
+    layer.addTo(map);
+
+    map.on('click', function(e) {
+        //marker.setLatLng(e.latlng);
+        circle.setLatLng(e.latlng);
+    });
+
+    var mapIcon = L.icon({
+      iconUrl: "/static/hackney/images/contact/map-marker.svg",
+      iconSize: [48, 48],
+      iconAnchor: [24, 48]
+    });
+    var marker = L.marker(point, { icon: mapIcon, draggable: false });
+    var circle = L.circle(point, { radius: {{ case.radius|default:0 }}, color: '#00664f' });
+    circle.on('move', function(e) {
+        e.latlng.lng;
+        e.latlng.lat;
+        document.getElementById('id_point').value = '{"type":"Point","coordinates":[' + e.latlng.lng + ',' + e.latlng.lat + ']}';
+    });
+
+    var radius = document.getElementById('id_radius');
+
+    nw.react = function() {
+        var tab = document.querySelector('.govuk-tabs__list-item--selected a').getAttribute('href');
+
+        if (tab === '#circle' && radius.value) {
+            circle.setRadius(radius.value);
+            map.removeLayer(marker);
+            map.addLayer(circle);
+            map.fitBounds(circle.getBounds());
+        } else {
+            map.removeLayer(circle);
+            map.addLayer(marker);
+            map.panTo(marker.getLatLng());
+        }
+    };
+    nw.react();
+
+    radius.addEventListener('change', nw.react);
+
+})();
+</script>
+
+
+{% endblock %}
+

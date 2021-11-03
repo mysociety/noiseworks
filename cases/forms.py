@@ -1,8 +1,20 @@
+import re
 from django import forms
+from django.core.exceptions import ValidationError
 from accounts.models import User
 from .models import Case, Action, ActionType
 from crispy_forms_gds.choices import Choice
+from noiseworks import cobrand
 from noiseworks.forms import GDSForm
+
+
+class LogActionMixin:
+    def save(self):
+        super().save()
+        typ, _ = ActionType.objects.get_or_create(
+            name="Edit case", defaults={"visibility": "internal"}
+        )
+        Action.objects.create(case=self.instance, type=typ, notes=self.log_note)
 
 
 class FilterForm(GDSForm, forms.Form):
@@ -67,10 +79,11 @@ class ReassignForm(GDSForm, forms.ModelForm):
             )
 
 
-class KindForm(GDSForm, forms.ModelForm):
+class KindForm(LogActionMixin, GDSForm, forms.ModelForm):
     """Update the kind of case"""
 
     submit_text = "Update"
+    log_note = "Updated type"
 
     class Meta:
         model = Case
@@ -81,11 +94,6 @@ class KindForm(GDSForm, forms.ModelForm):
         widget=forms.RadioSelect,
         choices=Case.KIND_CHOICES,
     )
-
-    def save(self):
-        super().save()
-        typ, _ = ActionType.objects.get_or_create(name="Edit case")
-        Action.objects.create(case=self.instance, type=typ, notes="Updated type")
 
 
 class ActionForm(GDSForm, forms.ModelForm):
@@ -125,3 +133,74 @@ class ActionForm(GDSForm, forms.ModelForm):
     def save(self, case):
         self.instance.case = case
         super().save()
+
+
+class LocationForm(LogActionMixin, GDSForm, forms.ModelForm):
+    """Update the location of case"""
+
+    submit_text = "Update"
+    log_note = "Updated location"
+
+    radius = forms.TypedChoiceField(
+        coerce=int,
+        required=False,
+        empty_value=None,
+        choices=(
+            ("", "----"),
+            (30, "Small (100ft / 30m)"),
+            (180, "Medium (200yd / 180m)"),
+            (800, "Large (half a mile / 800m)"),
+        ),
+    )
+
+    postcode = forms.CharField(max_length=8, required=False)
+    addresses = forms.ChoiceField(
+        required=False, widget=forms.RadioSelect, label="Address"
+    )
+
+    class Meta:
+        model = Case
+        fields = ["point", "radius", "uprn", "where", "estate"]
+        widgets = {"point": forms.HiddenInput, "uprn": forms.HiddenInput}
+
+    def address_choices(self, pc):
+        addresses = cobrand.api.addresses_for_postcode(pc)
+        if "error" in addresses:
+            raise ValidationError("We could not recognise that postcode")
+        choices = []
+        for addr in addresses["addresses"]:
+            choices.append((addr["value"], addr["label"]))
+        return choices
+
+    def clean(self):
+        if self.cleaned_data.get("addresses"):
+            self.cleaned_data["radius"] = None
+            self.cleaned_data["uprn"] = self.cleaned_data["addresses"]
+            self.instance.uprn_cache = ""
+            del self.cleaned_data["addresses"]
+        if self.cleaned_data.get("radius"):
+            self.cleaned_data["uprn"] = ""
+            self.instance.uprn_cache = ""
+        return self.cleaned_data
+
+    def clean_addresses(self):
+        uprn = self.cleaned_data["addresses"]
+        if re.match("[0-9]+$", uprn):
+            return uprn
+        if self.fields["addresses"].choices:
+            raise forms.ValidationError("Please select one of the addresses below")
+        return uprn
+
+    def clean_postcode(self):
+        pc = self.cleaned_data["postcode"]
+        if pc:
+            self.fields["addresses"].choices = self.address_choices(pc)
+        return pc
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Submitting the form with an address selected
+        if "addresses" in self.data and "postcode" in self.data:
+            choices = self.address_choices(self.data["postcode"])
+            self.fields["addresses"].choices = choices

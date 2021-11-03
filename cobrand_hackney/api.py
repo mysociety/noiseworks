@@ -54,6 +54,8 @@ def addresses_for_postcode(postcode):
         params["page"] = page
         r = s.get(url, params=params)
         data = r.json()
+        if "data" not in data:
+            return {"error": "Sorry, did not recognise that postcode"}
         pages = data["data"].get(pageAttr, 0)
         for address in data["data"]["address"]:
             if address["locality"] != "HACKNEY":

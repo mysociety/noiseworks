@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404
 from noiseworks.decorators import staff_member_required
 from .filters import CaseFilter
 from .models import Case, Complaint, Action
-from .forms import ReassignForm, ActionForm, KindForm
+from .forms import ReassignForm, ActionForm, KindForm, LocationForm
 
 
 @login_required(redirect_field_name="nxt")
@@ -109,6 +109,23 @@ def edit_kind(request, pk):
     return render(
         request,
         "cases/edit-kind.html",
+        {
+            "case": case,
+            "form": form,
+        },
+    )
+
+
+@staff_member_required
+def edit_location(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    form = LocationForm(request.POST or None, instance=case)
+    if form.is_valid():
+        form.save()
+        return HttpResponseRedirect(case.get_absolute_url())
+    return render(
+        request,
+        "cases/edit-location.html",
         {
             "case": case,
             "form": form,
