@@ -40,9 +40,11 @@ def show_form(request):
     if form.is_valid():
         username = form.cleaned_data["username"]
         username_type = form.cleaned_data["username_type"]
-        # XXX email/phone/verified
         try:
-            user = User.objects.get(username=username)
+            if username_type == "email":
+                user = User.objects.get(email=username, email_verified=True)
+            else:
+                user = User.objects.get(phone=username, phone_verified=True)
         except User.DoesNotExist:
             user = User.objects.create_user(username=username)
         if user.is_staff:
