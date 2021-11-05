@@ -101,3 +101,24 @@ def wards():
         {"id": 144393, "gss": "E05009386", "name": "Victoria"},
         {"id": 144398, "gss": "E05009387", "name": "Woodberry Down"},
     )
+
+
+def in_a_park(pt):
+    filter = f'<Filter xmlns:gml="http://www.opengis.net/gml"><Intersects><PropertyName>geom</PropertyName><gml:Point srsName="27700"><gml:coordinates>{pt.x},{pt.y}</gml:coordinates></gml:Point></Intersects></Filter>'
+    r = requests.get(
+        "https://map2.hackney.gov.uk/geoserver/greenspaces/ows",
+        params={
+            "SERVICE": "WFS",
+            "VERSION": "1.1.0",
+            "REQUEST": "GetFeature",
+            "typename": "greenspaces:hackney_park",
+            "outputformat": "json",
+            "srsname": "urn:ogc:def:crs:EPSG::27700",
+            "filter": filter,
+        },
+    )
+    data = r.json()
+    name = False
+    if data["features"]:
+        name = data["features"][0]["properties"]
+    return name

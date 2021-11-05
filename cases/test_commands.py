@@ -46,6 +46,7 @@ def mock_things(requests_mock):
             "144397": {"type": "LBW", "codes": {"gss": "E05009385"}},
         },
     )
+    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
 
 
 def test_random_command_bad_input(db):

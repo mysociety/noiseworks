@@ -48,8 +48,25 @@ def test_edit_location(requests_mock, admin_client, case, form_defaults):
         re.compile("postcode=SW1A1AA"),
         json={"data": {"address": [{**ADDRESS, "locality": "WESTMINSTER"}]}},
     )
+    requests_mock.get(
+        re.compile("greenspaces/ows"),
+        json={
+            "features": [
+                {
+                    "type": "Feature",
+                    "id": "hackney_park.1",
+                    "properties": {
+                        "park_id": "P37",
+                        "name": "Shepherdess Walk",
+                        "new_ward": "Hoxton West",
+                    },
+                }
+            ]
+        },
+    )
 
     admin_client.get(f"/cases/{case.id}/edit-location")
+    assert case.location_display == "800m around a point in Shepherdess Walk"
 
     # Post with no changes
     resp = admin_client.post(f"/cases/{case.id}/edit-location", form_defaults)
@@ -73,6 +90,7 @@ def test_edit_location_to_uprn(requests_mock, admin_client, case, form_defaults)
     requests_mock.get(
         re.compile("uprn=10008315925"), json={"data": {"address": [ADDRESS]}}
     )
+    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
 
     # Post with a postcode
     resp = admin_client.post(
