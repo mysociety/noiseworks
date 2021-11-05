@@ -2,12 +2,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.gis.measure import D
 from django.core.paginator import Paginator
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from noiseworks.decorators import staff_member_required
 from .filters import CaseFilter
-from .models import Case, Complaint, Action
+from .models import Case, Complaint, Action, ActionType
 from . import forms
+from accounts.models import User
 
 
 @login_required(redirect_field_name="nxt")
@@ -131,6 +133,55 @@ def edit_location(request, pk):
             "form": form,
         },
     )
+
+
+@staff_member_required
+def search_perpetrator(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    form = forms.PersonSearchForm(request.POST or None)
+    if form.is_valid():
+        form = forms.PersonPickForm(initial={"search": form.cleaned_data["search"]})
+        form.helper.form_action = reverse("case-add-perpetrator", args=[case.id])
+    return render(
+        request,
+        "cases/add-perpetrator.html",
+        {
+            "case": case,
+            "form": form,
+        },
+    )
+
+
+@staff_member_required
+def add_perpetrator(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    if not request.POST:
+        return HttpResponseForbidden()
+    form = forms.PersonPickForm(request.POST)
+    if form.is_valid():
+        form.save(case=case)
+        return HttpResponseRedirect(case.get_absolute_url())
+    return render(
+        request,
+        "cases/add-perpetrator.html",
+        {
+            "case": case,
+            "form": form,
+        },
+    )
+
+
+@staff_member_required
+def remove_perpetrator(request, pk, perpetrator):
+    case = get_object_or_404(Case, pk=pk)
+    user = get_object_or_404(User, pk=perpetrator)
+    case.perpetrators.remove(user)
+    # TODO Centralise this action creation somewhere?
+    typ, _ = ActionType.objects.get_or_create(
+        name="Edit case", defaults={"visibility": "internal"}
+    )
+    Action.objects.create(case=case, type=typ, notes="Removed perpetrator")
+    return HttpResponseRedirect(case.get_absolute_url())
 
 
 @staff_member_required

@@ -188,28 +188,65 @@ var nw = nw || {};
 })();
 </script>
 {% endif %}
+</dl>
 
-<!--
+<h2 class="lbh-heading-h2 section-heading">{% blocktranslate count counter=case.perpetrators.count|length trimmed %}
+    Perpetrator{% plural %}Perpetrators
+    {% endblocktranslate %}</h2>
+
+<a class="nw-link--no-visited-state" href="{% url "case-search-perpetrator" case.id %}">
+    Add<span class="govuk-visually-hidden"> perpetrator</span>
+</a>
+
+<ul class="list-reporters">
+{% for perpetrator in case.perpetrators.all %}
+<li>
+<dl class="nw-summary-list">
     <div class="govuk-summary-list__row govuk-summary-list__row--warning">
         <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar-warning.svg" class="icon-avatar-warning" alt=""></dt>
         <dd class="govuk-summary-list__value">
-          <p class="govuk-body">Walter White (4 cases)</p>
-          <p class="govuk-body">07700 900123</p>
-          <p class="text-smaller">(No email address)</p>
-          <p class="govuk-body">Flat 5</p>
-          <p class="govuk-body">
-            2 Crosby Walk<br />
-            E8 3DW
+          <p class="govuk-body">{{ perpetrator }}
+            {% blocktranslate count counter=perpetrator.cases_perpetrated.count with cases=perpetrator.cases_perpetrated.count trimmed %}
+            ({{ cases }} case)
+            {% plural %}
+            ({{ cases }} cases)
+            {% endblocktranslate %}
           </p>
-          <p class="text-smaller">(Dalston Ward)</p>
-          <p class="p-warning">Complex needs</p>
-
+        {% if perpetrator.phone %}
+          <p class="govuk-body">{{ perpetrator.phone.as_national }}
+            {% if perpetrator.phone_verified %} (verified){% endif %}
+        {% endif %}
+        {% if perpetrator.email %}
+          <p class="govuk-body">{{ perpetrator.email }}
+            {% if perpetrator.email_verified %} (verified){% endif %}
+        {% endif %}
+          <p class="govuk-body">{{ perpetrator.address_display }}</p>
         </dd>
         <dd class="govuk-summary-list__actions">
+            <a class="nw-link--no-visited-state" href="{% url "case-remove-perpetrator" case.id perpetrator.id %}">
+                Remove from case
+            </a>
         </dd>
-      </div>
--->
+    </div>
 </dl>
+</li>
+{% empty %}
+<li>
+<dl class="nw-summary-list">
+    <div class="govuk-summary-list__row govuk-summary-list__row--warning">
+        <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar-warning.svg" class="icon-avatar-warning" alt=""></dt>
+        <dd class="govuk-summary-list__value">
+            <p class="govuk-body">None</p>
+        </dd>
+        <dd class="govuk-summary-list__actions">
+            <a class="nw-link--no-visited-state" href="{% url "case-search-perpetrator" case.id %}">
+                Add<span class="govuk-visually-hidden"> perpetrator</span>
+            </a>
+        </dd>
+    </div>
+</dl>
+</li>
+{% endfor %}
 
 <h2 class="lbh-heading-h2 section-heading">{% blocktranslate count counter=case.all_complainants|length trimmed %}
     Reporter{% plural %}Reporters

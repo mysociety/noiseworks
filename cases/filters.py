@@ -92,13 +92,22 @@ class CaseFilter(django_filters.FilterSet):
         # URPN cases in any of the addresses found by postcode/street lookup above
         # uprn_search = Q(uprn__in=addresses)
 
-        # Users with matching name/address/contact details
+        # Reporters with matching name/address/contact details
         queries |= (
             Q(complaints__complainant__first_name__icontains=value)
             | Q(complaints__complainant__last_name__icontains=value)
             | Q(complaints__complainant__address__icontains=value)
             | Q(complaints__complainant__email__icontains=value)
             | Q(complaints__complainant__phone__icontains=value)
+        )
+
+        # Perpetrators with matching name/address/contact details
+        queries |= (
+            Q(perpetrators__first_name__icontains=value)
+            | Q(perpetrators__last_name__icontains=value)
+            | Q(perpetrators__address__icontains=value)
+            | Q(perpetrators__email__icontains=value)
+            | Q(perpetrators__phone__icontains=value)
         )
 
         # Actions with matching notes
