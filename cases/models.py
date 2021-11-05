@@ -128,7 +128,11 @@ class Case(AbstractModel):
                 desc = f"a point in {park['name']}"
             else:
                 # Set ward here too?
-                desc = f"({self.point.x:.0f},{self.point.y:.0f})"
+                road = cobrand.api.nearest_road(self.point)
+                if road:
+                    desc = f"a point near {road}"
+                else:
+                    desc = f"({self.point.x:.0f},{self.point.y:.0f})"
             self.location_cache = f"{self.radius}m around {desc}"
             self.save()
             return self.location_cache

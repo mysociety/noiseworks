@@ -91,6 +91,66 @@ def test_edit_location_to_uprn(requests_mock, admin_client, case, form_defaults)
         re.compile("uprn=10008315925"), json={"data": {"address": [ADDRESS]}}
     )
     requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
+    # Mock a road
+    requests_mock.get(
+        re.compile("transport/ows"),
+        json={
+            "features": [
+                {
+                    "type": "Feature",
+                    "id": "os_highways_street.1695",
+                    "geometry": {
+                        "type": "MultiLineString",
+                        "coordinates": [
+                            [
+                                [533338, 182414],
+                                [533337, 182440],
+                                [533337, 182440],
+                                [533337, 182459],
+                            ]
+                        ],
+                    },
+                    "properties": {
+                        "usrn": 20900732,
+                        "authority_name": "Hackeny",
+                        "name": "NEW INN STREET",
+                    },
+                },
+                {
+                    "type": "Feature",
+                    "id": "os_highways_street.1695",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [
+                            [533338, 182414],
+                            [533337, 182440],
+                            [533337, 182440],
+                            [533337, 182459],
+                        ],
+                    },
+                    "properties": {
+                        "usrn": 20900732,
+                        "authority_name": "Hackeny",
+                        "name": "NEW INN STREET",
+                    },
+                },
+                {
+                    "type": "Feature",
+                    "id": "os_highways_street.1695",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [533338, 182414],
+                    },
+                    "properties": {
+                        "usrn": 20900732,
+                        "authority_name": "Hackeny",
+                        "name": "NEW INN STREET",
+                    },
+                },
+            ]
+        },
+    )
+    assert case.location_display == "800m around a point near New Inn Street"
 
     # Post with a postcode
     resp = admin_client.post(
@@ -103,6 +163,6 @@ def test_edit_location_to_uprn(requests_mock, admin_client, case, form_defaults)
         f"/cases/{case.id}/edit-location",
         {**form_defaults, "postcode": "E95RF", "addresses": "10008315925"},
     )
-    case.refresh_from_db()
+    case = Case.objects.get(id=case.id)
     assert case.location_display == "Line 1, Line 2, Line 3, E8 1DY"
     assert case.uprn == "10008315925"

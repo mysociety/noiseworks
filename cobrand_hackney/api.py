@@ -1,3 +1,4 @@
+import math
 import requests
 from django.conf import settings
 
@@ -122,3 +123,74 @@ def in_a_park(pt):
     if data["features"]:
         name = data["features"][0]["properties"]
     return name
+
+
+def nearest_road(pt):
+    filter = (
+        f"<Filter xmlns:gml=\"http://www.opengis.net/gml\"><DWithin><PropertyName>geom</PropertyName><gml:Point><gml:coordinates>{pt.x},{pt.y}</gml:coordinates></gml:Point><Distance units='m'>50</Distance></DWithin></Filter>",
+    )
+    r = requests.get(
+        "https://map2.hackney.gov.uk/geoserver/transport/ows",
+        params={
+            "SERVICE": "WFS",
+            "VERSION": "1.1.0",
+            "REQUEST": "GetFeature",
+            "typename": "transport:os_highways_street",
+            "outputformat": "json",
+            "srsname": "urn:ogc:def:crs:EPSG::27700",
+            "filter": filter,
+        },
+    )
+    data = r.json()
+    return _nearest_feature(pt, data["features"])
+
+
+def _nearest_feature(pt, features):
+    """We have a list of features, and we want to find the one closest to the location."""
+    chosen = None
+    nearest = None
+
+    for feature in features:
+        linestrings = feature["geometry"]["coordinates"]
+        if feature["geometry"]["type"] == "LineString":
+            linestrings = [linestrings]
+        # If it is a point, upgrade it to a one-segment zero-length
+        # MultiLineString so it can be compared by the distance function.
+        if feature["geometry"]["type"] == "Point":
+            linestrings = [[linestrings], [linestrings]]
+
+        for coordinates in linestrings:
+            for start, end in linestring_parts(coordinates):
+                distance = _distanceToLine(pt, start, end)
+                if nearest is None or distance < nearest:
+                    chosen = feature
+                    nearest = distance
+
+    if chosen:
+        return chosen["properties"]["name"].title()
+    return None
+
+
+def linestring_parts(coordinates):
+    for i in range(len(coordinates) - 1):
+        yield (coordinates[i], coordinates[i + 1])
+
+
+def _distanceToLine(pt, start, end):
+    """Returns the cartesian distance of a point from a line.
+    This is not a general-purpose distance function, it's intended for use with
+    fairly nearby coordinates in EPSG:27700 where a spheroid doesn't need to be
+    taken into account."""
+
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    if dx == 0 and dy == 0:
+        along = 0
+    else:
+        along = ((dx * (pt.x - start[0])) + (dy * (pt.y - start[1]))) / (
+            dx ** 2 + dy ** 2
+        )
+    along = max(0, min(1, along))
+    fx = start[0] + along * dx
+    fy = start[1] + along * dy
+    return math.sqrt(((pt.x - fx) ** 2) + ((pt.y - fy) ** 2))
