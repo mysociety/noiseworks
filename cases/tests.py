@@ -110,7 +110,11 @@ def test_list(admin_client, case_1):
     assertContains(response, "Cases")
 
 
-def test_assigned_filter(admin_client, admin_user, case_1, case_location):
+def test_assigned_filter(
+    admin_client, admin_user, case_1, case_location, requests_mock
+):
+    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
+    requests_mock.get(re.compile("transport/ows"), json={"features": []})
     response = admin_client.get("/cases?assigned=others")
     assertContains(response, f"/cases/{case_1.id}")
     case_1.assigned = admin_user
