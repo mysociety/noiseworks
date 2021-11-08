@@ -1,0 +1,14 @@
+.nw-merge-source {
+    background-color: lbh-colour("lbh-panel");
+    padding: govuk-spacing(3);
+
+    .nw-case-list {
+        border-top: none;
+    }
+
+    .nw-case-list__item {
+        border-bottom: none;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}

@@ -68,6 +68,7 @@ $lbh-asset-path: "/static/hackney";
 
 @import "timeline";
 @import "sections";
+@import "merge.scss";
 
 span {
     font-family: $lbh-font-family;
