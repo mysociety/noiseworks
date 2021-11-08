@@ -6,32 +6,55 @@
     <a href="{% url "cases" %}" class="nw-back-link">Back to all cases</a>
 </div>
 
-<p class="nw-tag--id">{{ case.id }}</p>
-<h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
+<h1>Merge case</h1>
 
-<p>The case you were on has been recorded;
-please now visit the case you wish to merge
-this case into and
-and <strong>click the button</strong> that will have appeared there.</p>
+<div class="nw-merge-source">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-one-third">
+            <h2>This case</h2>
+        </div>
+        <div class="govuk-grid-column-two-thirds">
+            <ul class="nw-case-list">
+                {% include "cases/_case_list_item.html" %}
+            </ul>
+        </div>
+    </div>
+</div>
 
-<p><a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">Show all cases</a></p>
+{% if cases_same_uprn or cases_nearby %}
+    <p>Select a case to merge into, from the suggestions below, or <a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">the list of all cases</a></p>
+{% else %}
+    <p>Select a case to merge into, from <a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">the list of all cases</a></p>
+{% endif %}
 
 {% if case.uprn and cases_same_uprn %}
-<h2>Other cases at the same property</h2>
-<ul class="nw-list nw-list--bullet">
-{% for case in cases_same_uprn %}
-<li><a href="{% url "case-view" case.id %}">{{ case.kind_display }} at {{ case.location_display }}</a>
-{% endfor %}
-</ul>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-third">
+        <h2>Other cases at the same property</h2>
+    </div>
+    <div class="govuk-grid-column-two-thirds">
+        <ul class="nw-case-list">
+          {% for case in cases_same_uprn %}
+            {% include "cases/_case_list_item.html" %}
+          {% endfor %}
+        </ul>
+    </div>
+</div>
 {% endif %}
 
 {% if cases_nearby %}
-<h2>Nearby cases</h2>
-<ul class="nw-list nw-list--bullet">
-{% for case in cases_nearby %}
-<li><a href="{% url "case-view" case.id %}">{{ case.kind_display }} at {{ case.location_display }}</a>
-{% endfor %}
-</ul>
+<div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-third">
+        <h2>Nearby cases</h2>
+    </div>
+    <div class="govuk-grid-column-two-thirds">
+        <ul class="nw-case-list">
+          {% for case in cases_nearby %}
+            {% include "cases/_case_list_item.html" %}
+          {% endfor %}
+        </ul>
+    </div>
+</div>
 {% endif %}
 
 {% endblock %}
