@@ -150,7 +150,10 @@ def test_edit_location_to_uprn(requests_mock, admin_client, case, form_defaults)
             ]
         },
     )
-    assert case.location_display == "800m around a point near New Inn Street"
+    assert (
+        case.location_display
+        == "800m around a point near New Inn Street / New Inn Street"
+    )
 
     # Post with a postcode
     resp = admin_client.post(

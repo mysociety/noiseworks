@@ -1,4 +1,5 @@
 import math
+import sys
 import requests
 from django.conf import settings
 
@@ -125,7 +126,7 @@ def in_a_park(pt):
     return name
 
 
-def nearest_road(pt):
+def nearest_roads(pt):
     filter = (
         f"<Filter xmlns:gml=\"http://www.opengis.net/gml\"><DWithin><PropertyName>geom</PropertyName><gml:Point><gml:coordinates>{pt.x},{pt.y}</gml:coordinates></gml:Point><Distance units='m'>50</Distance></DWithin></Filter>",
     )
@@ -142,15 +143,18 @@ def nearest_road(pt):
         },
     )
     data = r.json()
-    return _nearest_feature(pt, data["features"])
+    data = _sorted_by_distance(pt, data["features"])
+    data = data[:2]
+    data = map(lambda x: x["properties"]["name"].title() or "Unknown road", data)
+    return " / ".join(data)
 
 
-def _nearest_feature(pt, features):
-    """We have a list of features, and we want to find the one closest to the location."""
-    chosen = None
-    nearest = None
+def _sorted_by_distance(pt, features):
+    """We have a list of features, and we want to sort them by distance to the location."""
 
+    data = []
     for feature in features:
+        nearest = None
         linestrings = feature["geometry"]["coordinates"]
         if feature["geometry"]["type"] == "LineString":
             linestrings = [linestrings]
@@ -163,12 +167,12 @@ def _nearest_feature(pt, features):
             for start, end in linestring_parts(coordinates):
                 distance = _distanceToLine(pt, start, end)
                 if nearest is None or distance < nearest:
-                    chosen = feature
                     nearest = distance
+        data.append((nearest or sys.maxsize, feature))
 
-    if chosen:
-        return chosen["properties"]["name"].title()
-    return None
+    data.sort(key=lambda x: x[0])
+    data = list(map(lambda x: x[1], data))
+    return data
 
 
 def linestring_parts(coordinates):
