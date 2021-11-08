@@ -244,7 +244,7 @@ def test_merging_cases(admin_client, case_1, case_other_uprn, action_types):
     )
     assertNotContains(response, "We have forgotten your current merging.")
     response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
-    assertContains(response, "visit the case you wish to merge")
+    assertContains(response, "Select a case to merge into")
     response = admin_client.get(f"/cases/{case_1.id}")
     assertContains(response, f"Merge #{case_other_uprn.id} into this case")
     response = admin_client.post(
