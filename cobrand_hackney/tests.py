@@ -1,7 +1,7 @@
 import re
 import pytest
 from pytest_django.asserts import assertContains
-from .api import address_for_uprn, addresses_for_postcode
+from .api import address_for_uprn, addresses_for_postcode, addresses_for_string
 
 pytestmark = pytest.mark.django_db
 
@@ -76,3 +76,8 @@ def test_addresses_api_uprn(requests_mock, make_api_result):
     data = ADDRESS.copy()
     data["string"] = "Line 1, Line 2, Line 3, E8 1DY"
     assert address_for_uprn("10008315925") == data
+
+
+def test_addresses_api_street(requests_mock, make_api_result):
+    requests_mock.get(re.compile(r"street=test\+street"), json=make_api_result())
+    assert len(addresses_for_string("test street")) == 1

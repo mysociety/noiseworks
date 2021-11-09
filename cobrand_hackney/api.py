@@ -45,6 +45,24 @@ def addresses_for_postcode(postcode):
         "postcode": postcode,
     }
 
+    return _addresses_api(params)
+
+
+def addresses_for_string(string):
+    params = {
+        "format": "detailed",
+        "gazetteer": "local",
+        "street": string,
+    }
+    return _addresses_api(params)
+
+
+def _addresses_api(params):
+    api = settings.COBRAND_SETTINGS["address_api"]
+    url = api["url"]
+    key = api["key"]
+    pageAttr = api["pageAttr"]
+
     s = requests.Session()
     s.headers.update({"Authorization": key})
 
@@ -147,6 +165,26 @@ def nearest_roads(pt):
     data = data[:2]
     data = map(lambda x: x["properties"]["name"].title() or "Unknown road", data)
     return " / ".join(data)
+
+
+# def matching_roads(s):
+#     filter = (
+#         f"<Filter xmlns:gml=\"http://www.opengis.net/gml\"><PropertyIsLike wildCard='*' singleChar='.' escape='!'><PropertyName>name</PropertyName><Literal>*{s}*</Literal></PropertyIsLike></Filter>",
+#     )
+#     r = requests.get(
+#         "https://map2.hackney.gov.uk/geoserver/transport/ows",
+#         params={
+#             "SERVICE": "WFS",
+#             "VERSION": "1.1.0",
+#             "REQUEST": "GetFeature",
+#             "typename": "transport:os_highways_street",
+#             "outputformat": "json",
+#             "srsname": "urn:ogc:def:crs:EPSG::27700",
+#             "filter": filter,
+#         },
+#     )
+#     data = r.json()
+#     return data
 
 
 def _sorted_by_distance(pt, features):
