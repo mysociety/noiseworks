@@ -30,7 +30,11 @@ def normal_user(db):
 @pytest.fixture
 def case_1(db, staff_user, normal_user):
     return Case.objects.create(
-        kind="diy", assigned=staff_user, created_by=normal_user, ward="E05009373"
+        kind="other",
+        kind_other="Fireworks",
+        assigned=staff_user,
+        created_by=normal_user,
+        ward="E05009373",
     )
 
 
@@ -72,3 +76,10 @@ def test_ward_filter(admin_client, admin_user, case_1):
     admin_user.save()
     response = admin_client.get("/cases?assigned=")
     assertContains(response, f"/cases/{case_1.id}")
+
+
+def test_search(admin_client, case_1, requests_mock):
+    resp = admin_client.get("/cases?search=fireworks")
+    assertContains(resp, "Other")
+    resp = admin_client.get(f"/cases?search={case_1.id}")
+    assertContains(resp, "Other")

@@ -1,7 +1,10 @@
+import re
 from django import forms
+from django.db.models import Q
 import django_filters
 from .models import Case
 from .forms import FilterForm
+from .widgets import SearchWidget
 from noiseworks import cobrand
 from accounts.models import User
 
@@ -14,6 +17,9 @@ def get_wards():
 
 
 class CaseFilter(django_filters.FilterSet):
+    search = django_filters.CharFilter(
+        label="", method="search_filter", widget=SearchWidget
+    )
     assigned = django_filters.ChoiceFilter(
         choices=[
             ("me", "Assigned to me"),
@@ -51,6 +57,7 @@ class CaseFilter(django_filters.FilterSet):
         # Default to showing cases assigned to the user
         data.setdefault("assigned", "me")
         super().__init__(data, *args, **kwargs)
+        self.filters.move_to_end("search", last=False)
         self.filters["kind"].label = "Noise type"
         self.filters["where"].label = "Noise location type"
         self.filters["estate"].label = "Hackney Estates property?"
@@ -72,3 +79,43 @@ class CaseFilter(django_filters.FilterSet):
             return queryset.filter(assigned=None)
         else:
             return queryset.filter(assigned=value)
+
+    def search_filter(self, queryset, name, value):
+        queries = Q()
+
+        # postcode_lookup = cobrand.api.addresses_for_postcode(value)
+        # addresses = postcode_lookup.get("addresses", [])
+        # street_lookup = cobrand.api.addresses_for_string(value)
+        # addresses.extend(street_lookup.get("addresses", []))
+        # addresses = list(map(lambda x: x["value"], addresses))
+        # roads = cobrand.api.matching_roads(value)
+        # URPN cases in any of the addresses found by postcode/street lookup above
+        # uprn_search = Q(uprn__in=addresses)
+
+        # Users with matching name/address/contact details
+        queries |= (
+            Q(complaints__complainant__first_name__icontains=value)
+            | Q(complaints__complainant__last_name__icontains=value)
+            | Q(complaints__complainant__address__icontains=value)
+            | Q(complaints__complainant__email__icontains=value)
+            | Q(complaints__complainant__phone__icontains=value)
+        )
+
+        # Actions with matching notes
+        queries |= Q(actions__notes__icontains=value)
+
+        # Cases with matching UPRN, location or other kind, or ID
+        queries |= (
+            Q(location_cache__icontains=value)
+            | Q(uprn=value)
+            | Q(kind_other__icontains=value)
+        )
+        if re.match("[0-9]+$", value):
+            queries |= Q(pk=value)
+
+        # Complaints with matching descriptions/details
+        queries |= Q(complaints__happening_description__icontains=value) | Q(
+            complaints__more_details__icontains=value
+        )
+
+        return queryset.filter(queries).distinct()
