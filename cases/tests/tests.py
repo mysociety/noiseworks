@@ -2,12 +2,11 @@ import re
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
-from django.contrib.gis.geos import Point
 from django.template import Context, Template
 from django.http import HttpRequest
 from accounts.models import User
-from .models import Case, Complaint, ActionType, Action
-from .forms import ReassignForm, ActionForm
+from ..models import Case, Complaint, ActionType, Action
+from ..forms import ReassignForm, ActionForm
 
 pytestmark = pytest.mark.django_db
 
@@ -55,11 +54,6 @@ def case_1(db, staff_user_1, normal_user):
 
 
 @pytest.fixture
-def case_location(db):
-    return Case.objects.create(kind="diy", point=Point(470267, 122766), radius=100)
-
-
-@pytest.fixture
 def case_other_uprn(db):
     with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {
@@ -103,41 +97,6 @@ def action_type(case_1, action_types):
     return Action.objects.create(
         case=case_1, notes="Internal note", type=action_types[1]
     )
-
-
-def test_list(admin_client, case_1):
-    response = admin_client.get("/cases")
-    assertContains(response, "Cases")
-
-
-def test_assigned_filter(
-    admin_client, admin_user, case_1, case_location, requests_mock
-):
-    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
-    requests_mock.get(re.compile("transport/ows"), json={"features": []})
-    response = admin_client.get("/cases?assigned=others")
-    assertContains(response, f"/cases/{case_1.id}")
-    case_1.assigned = admin_user
-    case_1.save()
-    response = admin_client.get("/cases")
-    assertContains(response, f"/cases/{case_1.id}")
-    response = admin_client.get(f"/cases?assigned={admin_user.id}")
-    assertContains(response, f"/cases/{case_1.id}")
-    case_1.assigned = None
-    case_1.save()
-    response = admin_client.get("/cases?assigned=none")
-    assertContains(response, f"/cases/{case_1.id}")
-
-
-def test_ward_filter(admin_client, admin_user, case_1):
-    admin_user.wards = ["E05009374"]
-    admin_user.save()
-    response = admin_client.get("/cases?assigned=")
-    assertNotContains(response, f"/cases/{case_1.id}")
-    admin_user.wards = ["E05009372", case_1.ward]
-    admin_user.save()
-    response = admin_client.get("/cases?assigned=")
-    assertContains(response, f"/cases/{case_1.id}")
 
 
 def test_case_not_found(admin_client):

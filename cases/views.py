@@ -7,7 +7,7 @@ from django.shortcuts import render, get_object_or_404
 from noiseworks.decorators import staff_member_required
 from .filters import CaseFilter
 from .models import Case, Complaint, Action
-from .forms import ReassignForm, ActionForm, KindForm, LocationForm
+from . import forms
 
 
 @login_required(redirect_field_name="nxt")
@@ -85,7 +85,7 @@ def case_staff(request, pk):
 @staff_member_required
 def reassign(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = ReassignForm(request.POST or None, instance=case)
+    form = forms.ReassignForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
         return HttpResponseRedirect(case.get_absolute_url())
@@ -102,7 +102,7 @@ def reassign(request, pk):
 @staff_member_required
 def edit_kind(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = KindForm(request.POST or None, instance=case)
+    form = forms.KindForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
         return HttpResponseRedirect(case.get_absolute_url())
@@ -119,7 +119,7 @@ def edit_kind(request, pk):
 @staff_member_required
 def edit_location(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = LocationForm(request.POST or None, instance=case)
+    form = forms.LocationForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
         return HttpResponseRedirect(case.get_absolute_url())
@@ -136,7 +136,7 @@ def edit_location(request, pk):
 @staff_member_required
 def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = ActionForm(request.POST or None)
+    form = forms.ActionForm(request.POST or None)
     if form.is_valid():
         form.save(case=case)
         return HttpResponseRedirect(case.get_absolute_url())

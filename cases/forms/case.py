@@ -2,7 +2,7 @@ import re
 from django import forms
 from django.core.exceptions import ValidationError
 from accounts.models import User
-from .models import Case, Action, ActionType
+from ..models import Case, Action, ActionType
 from crispy_forms_gds.choices import Choice
 from noiseworks import cobrand
 from noiseworks.forms import GDSForm
@@ -15,17 +15,6 @@ class LogActionMixin:
             name="Edit case", defaults={"visibility": "internal"}
         )
         Action.objects.create(case=self.instance, type=typ, notes=self.log_note)
-
-
-class FilterForm(GDSForm, forms.Form):
-    """Filter forms can use GET by default"""
-
-    submit_text = "Filter"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper.form_method = "GET"
-        self.helper.checkboxes_small = True
 
 
 class ReassignForm(GDSForm, forms.ModelForm):
