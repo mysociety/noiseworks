@@ -31,7 +31,7 @@ class UserManager(BaseManager):
             phone=phone,
             email_verified=email_verified,
             phone_verified=phone_verified,
-            **extra_fields
+            **extra_fields,
         )
         return user
 
@@ -75,7 +75,10 @@ class User(AbstractUser):
         ordering = ("first_name", "last_name")
 
     def __str__(self):
-        return self.get_full_name() or self.username
+        name = self.get_full_name() or self.username
+        if self.address:
+            name += f", {self.address}"
+        return name
 
     def get_best_time_display(self):
         best_time = self.best_time or []

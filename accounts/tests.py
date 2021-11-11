@@ -17,7 +17,7 @@ def staff_user(db):
 
 @pytest.fixture
 def normal_user(db):
-    yield User.objects.create(uprn=10001)
+    yield User.objects.create(first_name="Norma", last_name="User", uprn=10001)
 
 
 @pytest.fixture
@@ -145,3 +145,4 @@ def test_address_display_address(normal_user):
     normal_user.address = "Other address"
     normal_user.save()
     assert normal_user.address_display == "Other address"
+    assert str(normal_user) == "Norma User, Other address"
