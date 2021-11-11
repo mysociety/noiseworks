@@ -1,9 +1,11 @@
+import datetime
 import re
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
 from django.template import Context, Template
 from django.http import HttpRequest
+from django.utils.timezone import make_aware
 from accounts.models import User
 from ..models import Case, Complaint, ActionType, Action
 from ..forms import ReassignForm, ActionForm
@@ -78,9 +80,7 @@ def complaint(db, case_1, normal_user):
         case=case_1,
         complainant=normal_user,
         happening_now=True,
-        happening_pattern=True,
-        happening_times=["morning"],
-        happening_days=[5, 6, 7],
+        end=make_aware(datetime.datetime(2021, 11, 9, 14, 29)),
     )
 
 
@@ -239,7 +239,7 @@ def test_action_manager(case_1, case_other_uprn):
 
 def test_complaint_view(admin_client, complaint):
     response = admin_client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
-    assertContains(response, "Friday, Saturday, Sunday")
+    assertContains(response, "Still ongoing at Tue, 9 Nov 2021, 2:29 p.m.", html=True)
 
 
 def test_complaint_bad_case(admin_client, case_other_uprn, complaint):

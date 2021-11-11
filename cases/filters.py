@@ -114,8 +114,10 @@ class CaseFilter(django_filters.FilterSet):
             queries |= Q(pk=value)
 
         # Complaints with matching descriptions/details
-        queries |= Q(complaints__happening_description__icontains=value) | Q(
-            complaints__more_details__icontains=value
+        queries |= (
+            Q(complaints__rooms__icontains=value)
+            | Q(complaints__description__icontains=value)
+            | Q(complaints__effect__icontains=value)
         )
 
         return queryset.filter(queries).distinct()

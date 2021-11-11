@@ -104,20 +104,15 @@ class Command(BaseCommand):
                     case=case,
                     complainant=user,
                     happening_now=self._pick_happening_now(),
-                    happening_pattern=self._pick_happening_pattern(),
-                    more_details="",
+                    rooms="[rooms affected]",
+                    description="[description of noise]",
+                    effect="[effect of noise]",
+                    start=complaint_date - timedelta(minutes=random.randint(30, 120)),
+                    end=complaint_date,
                     created=complaint_date,
                     modified=complaint_date,
                 )
                 complaint_date += timedelta(minutes=random.randint(1, 10080))
-
-                if complaint.happening_pattern:
-                    complaint.happening_days = self._pick_happening_days()
-                    complaint.happening_times = self._pick_happening_times()
-                else:
-                    complaint.happening_description = (
-                        "[description of when noise happening]"
-                    )
 
                 if options["commit"]:
                     complaint.save()
@@ -210,47 +205,8 @@ class Command(BaseCommand):
 
     # Complaint
 
-    def _pick_happening_pattern(self):
-        return random.randint(1, 2) == 1
-
     def _pick_happening_now(self):
         return random.randint(1, 10) != 1
-
-    def _pick_happening_days(self):
-        r = random.randint(1, 25)
-        if r == 1:
-            return [1, 2, 3, 4, 5, 6]
-        elif r == 2:
-            return [1, 2, 3, 4, 5]
-        elif r == 3:
-            return [6, 7]
-        elif r == 4:
-            return [6]
-        elif r == 5:
-            return [4, 5, 6, 7]
-        elif r in (6, 7):
-            return [5, 6]
-        elif r in (8, 9):
-            return [5, 6, 7]
-        else:
-            return [1, 2, 3, 4, 5, 6, 7]
-
-    def _pick_happening_times(self):
-        r = random.randint(1, 40)
-        if r <= 10:
-            return ["evening", "night"]
-        elif r <= 20:
-            return ["morning", "daytime", "evening", "night"]
-        elif r <= 25:
-            return ["daytime", "evening", "night"]
-        elif r <= 30:
-            return ["night"]
-        elif r <= 34:
-            return ["daytime", "evening"]
-        elif r <= 38:
-            return ["morning", "daytime"]
-        else:
-            return ["morning", "daytime", "evening"]
 
     # User
 

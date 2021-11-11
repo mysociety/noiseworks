@@ -275,14 +275,14 @@ var nw = nw || {};
             </summary>
             <div class="govuk-details__text">
                 {{ entry.complaint.happening_now|yesno:"Happening now,Not happening now" }},
-                {{ entry.complaint.happening_pattern|yesno:"to a pattern,not to a pattern" }}.
-                {% if entry.complaint.happening_pattern %}
-                    {{ entry.complaint.get_days_display|join:", " }};
-                    {{ entry.complaint.get_times_display|join:", " }}.
-                {% elif entry.complaint.happening_description %}
-                    {{ entry.complaint.happening_description }}.
+                {% if entry.complaint.happening_now %}
+                    started {{ entry.complaint.start }}.
+                {% else %}
+                    {{ entry.complaint.start }} – {{ entry.complaint.end }}.
                 {% endif %}
-                {{ entry.complaint.more_details }}
+                Rooms: {{ entry.complaint.rooms }},
+                description: {{ entry.complaint.description }},
+                effect: {{ entry.complaint.effect }}.
             </div>
           </details>
 

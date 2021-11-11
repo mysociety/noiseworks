@@ -3,6 +3,7 @@ from django.contrib.gis.geos import Point
 from django.db.models import Q, Count
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from noiseworks import cobrand
 from accounts.models import User
@@ -265,22 +266,6 @@ class Case(AbstractModel):
 
 
 class Complaint(AbstractModel):
-    DAY_CHOICES = [
-        (1, "Monday"),
-        (2, "Tuesday"),
-        (3, "Wednesday"),
-        (4, "Thursday"),
-        (5, "Friday"),
-        (6, "Saturday"),
-        (7, "Sunday"),
-    ]
-    TIME_CHOICES = [
-        ("morning", "Morning (6am – noon)"),
-        ("daytime", "Daytime (noon – 6pm)"),
-        ("evening", "Evening (6pm – 11pm)"),
-        ("night", "Night time (11pm – 6am)"),
-    ]
-
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="complaints")
     complainant = models.ForeignKey(
         User,
@@ -290,29 +275,11 @@ class Complaint(AbstractModel):
     )
 
     happening_now = models.BooleanField()
-    happening_pattern = models.BooleanField()
-    happening_days = ArrayField(
-        models.PositiveSmallIntegerField(choices=DAY_CHOICES),
-        size=7,
-        null=True,
-        blank=True,
-    )
-    happening_times = ArrayField(
-        models.CharField(max_length=7, choices=TIME_CHOICES),
-        size=4,
-        null=True,
-        blank=True,
-    )
-    happening_description = models.TextField(blank=True)
-    more_details = models.TextField(blank=True)
-
-    def get_days_display(self):
-        choices_dict = dict(self.DAY_CHOICES)
-        return list(map(choices_dict.get, self.happening_days))
-
-    def get_times_display(self):
-        choices_dict = dict(self.TIME_CHOICES)
-        return list(map(choices_dict.get, self.happening_times))
+    start = models.DateTimeField(default=timezone.now)
+    end = models.DateTimeField(default=timezone.now)
+    rooms = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    effect = models.TextField(blank=True)
 
 
 class ActionType(models.Model):
