@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds %}
+
+{% block content %}
+
+{% error_summary wizard.form %}
+
+<h1 class="govuk-heading-l">{{ wizard.form.title }}</h1>
+
+{% if wizard.steps.current == "best_time" %}
+<p>We may need to talk to {% if request.user.is_staff %}the reporter{% else %}you{% endif %},
+or arrange a visit to listen to the noise ourselves.</p>
+{% elif wizard.steps.current == "postcode" %}
+<p>We do not accept anonymous reports, and may need your address should our team to visit to gather evidence.</p>
+{% endif %}
+
+<form action="" method="post">
+{{ wizard.management_form }}
+{% crispy wizard.form %}
+
+<p><a href="{% url "case-add" %}">Cancel</a></p>
+
+</form>
+
+<script>
+(function(){
+    var radius = document.querySelectorAll('input[type=radio][name=where-map-radius]');
+    radius.forEach(function(r) {
+        r.addEventListener('change', nw.react);
+    });
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds %}
+
+{% block content %}
+
+<div class="nw-panel">
+    <h1 class="govuk-panel__title">Case logged</h1>
+    <div class="govuk-panel__body">
+        Case reference {{ case.id }}
+    </div>
+</div>
+
+<h2>What happens next?</h2>
+
+<p>...</p>
+
+<p>
+    <a href="{% url "case-view" case.id %}">Show the case log</a>
+</p>
+
+{% endblock %}

@@ -10,6 +10,15 @@
     }
 }
 
+// The LBH styles make the spacing too big
+.govuk-radios--small {
+    .govuk-label {
+        margin-top: -2px;
+        margin-bottom: 0;
+        line-height: inherit;
+    }
+}
+
 // Line up the top of very long label with
 // the top of the checkbox next to it.
 #div_id_summary-true_statement label {

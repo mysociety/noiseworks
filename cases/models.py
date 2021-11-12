@@ -125,7 +125,8 @@ class Case(AbstractModel):
                 self.location_cache = addr["string"]
                 self.point = Point(addr["longitude"], addr["latitude"], srid=4326)
                 self.ward = ward_name_to_id(addr["ward"])
-                self.save()
+                if self.id:
+                    self.save()
             return addr["string"] or self.uprn
         elif self.point:
             park = cobrand.api.in_a_park(self.point)
@@ -140,7 +141,8 @@ class Case(AbstractModel):
                 else:
                     desc = f"({self.point.x:.0f},{self.point.y:.0f})"
             self.location_cache = f"{self.radius}m around {desc}"
-            self.save()
+            if self.id:
+                self.save()
             return self.location_cache
         else:
             return "Unknown location"

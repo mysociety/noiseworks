@@ -83,7 +83,7 @@ class EffectForm(StepForm):
 class SummaryForm(StepForm):
     submit_text = "Submit"
     title = "Check your answers"
-
+    template = "cases/add/summary.html"  # Not used by recurrence
     true_statement = forms.BooleanField(
         label="This statement is true to the best of my knowledge and belief and I make it knowing that, if it is tendered in evidence, I shall be liable to prosecution if I have wilfully stated in it anything which I know to be false or do not believe to be true."
     )
