@@ -1,0 +1,70 @@
+{% load i18n %}
+
+<div class="nw-person">
+  {% if relationship == 'perpetrator' %}
+    {% include 'icons/avatar-triangle.html' %}
+  {% else %}
+    {% include 'icons/avatar-circle.html' %}
+  {% endif %}
+
+    <h3>
+      {% if person.email %}
+        <a href="{% url "cases" %}?assigned=&amp;search={{ person.email|urlencode }}">
+      {% endif %}
+        {{ person.first_name }}
+        {{ person.last_name }}
+      {% if person.cases_perpetrated %}
+        {% blocktranslate count counter=person.cases_perpetrated.count with cases=person.cases_perpetrated.count trimmed %}
+          ({{ cases }} case)
+        {% plural %}
+          ({{ cases }} cases)
+        {% endblocktranslate %}
+      {% endif %}
+      {% if person.email %}
+        </a>
+      {% endif %}
+    </h3>
+
+  {% if person.phone %}
+    <p>
+        <a href="tel:{{ person.phone.as_national }}">{{ person.phone.as_national }}</a>
+      {% if not person.phone_verified %}
+        (unverified)
+      {% endif %}
+    </p>
+  {% else %}
+    <p class="nw-text-muted">No phone number</p>
+  {% endif %}
+
+  {% if person.email %}
+    <p>
+        <a href="mailto:{{ person.email|urlencode }}">{{ person.email }}</a>
+      {% if not person.email_verified %}
+        (unverified)
+      {% endif %}
+    </p>
+  {% else %}
+    <p class="nw-text-muted">No email address</p>
+  {% endif %}
+
+    <p>{{ person.address_display }}</p>
+
+  {% if person.get_best_time_display and person.get_best_method_display %}
+    <p>Available
+        {% for time in person.get_best_time_display %}{% if not forloop.first %}{% if forloop.last %}, and {% else %}, {% endif %}{% endif %}{{ time|lower }}{% endfor %},
+        by {{ person.get_best_method_display|default:"unknown"|lower }}
+    </p>
+  {% endif %}
+
+    <ul class="nw-inline-list">
+      {% if relationship == 'perpetrator' and case %}
+        <li>
+            <a class="nw-link--no-visited-state" href="{% url 'case-remove-perpetrator' case.id person.id %}">Remove from case</a>
+        </li>
+      {% endif %}
+        <li>
+            <a class="nw-link--no-visited-state" href="{% url "accounts:edit" person.id %}">Edit details</a>
+        </li>
+    </ul>
+
+</div>

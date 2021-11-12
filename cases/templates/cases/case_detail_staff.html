@@ -190,105 +190,45 @@ var nw = nw || {};
 {% endif %}
 </dl>
 
-<h2 class="lbh-heading-h2 section-heading">{% blocktranslate count counter=case.perpetrators.count|length trimmed %}
+<h2 class="lbh-heading-h2 section-heading">{% blocktranslate count counter=case.perpetrators.count trimmed %}
     Perpetrator{% plural %}Perpetrators
     {% endblocktranslate %}</h2>
 
-<a class="nw-link--no-visited-state" href="{% url "case-search-perpetrator" case.id %}">
-    Add<span class="govuk-visually-hidden"> perpetrator</span>
-</a>
+{% if case.perpetrators.all %}
 
-<ul class="list-reporters">
-{% for perpetrator in case.perpetrators.all %}
-<li>
-<dl class="nw-summary-list">
-    <div class="govuk-summary-list__row govuk-summary-list__row--warning">
-        <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar-warning.svg" class="icon-avatar-warning" alt=""></dt>
-        <dd class="govuk-summary-list__value">
-          <p class="govuk-body">{{ perpetrator }}
-            {% blocktranslate count counter=perpetrator.cases_perpetrated.count with cases=perpetrator.cases_perpetrated.count trimmed %}
-            ({{ cases }} case)
-            {% plural %}
-            ({{ cases }} cases)
-            {% endblocktranslate %}
-          </p>
-        {% if perpetrator.phone %}
-          <p class="govuk-body">{{ perpetrator.phone.as_national }}
-            {% if perpetrator.phone_verified %} (verified){% endif %}
-        {% endif %}
-        {% if perpetrator.email %}
-          <p class="govuk-body">{{ perpetrator.email }}
-            {% if perpetrator.email_verified %} (verified){% endif %}
-        {% endif %}
-          <p class="govuk-body">{{ perpetrator.address_display }}</p>
-        </dd>
-        <dd class="govuk-summary-list__actions">
-            <a class="nw-link--no-visited-state" href="{% url "case-remove-perpetrator" case.id perpetrator.id %}">
-                Remove from case
+<ul class="nw-person-list">
+  {% for person in case.perpetrators.all %}
+    <li>
+        {% include 'cases/_person.html' with person=person case=case relationship='perpetrator' %}
+    </li>
+  {% endfor %}
+    <li>
+        <div class="nw-person nw-person--empty">
+            <a class="nw-link--no-visited-state" href="{% url 'case-search-perpetrator' case.id %}">
+                Add another perpetrator
             </a>
-        </dd>
-    </div>
-</dl>
-</li>
-{% empty %}
-<li>
-<dl class="nw-summary-list">
-    <div class="govuk-summary-list__row govuk-summary-list__row--warning">
-        <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar-warning.svg" class="icon-avatar-warning" alt=""></dt>
-        <dd class="govuk-summary-list__value">
-            <p class="govuk-body">None</p>
-        </dd>
-        <dd class="govuk-summary-list__actions">
-            <a class="nw-link--no-visited-state" href="{% url "case-search-perpetrator" case.id %}">
-                Add<span class="govuk-visually-hidden"> perpetrator</span>
-            </a>
-        </dd>
-    </div>
-</dl>
-</li>
-{% endfor %}
+        </div>
+    </li>
+</ul>
+
+{% else %}
+
+<p>
+    No perpetrators on this case. <a class="nw-link--no-visited-state" href="{% url "case-search-perpetrator" case.id %}">Add a perpetrator</a>.
+</p>
+
+{% endif %}
 
 <h2 class="lbh-heading-h2 section-heading">{% blocktranslate count counter=case.all_complainants|length trimmed %}
     Reporter{% plural %}Reporters
     {% endblocktranslate %}</h2>
 
-<ul class="list-reporters">
-{% for complainant in case.all_complainants %}
-<li>
-
-<dl class="nw-summary-list">
-    <div class="govuk-summary-list__row govuk-summary-list__row--lbh-grey-4">
-        <dt class="govuk-summary-list__key"><img src="/static/assets/images/avatar.svg" class="icon-avatar" alt=""></dt>
-        <dd class="govuk-summary-list__value">
-          <p class="govuk-body">{{ complainant }}
-            {% blocktranslate count counter=complainant.num_cases with cases=complainant.num_cases trimmed %}
-            ({{ cases }} case)
-            {% plural %}
-            ({{ cases }} cases)
-            {% endblocktranslate %}
-          </p>
-        {% if complainant.phone %}
-          <p class="govuk-body">{{ complainant.phone.as_national }}
-            {% if complainant.phone_verified %} (verified){% endif %}
-        {% endif %}
-        {% if complainant.email %}
-          <p class="govuk-body">{{ complainant.email }}
-            {% if complainant.email_verified %} (verified){% endif %}
-        {% endif %}
-        <p class="govuk-body">{{ complainant.address_display }}</p>
-          <p class="text-smaller">Available
-            {% for time in complainant.get_best_time_display %}
-            {% if not forloop.first %}{% if forloop.last %} or {% else %}, {% endif %}{% endif %}
-            {{ time|lower }}{% empty %}<i>unknown</i>{% endfor %},
-            by {{ complainant.get_best_method_display|default:"unknown"|lower }}
-          </p>
-        </dd>
-        <dd class="govuk-summary-list__actions">
-        </dd>
-      </div>
-  </dl>
-
-{% endfor %}
+<ul class="nw-person-list">
+  {% for person in case.all_complainants %}
+    <li>
+        {% include 'cases/_person.html' with person=person case=case relationship='reporter' %}
+    </li>
+  {% endfor %}
 </ul>
 
 <h2 class="lbh-heading-h2 section-heading">Timeline</h2>

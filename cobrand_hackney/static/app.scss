@@ -69,6 +69,7 @@ $lbh-asset-path: "/static/hackney";
 @import "timeline";
 @import "sections";
 @import "merge.scss";
+@import "person";
 
 span {
     font-family: $lbh-font-family;
@@ -128,10 +129,6 @@ dl.inline {
 }
 
 // Case page
-
-.list-reporters li {
-    list-style-type: none;
-}
 
 .case-detail__map {
     display: none;

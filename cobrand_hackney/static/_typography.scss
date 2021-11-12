@@ -1,11 +1,21 @@
-p.text-smaller {
-    font-size: 0.875em;
-    margin-top: 0;
-}
-
 .p-warning {
     color: $lbh-error;
     font-weight: 600;
     padding: 0;
     margin-top: 0;
+}
+
+.nw-inline-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    margin: -0.5rem;
+
+    & > * {
+        padding: 0.5rem;
+    }
+}
+
+.nw-text-muted {
+    color: lbh-colour("lbh-grey-1") !important;
 }
