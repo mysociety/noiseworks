@@ -1,0 +1,11 @@
+.nw-button-bar {
+    @include govuk-media-query($from: tablet) {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 2rem -0.5rem -0.5rem -0.5rem;
+
+        & > * {
+            margin: 0.5rem;
+        }
+    }
+}

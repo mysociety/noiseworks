@@ -18,19 +18,5 @@
     {% crispy form %}
 </fieldset>
 
-<script>
-    document.querySelectorAll('input[name="kind"]').forEach(function(i) {
-        i.addEventListener('change', function(e) {
-            if (e.currentTarget.value == "other") {
-                document.getElementById('div_id_kind_other').style.display = 'block';
-            } else {
-                document.getElementById('div_id_kind_other').style.display = 'none';
-            }
-        });
-    });
-    var el = document.querySelector('input[name="kind"]:checked');
-    el.dispatchEvent(new Event('change'));
-</script>
-
 {% endblock %}
 

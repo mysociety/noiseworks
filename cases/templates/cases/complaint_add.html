@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds %}
+
+{% block content %}
+
+<div>
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">Back to case #{{ case.id }}</a>
+</div>
+
+<div class="nw-merge-source">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <p class="govuk-body">
+            <strong>{{ case.kind_display }} at {{ case.location_display }}</strong>
+            </p>
+            <p class="govuk-body" style="margin-bottom:0">
+            Case reference <strong>{{ case.id }}</strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+{% error_summary wizard.form %}
+
+{% if wizard.form.title %}
+<h1 class="govuk-heading-l govuk-!-margin-top-7">{{ wizard.form.title }}</h1>
+{% endif %}
+
+{% if wizard.steps.current == "summary" %}
+
+<dl class="nw-summary-list govuk-!-margin-bottom-8">
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise started again</dt>
+    <dd class="govuk-summary-list__value">{{ data.start_date }}, {{ data.start_time }}</dd>
+    <dd class="govuk-summary-list__actions">
+    <a class="nw-link--no-visited-state" href="isitnow">
+        Change<span class="govuk-visually-hidden"> start time</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise ended</dt>
+    <dd class="govuk-summary-list__value">
+     {% if data.happening_now %}
+     Still ongoing at {% now "P, D j M Y" %}
+     {% else %}
+      {{ data.start_date }}, {{ data.end_time }}
+     {% endif %}
+    </dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="{% if data.happening_now %}isnow{% else %}notnow{% endif %}">
+        Change<span class="govuk-visually-hidden"> end time</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Rooms affected</dt>
+    <dd class="govuk-summary-list__value">{{ data.rooms }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="rooms">
+        Change<span class="govuk-visually-hidden"> rooms</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise description</dt>
+    <dd class="govuk-summary-list__value">{{ data.description }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="describe">
+        Change<span class="govuk-visually-hidden"> description</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Effect on you</dt>
+    <dd class="govuk-summary-list__value">{{ data.effect }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="effect">
+        Change<span class="govuk-visually-hidden"> effect</span>
+      </a>
+    </dd>
+  </div>
+{% if reporting_user %}
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Reporting user</dt>
+    <dd class="govuk-summary-list__value">{{ reporting_user }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="user_search">
+        Change<span class="govuk-visually-hidden"> user</span>
+      </a>
+    </dd>
+  </div>
+{% endif %}
+</dl>
+
+{% endif %}
+
+<form action="" method="post">
+{{ wizard.management_form }}
+{% crispy wizard.form %}
+
+<p><a href="{% url "complaint-add" case.id %}">Cancel</a></p>
+
+</form>
+
+{% endblock %}

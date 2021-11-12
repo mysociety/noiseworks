@@ -78,6 +78,7 @@ CRISPY_CLASS_CONVERTERS = {
     "select": "govuk-select lbh-select",
     "textinput": "govuk-input lbh-input",
     "emailinput": "govuk-input lbh-input",
+    "timewidget": "govuk-input lbh-input govuk-input--width-5",
     "textarea": "govuk-textarea lbh-textarea",
     "clearablefileinput": "govuk-file-upload lbh-file-upload",
     "searchwidget": "govuk-input lbh-input",
@@ -183,6 +184,17 @@ USE_I18N = True
 
 USE_L10N = False
 DATETIME_FORMAT = "D, j M Y, P"
+DATE_FORMAT = "D, j M Y"
+TIME_INPUT_FORMATS = [
+    "%I:%M %p",
+    "%I.%M %p",
+    "%I %M %p",
+    "%I:%M%p",
+    "%I.%M%p",
+    "%I %M%p",
+    "%I %p",
+    "%I%p",
+]
 
 USE_TZ = True
 

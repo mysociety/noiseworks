@@ -1,10 +1,14 @@
+import datetime
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.gis.measure import D
 from django.core.paginator import Paginator
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
+from formtools.wizard.views import NamedUrlSessionWizardView
 from noiseworks.decorators import staff_member_required
 from .filters import CaseFilter
 from .models import Case, Complaint, Action, ActionType
@@ -140,7 +144,9 @@ def search_perpetrator(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.PersonSearchForm(request.POST or None)
     if form.is_valid():
-        form = forms.PersonPickForm(initial={"search": form.cleaned_data["search"]})
+        form = forms.PerpetratorPickForm(
+            initial={"search": form.cleaned_data["search"]}
+        )
         form.helper.form_action = reverse("case-add-perpetrator", args=[case.id])
     return render(
         request,
@@ -157,7 +163,7 @@ def add_perpetrator(request, pk):
     case = get_object_or_404(Case, pk=pk)
     if not request.POST:
         return HttpResponseForbidden()
-    form = forms.PersonPickForm(request.POST)
+    form = forms.PerpetratorPickForm(request.POST)
     if form.is_valid():
         form.save(case=case)
         return redirect(case)
@@ -272,3 +278,130 @@ def complaint(request, pk, complaint):
         "cases/complaint_detail.html",
         context={"case": case, "complaint": complaint},
     )
+
+
+class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
+    template_name = "cases/complaint_add.html"
+    context_object_name = "case"
+    model = Case
+
+    def dispatch(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_staff:
+            qs = Case.objects.all()
+        else:
+            qs = Case.objects.by_complainant(user)
+        self.object = get_object_or_404(qs, pk=kwargs["pk"])
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, *args, **kwargs):
+        """Always reset if begin page visited."""
+        step_url = kwargs.get("step", None)
+        if step_url is None:
+            self.storage.reset()
+            # self.storage.current_step = self.steps.first
+            return redirect(self.get_step_url(self.steps.current))
+        return super().get(*args, **kwargs)
+
+    def get_prefix(self, request, *args, **kwargs):
+        """To make sure we have separate stored wizard data per case per session"""
+        prefix = super().get_prefix(request, *args, **kwargs)
+        prefix = f"{prefix}_{self.object.id}"
+        return prefix
+
+    def get_step_url(self, step):
+        """As we additionally have the case ID in the url"""
+        return reverse(self.url_name, kwargs={"pk": self.object.id, "step": step})
+
+    def get_context_data(self, **kwargs):
+        kwargs["case"] = self.object
+
+        data = kwargs["data"] = self.get_all_cleaned_data()
+
+        if data.get("user"):
+            user = User.objects.get(id=data["user"])
+            kwargs["reporting_user"] = user
+        elif data.get("last_name"):
+            kwargs[
+                "reporting_user"
+            ] = f"{data['first_name']} {data['last_name']}, {data['address']}, {data['email']}, {data['phone']}"
+
+        return super().get_context_data(**kwargs)
+
+    def get_form_initial(self, step):
+        """The user pick form needs the search query passed to it"""
+        if step == "user_pick":
+            data = self.get_cleaned_data_for_step("user_search")
+            if data:
+                return {"search": data["search"]}
+        return super().get_form_initial(step)
+
+    # Conditionals for form step display
+
+    def show_happening_now_form(wizard):
+        data = wizard.get_cleaned_data_for_step("isitnow") or {}
+        return data.get("happening_now")
+
+    def show_not_happening_now_form(wizard):
+        data = wizard.get_cleaned_data_for_step("isitnow") or {}
+        return not data.get("happening_now")
+
+    def show_user_form(wizard):
+        user = wizard.request.user
+        return user.is_active and user.is_staff
+
+    form_list = [
+        ("isitnow", forms.IsItHappeningNowForm),
+        ("isnow", forms.HappeningNowForm),
+        ("notnow", forms.NotHappeningNowForm),
+        ("rooms", forms.RoomsAffectedForm),
+        ("describe", forms.DescribeNoiseForm),
+        ("effect", forms.EffectForm),
+        ("user_search", forms.RecurrencePersonSearchForm),
+        ("user_pick", forms.PersonPickForm),
+        ("summary", forms.SummaryForm),
+    ]
+
+    condition_dict = {
+        "isnow": show_happening_now_form,
+        "notnow": show_not_happening_now_form,
+        "user_search": show_user_form,
+        "user_pick": show_user_form,
+    }
+
+    def done(self, form_list, form_dict, **kwargs):
+        # Save a new user if need be
+        picker = form_dict["user_pick"]
+        user = picker.save()
+
+        data = self.get_all_cleaned_data()
+        start = datetime.datetime.combine(
+            data["start_date"],
+            data["start_time"],
+            tzinfo=timezone.get_current_timezone(),
+        )
+        if data["happening_now"]:
+            end = timezone.now()
+        else:
+            end = datetime.datetime.combine(
+                data["start_date"],
+                data["end_time"],
+                tzinfo=timezone.get_current_timezone(),
+            )
+        complaint = Complaint(
+            case=self.object,
+            complainant_id=user,
+            happening_now=data["happening_now"],
+            start=start,
+            end=end,
+            rooms=data["rooms"],
+            description=data["description"],
+            effect=data["effect"],
+        )
+        complaint.save()
+        return render(
+            self.request,
+            "cases/complaint_add_done.html",
+            {"data": data, "case": self.object},
+        )
