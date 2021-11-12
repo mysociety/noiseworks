@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+{% error_summary form %}
+
+<fieldset class="govuk-fieldset lbh-fieldset">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--xl">
+        <h1 class="govuk-fieldset__heading">About the noise</h1>
+    </legend>
+    {% crispy form %}
+</fieldset>
+
+{% endblock %}

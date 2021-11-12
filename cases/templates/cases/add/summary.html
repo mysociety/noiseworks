@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds %}
+
+{% block content %}
+
+{% error_summary wizard.form %}
+
+<h1 class="govuk-heading-l">{{ wizard.form.title }}</h1>
+
+<dl class="nw-summary-list">
+{% if reporting_user %}
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Reporting user</dt>
+    <dd class="govuk-summary-list__value">{{ reporting_user }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href=""> <!-- TODO user_search OR about -->
+        Change<span class="govuk-visually-hidden"> user</span>
+      </a>
+    </dd>
+  </div>
+{% endif %}
+
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Availability</dt>
+    <dd class="govuk-summary-list__value">{{ data.best_time|join:" or " }}, by {{ data.best_method }}</dd>
+    <dd class="govuk-summary-list__actions">
+    <a class="nw-link--no-visited-state" href="best_time">
+        Change<span class="govuk-visually-hidden"> availability</span>
+      </a>
+    </dd>
+  </div>
+
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Type of noise</dt>
+    <dd class="govuk-summary-list__value">{{ case.get_kind_display }}</dd>
+    <dd class="govuk-summary-list__actions">
+    <a class="nw-link--no-visited-state" href="kind">
+        Change<span class="govuk-visually-hidden"> type of noise</span>
+      </a>
+    </dd>
+  </div>
+
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Where is the noise coming from?</dt>
+    <dd class="govuk-summary-list__value">{{ case.get_where_display }}</dd>
+    <dd class="govuk-summary-list__actions">
+    <a class="nw-link--no-visited-state" href="where">
+        Change<span class="govuk-visually-hidden"> where noise is coming from</span>
+      </a>
+    </dd>
+  </div>
+
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Source of the noise</dt>
+    <dd class="govuk-summary-list__value">{{ case.location_display }}</dd>
+    <dd class="govuk-summary-list__actions">
+    <a class="nw-link--no-visited-state" href="where-location">
+        Change<span class="govuk-visually-hidden"> noise source</span>
+      </a>
+    </dd>
+  </div>
+
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise started</dt>
+    <dd class="govuk-summary-list__value">{{ data.start_date }}, {{ data.start_time }}</dd>
+    <dd class="govuk-summary-list__actions">
+    <a class="nw-link--no-visited-state" href="isitnow">
+        Change<span class="govuk-visually-hidden"> start time</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise ended</dt>
+    <dd class="govuk-summary-list__value">
+     {% if data.happening_now %}
+     Still ongoing at {% now "P, D j M Y" %}
+     {% else %}
+      {{ data.start_date }}, {{ data.end_time }}
+     {% endif %}
+    </dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="{% if data.happening_now %}isnow{% else %}notnow{% endif %}">
+        Change<span class="govuk-visually-hidden"> end time</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Rooms affected</dt>
+    <dd class="govuk-summary-list__value">{{ data.rooms }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="rooms">
+        Change<span class="govuk-visually-hidden"> rooms</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise description</dt>
+    <dd class="govuk-summary-list__value">{{ data.description }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="describe">
+        Change<span class="govuk-visually-hidden"> description</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Effect on you</dt>
+    <dd class="govuk-summary-list__value">{{ data.effect }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="effect">
+        Change<span class="govuk-visually-hidden"> effect</span>
+      </a>
+    </dd>
+  </div>
+</dl>
+
+<form action="" method="post">
+{{ wizard.management_form }}
+{% crispy wizard.form %}
+</form>
+
+{% endblock %}

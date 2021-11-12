@@ -1,9 +1,12 @@
 import datetime
+import re
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
@@ -14,6 +17,7 @@ from .filters import CaseFilter
 from .models import Case, Complaint, Action, ActionType
 from . import forms
 from accounts.models import User
+from . import map_utils
 
 
 @login_required(redirect_field_name="nxt")
@@ -274,6 +278,43 @@ def complaint(request, pk, complaint):
     )
 
 
+# Conditionals for form step display
+
+
+def show_postcode_results_form(wizard):
+    data = wizard.storage.get_step_data("where-location") or {}
+    return data.get("postcode_results")
+
+
+def show_geocode_results_form(wizard):
+    data = wizard.storage.get_step_data("where-location") or {}
+    return data.get("geocode_results")
+
+
+def show_map_form(wizard):
+    data1 = wizard.storage.get_step_data("where-location") or {}
+    data2 = wizard.get_cleaned_data_for_step("where-geocode-results") or {}
+    return data1.get("geocode_result") or data2.get("geocode_result")
+
+
+def show_happening_now_form(wizard):
+    data = wizard.get_cleaned_data_for_step("isitnow") or {}
+    return data.get("happening_now")
+
+
+def show_not_happening_now_form(wizard):
+    return not show_happening_now_form(wizard)
+
+
+def show_user_form(wizard):
+    user = wizard.request.user
+    return user.is_active and user.is_staff
+
+
+def show_about_form(wizard):
+    return not show_user_form(wizard)
+
+
 class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
     template_name = "cases/complaint_add.html"
     context_object_name = "case"
@@ -310,7 +351,6 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
 
     def get_context_data(self, **kwargs):
         kwargs["case"] = self.object
-
         data = kwargs["data"] = self.get_all_cleaned_data()
 
         if data.get("user"):
@@ -330,20 +370,6 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
             if data:
                 return {"search": data["search"]}
         return super().get_form_initial(step)
-
-    # Conditionals for form step display
-
-    def show_happening_now_form(wizard):
-        data = wizard.get_cleaned_data_for_step("isitnow") or {}
-        return data.get("happening_now")
-
-    def show_not_happening_now_form(wizard):
-        data = wizard.get_cleaned_data_for_step("isitnow") or {}
-        return not data.get("happening_now")
-
-    def show_user_form(wizard):
-        user = wizard.request.user
-        return user.is_active and user.is_staff
 
     form_list = [
         ("isitnow", forms.IsItHappeningNowForm),
@@ -398,4 +424,250 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
             self.request,
             "cases/complaint_add_done.html",
             {"data": data, "case": self.object},
+        )
+
+
+def report_existing_qn(request):
+    data = request.POST or None
+    if "get" in request.POST:
+        data = None
+    form = forms.ExistingForm(data)
+    if form.is_valid():
+        flow = form.cleaned_data["existing"]
+        if flow == "new":
+            return redirect("case-add")
+        else:  # existing
+            return redirect("cases")
+    return render(request, "cases/add/existing.html", {"form": form})
+
+
+class ReportingWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
+    def get(self, *args, **kwargs):
+        """Always reset if begin page visited."""
+        step_url = kwargs.get("step", None)
+        if step_url is None:
+            self.storage.reset()
+            # self.storage.current_step = self.steps.first
+            return redirect(self.get_step_url(self.steps.current))
+        return super().get(*args, **kwargs)
+
+    def _deal_with_no_js_map_click(self):
+        """If we have clicked the map or no-JS zoom buttons, deal with that
+        first off to convert to it being as if we'd come to the map page anew
+        with this data"""
+        coords = {}
+        x = y = None
+        zoom = self.request.POST.get("where-map-zoom")
+        point = self.request.POST.get("where-map-point")
+        radius = self.request.POST.get("where-map-radius")
+        for key in self.request.POST:
+            m = re.match("tile_(\d+)\.(\d+)\.([xy])", key)
+            if m:
+                x, y, d = m.groups()
+                coords[d] = int(self.request.POST[key])
+        if x and y and "x" in coords and "y" in coords:
+            lat, lon = map_utils.click_to_wgs84(
+                int(zoom), int(x), coords["x"], int(y), coords["y"]
+            )
+            self.initial_dict = {
+                "where-map": {
+                    "point": f"POINT ({lon} {lat})",
+                    "radius": radius,
+                    "zoom": zoom,
+                }
+            }
+            return True
+        if "change-zoom" in self.request.POST:
+            self.initial_dict = {
+                "where-map": {
+                    "point": point,
+                    "radius": radius,
+                    "zoom": self.request.POST["change-zoom"],
+                }
+            }
+            return True
+        return False
+
+    def post(self, *args, **kwargs):
+        if self._deal_with_no_js_map_click():
+            return self.render()
+        return super().post(*args, **kwargs)
+
+    def get_template_names(self):
+        """Template to use is stored on the form"""
+        form = self.form_list[self.steps.current]
+        return getattr(form, "template", "cases/add/index.html")
+
+    def get_context_data(self, **kwargs):
+        if self.steps.current == "summary":
+            data = kwargs["data"] = self.get_all_cleaned_data()
+            kwargs["case"] = Case(
+                kind=data["kind"],
+                kind_other=data["kind_other"],
+                point=data.get("point"),
+                radius=data.get("radius"),
+                uprn=data.get("source_uprn"),
+                where=data["where"],
+                estate=data["estate"],
+            )
+
+            if data.get("user"):
+                user = User.objects.get(id=data["user"])
+                kwargs["reporting_user"] = user
+            else:  # Must have name
+                address = (
+                    data.get("address_manual") or data.get("address") or "No address"
+                )
+                email = data.get("email") or "No email"
+                phone = data.get("phone") or "No phone"
+                kwargs[
+                    "reporting_user"
+                ] = f"{data['first_name']} {data['last_name']}, {address}, {email}, {phone}"
+
+        return super().get_context_data(**kwargs)
+
+    def get_form_kwargs(self, step):
+        if step == "where-postcode-results":
+            data = self.storage.get_step_data("where-location") or {}
+            return {"address_choices": data["postcode_results"]}
+        elif step == "where-geocode-results":
+            data = self.storage.get_step_data("where-location") or {}
+            if data.get("geocode_results"):
+                return {"geocode_choices": data["geocode_results"]}
+        elif step == "best_time":
+            return {"staff": self.request.user.is_active and self.request.user.is_staff}
+        return super().get_form_kwargs(step)
+
+    def get_form_initial(self, step):
+        """The user pick form needs the search query passed to it"""
+        if step == "user_pick":
+            data = self.get_cleaned_data_for_step("user_search")
+            if data:
+                return {"search": data["search"]}
+        elif step == "where-map":
+            if "where-map" in self.initial_dict:  # no-JS map click
+                return self.initial_dict["where-map"]
+            data1 = self.storage.get_step_data("where-location") or {}
+            data2 = self.get_cleaned_data_for_step("where-geocode-results") or {}
+            initial = {
+                "radius": 30,
+                "zoom": 16,
+            }
+            if data1.get("geocode_result"):
+                lon, lat = data1["geocode_result"][0].split(",")
+                initial["point"] = Point(float(lon), float(lat))
+            else:  # Must have data2.get("geocode_result")
+                lon, lat = data2["geocode_result"].split(",")
+                initial["point"] = Point(float(lon), float(lat))
+            return initial
+        else:
+            return super().get_form_initial(step)
+
+    def process_step(self, form):
+        """If a form has given us some extra information to store, store it."""
+        data = super().process_step(form)
+        if hasattr(form, "to_store"):
+            data = data.copy()
+            data.update(form.to_store)
+        return data
+
+    form_list = [
+        ("user_search", forms.RecurrencePersonSearchForm),
+        ("user_pick", forms.PersonPickForm),
+        ("about", forms.AboutYouForm),
+        ("best_time", forms.BestTimeForm),
+        ("postcode", forms.PostcodeForm),
+        ("kind", forms.ReportingKindForm),
+        ("where", forms.WhereForm),
+        ("where-location", forms.WhereLocationForm),
+        ("where-postcode-results", forms.WherePostcodeResultsForm),
+        ("where-geocode-results", forms.WhereGeocodeResultsForm),
+        ("where-map", forms.WhereMapForm),
+        ("isitnow", forms.IsItHappeningNowForm),
+        ("isnow", forms.HappeningNowForm),
+        ("notnow", forms.NotHappeningNowForm),
+        ("rooms", forms.RoomsAffectedForm),
+        ("describe", forms.DescribeNoiseForm),
+        ("effect", forms.EffectForm),
+        ("summary", forms.SummaryForm),
+    ]
+
+    condition_dict = {
+        "user_search": show_user_form,
+        "user_pick": show_user_form,
+        "about": show_about_form,
+        "postcode": show_about_form,
+        "where-postcode-results": show_postcode_results_form,
+        "where-geocode-results": show_geocode_results_form,
+        "where-map": show_map_form,
+        "isnow": show_happening_now_form,
+        "notnow": show_not_happening_now_form,
+    }
+
+    @transaction.atomic
+    def done(self, form_list, form_dict, **kwargs):
+        data = self.get_all_cleaned_data()
+
+        # Save a new user if need be
+        if data.get("user"):
+            user = User.objects.get(pk=data["user"])
+        else:
+            try:
+                user = User.objects.get(email=data["email"], email_verified=True)
+            except User.DoesNotExist:
+                try:
+                    user = User.objects.get(phone=data["phone"], phone_verified=True)
+                except User.DoesNotExist:
+                    user = User.objects.create_user(
+                        first_name=data["first_name"],
+                        last_name=data["last_name"],
+                        email=data["email"],
+                        phone=data["phone"],
+                        uprn=data.get("address_uprn", ""),
+                        address=data["address"] or data["address_manual"],
+                    )
+
+        user.best_time = data["best_time"]
+        user.best_method = data["best_method"]
+        user.save()
+
+        case = Case(
+            kind=data["kind"],
+            kind_other=data["kind_other"],
+            point=data.get("point"),
+            radius=data.get("radius"),
+            uprn=data.get("source_uprn", ""),
+            where=data["where"],
+            estate=data["estate"],
+        )
+        case.save()
+
+        start = datetime.datetime.combine(
+            data["start_date"],
+            data["start_time"],
+            tzinfo=timezone.get_current_timezone(),
+        )
+        if data["happening_now"]:
+            end = timezone.now()
+        else:
+            end = datetime.datetime.combine(
+                data["start_date"],
+                data["end_time"],
+                tzinfo=timezone.get_current_timezone(),
+            )
+        complaint = Complaint(
+            case=case,
+            complainant=user,
+            happening_now=data["happening_now"],
+            start=start,
+            end=end,
+            rooms=data["rooms"],
+            description=data["description"],
+            effect=data["effect"],
+        )
+        complaint.save()
+        return render(
+            self.request,
+            "cases/add/done.html",
+            {"data": data, "case": case},
         )

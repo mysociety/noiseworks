@@ -1,0 +1,133 @@
+{% load static %}
+
+<style>
+.noscript { position: relative; width: 512px; }
+.js-enabled .noscript { display: none; }
+.case-add__map { height: 512px; margin: 1rem 0; }
+.case-add__map #leaflet { height: 100%; }
+.case-add__map * + * { margin-top: 0; }
+
+/* Make the buttons act like the links */
+.leaflet-bar button,
+.leaflet-bar button:hover {
+    border: none;
+    cursor: pointer;
+
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar button {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar button:hover {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar button:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar button:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar button.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar button {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar button:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar button:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+</style>
+
+<div class="case-add__map" id="map">
+    <div class="noscript">
+        <input type="image" alt="Map tile"
+            name="tile_{{ tile.x }}.{{ tile.y }}"
+            src="{{ tile.url }}">
+        <img src="{% static "hackney/images/contact/map-marker.svg" %}"
+			class="leaflet-marker-icon leaflet-zoom-animated"
+			style="margin-left: -24px; margin-top: -48px; width: 48px; height: 48px; transform: translate3d({{ pin.x }}px, {{ pin.y }}px, 0px); z-index: 200;"
+			alt="" tabindex="0">
+
+<div class="leaflet-top leaflet-right">
+	<div class="leaflet-control-zoom leaflet-bar leaflet-control">
+        <button class="leaflet-control-zoom-in" name="change-zoom" value="{{ zoom|add:"1" }}" aria-label="Zoom in" title="Zoom in">+</button>
+        <button class="leaflet-control-zoom-out" name="change-zoom" value="{{ zoom|add:"-1" }}" aria-label="Zoom out" title="Zoom out">-</button>
+	</div>
+</div>
+    </div>
+    <div id="leaflet"></div>
+</div>
+
+<input type="hidden" id="{{ id }}" class="required" name="{{ name }}" value="{{ serialized }}">
+
+<script>
+var nw = nw || {};
+(function(){
+    var point = new L.LatLng({{ value.1 }}, {{ value.0 }});
+    var map = nw.map = new L.Map("leaflet", {
+        center: point,
+        zoom: 17
+    });
+    map.zoomControl.setPosition('topright');
+    map.attributionControl.setPrefix('');
+
+    var layer;
+    if (nw.MAP_TYPE === 'osm') {
+        layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        });
+    } else {
+        layer = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            tileSize: 512,
+            maxZoom: 19,
+            zoomOffset: -1,
+            id: 'mapbox/streets-v11',
+            accessToken: 'pk.eyJ1IjoibGJoZWxld2lzIiwiYSI6ImNqeXJkN25uNjA5M3Uzb251bWVyejJ3YW8ifQ.uzO8I54w64U6QkNknW32FA'
+        });
+    }
+    layer.addTo(map);
+
+    map.on('click', function(e) {
+        circle.setLatLng(e.latlng);
+    });
+
+    var circle = L.circle(point, { radius: {{ radius|default:30 }}, color: '#00664f' });
+    circle.on('move', function(e) {
+        document.getElementById('{{ id }}').value = 'POINT (' + e.latlng.lng + ' ' + e.latlng.lat + ')';
+    });
+    map.addLayer(circle);
+
+    nw.react = function() {
+        var radius = document.querySelector('input[name=where-map-radius]:checked');
+        circle.setRadius(radius.value);
+        map.fitBounds(circle.getBounds());
+    };
+})();
+</script>
+
+

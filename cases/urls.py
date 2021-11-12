@@ -1,12 +1,18 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from . import views
 
+reporting_wizard = views.ReportingWizard.as_view(url_name="case-add-step")
 recurrence_wizard = views.RecurrenceWizard.as_view(url_name="complaint-add-step")
 
 
 urlpatterns = [
     path("", views.case_list, name="cases"),
     path("/<int:pk>", views.case, name="case-view"),
+    path("/add", TemplateView.as_view(template_name="cases/add/intro.html")),
+    path("/add/existing", views.report_existing_qn, name="case-report-existing-qn"),
+    path("/add/begin", reporting_wizard, name="case-add"),
+    path("/add/<step>", reporting_wizard, name="case-add-step"),
     path("/<int:pk>/complaint/add", recurrence_wizard, name="complaint-add"),
     path(
         "/<int:pk>/complaint/add/<step>", recurrence_wizard, name="complaint-add-step"

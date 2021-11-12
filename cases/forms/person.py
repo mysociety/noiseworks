@@ -7,7 +7,8 @@ from noiseworks.forms import GDSForm
 
 
 class PersonPickForm(GDSForm, forms.Form):
-    submit_text = "Submit"
+    title = "Who are you submitting this report on behalf of?"
+    submit_text = "Next"
 
     search = forms.CharField(widget=forms.HiddenInput)
     user = forms.ChoiceField(widget=forms.RadioSelect)
@@ -73,7 +74,7 @@ class PersonSearchForm(GDSForm, forms.Form):
 
 
 class RecurrencePersonSearchForm(PersonSearchForm):
-    title = "Reporting user"
+    title = "Who are you submitting this report on behalf of?"
 
 
 class PerpetratorPickForm(PersonPickForm):

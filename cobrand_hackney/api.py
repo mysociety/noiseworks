@@ -217,3 +217,22 @@ def _distanceToLine(pt, start, end):
     fx = start[0] + along * dx
     fy = start[1] + along * dy
     return math.sqrt(((pt.x - fx) ** 2) + ((pt.y - fy) ** 2))
+
+
+def geocode(q):
+    url = "https://nominatim.openstreetmap.org/search"
+    r = session.get(
+        url,
+        params={
+            "q": q,
+            "countrycodes": "gb",
+            "viewbox": "51.519814,-0.104511,51.577784,-0.016527",
+            "email": settings.CONTACT_EMAIL,
+            "format": "jsonv2",
+        },
+    )
+    data = r.json()
+    out = []
+    for row in data:
+        out.append((f"{row['lon']},{row['lat']}", row["display_name"]))
+    return out
