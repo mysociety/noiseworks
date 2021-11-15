@@ -2,8 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.gis.measure import D
 from django.core.paginator import Paginator
-from django.http import HttpResponseRedirect, HttpResponseForbidden
-from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponseForbidden
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from noiseworks.decorators import staff_member_required
 from .filters import CaseFilter
@@ -79,7 +79,7 @@ def case_staff(request, pk):
 
     # redirect = case.merged_into
     # if redirect:
-    #    return HttpResponseRedirect(redirect.get_absolute_url())
+    #    return redirect(redirect)
 
     return render(request, "cases/case_detail_staff.html", context={"case": case})
 
@@ -90,7 +90,7 @@ def reassign(request, pk):
     form = forms.ReassignForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
-        return HttpResponseRedirect(case.get_absolute_url())
+        return redirect(case)
     return render(
         request,
         "cases/reassign.html",
@@ -107,7 +107,7 @@ def edit_kind(request, pk):
     form = forms.KindForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
-        return HttpResponseRedirect(case.get_absolute_url())
+        return redirect(case)
     return render(
         request,
         "cases/edit-kind.html",
@@ -124,7 +124,7 @@ def edit_location(request, pk):
     form = forms.LocationForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
-        return HttpResponseRedirect(case.get_absolute_url())
+        return redirect(case)
     return render(
         request,
         "cases/edit-location.html",
@@ -160,7 +160,7 @@ def add_perpetrator(request, pk):
     form = forms.PersonPickForm(request.POST)
     if form.is_valid():
         form.save(case=case)
-        return HttpResponseRedirect(case.get_absolute_url())
+        return redirect(case)
     return render(
         request,
         "cases/add-perpetrator.html",
@@ -181,7 +181,7 @@ def remove_perpetrator(request, pk, perpetrator):
         name="Edit case", defaults={"visibility": "internal"}
     )
     Action.objects.create(case=case, type=typ, notes="Removed perpetrator")
-    return HttpResponseRedirect(case.get_absolute_url())
+    return redirect(case)
 
 
 @staff_member_required
@@ -190,7 +190,7 @@ def log_action(request, pk):
     form = forms.ActionForm(request.POST or None)
     if form.is_valid():
         form.save(case=case)
-        return HttpResponseRedirect(case.get_absolute_url())
+        return redirect(case)
     return render(
         request,
         "cases/action_form.html",
@@ -217,7 +217,7 @@ def merge_stop(request, case):
     if "merging_case" in request.session:
         del request.session["merging_case"]
         messages.success(request, "We have forgotten your current merging.")
-    return HttpResponseRedirect(case.get_absolute_url())
+    return redirect(case)
 
 
 def merge_action(request, case):
@@ -266,7 +266,7 @@ def complaint(request, pk, complaint):
     merge_map = case.action_merge_map
     case_ids = merge_map.keys()
     if complaint.case.id not in case_ids:
-        return HttpResponseRedirect(case.get_absolute_url())
+        return redirect(case)
     return render(
         request,
         "cases/complaint_detail.html",

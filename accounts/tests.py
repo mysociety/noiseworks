@@ -39,7 +39,9 @@ def sms_catcher(requests_mock):
 
 
 def test_create_user_without_email_or_phone():
-    user = User.objects.create_user(first_name="No", last_name="Contact", address="Address")
+    user = User.objects.create_user(
+        first_name="No", last_name="Contact", address="Address"
+    )
     assert user.id
 
 
