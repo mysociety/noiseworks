@@ -66,6 +66,7 @@ def case_list_staff(request):
         {
             "filter": f,
             "qs": qs,
+            "user_wards": request.user.wards or [],
         },
     )
 
