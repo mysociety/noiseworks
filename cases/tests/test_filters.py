@@ -83,3 +83,8 @@ def test_search(admin_client, case_1, requests_mock):
     assertContains(resp, "Other")
     resp = admin_client.get(f"/cases?search={case_1.id}")
     assertContains(resp, "Other")
+
+
+def test_user_ward_js_array(admin_client):
+    resp = admin_client.get(f"/cases")
+    assertContains(resp, "nw.user_wards = []")

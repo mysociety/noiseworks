@@ -13,6 +13,10 @@
         {% crispy filter.form %}
         </div>
     </div>
+    <script>
+        var nw = nw || {};
+        nw.user_wards = {{ user_wards|safe }};
+    </script>
     <div class="govuk-grid-column-two-thirds">
 
       {% if qs %}
