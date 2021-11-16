@@ -8,6 +8,7 @@ __pycache__/
 
 /.coverage
 /htmlcov
+/http_cache.sqlite
 
 conf/env.sh
 conf/env.sh.deployed

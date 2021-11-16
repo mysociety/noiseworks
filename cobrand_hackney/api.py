@@ -1,7 +1,15 @@
 import math
 import sys
 import requests
+from requests_cache import CachedSession
 from django.conf import settings
+
+api = settings.COBRAND_SETTINGS["address_api"]
+if "pytest" in sys.modules:
+    session = requests.Session()
+else:  # pragma: no cover
+    session = CachedSession(expire_after=86400)
+session.headers.update({"Authorization": api["key"]})
 
 
 def construct_address(address, include_postcode=False):
@@ -17,13 +25,7 @@ def construct_address(address, include_postcode=False):
 
 
 def address_for_uprn(uprn):
-    api = settings.COBRAND_SETTINGS["address_api"]
-    url = api["url"]
-    key = api["key"]
-
-    s = requests.Session()
-    s.headers.update({"Authorization": key})
-    r = s.get(url, params={"uprn": uprn, "format": "detailed"})
+    r = session.get(api["url"], params={"uprn": uprn, "format": "detailed"})
     data = r.json()
     addresses = data["data"]["address"]
     if not addresses:
@@ -35,48 +37,27 @@ def address_for_uprn(uprn):
 
 
 def addresses_for_postcode(postcode):
-    api = settings.COBRAND_SETTINGS["address_api"]
-    url = api["url"]
-    key = api["key"]
-    pageAttr = api["pageAttr"]
-
-    params = {
-        "format": "detailed",
-        "postcode": postcode,
-    }
-
+    params = {"format": "detailed", "postcode": postcode}
     return _addresses_api(params)
 
 
 def addresses_for_string(string):
-    params = {
-        "format": "detailed",
-        "gazetteer": "local",
-        "street": string,
-    }
+    params = {"format": "detailed", "gazetteer": "local", "street": string}
     return _addresses_api(params)
 
 
 def _addresses_api(params):
-    api = settings.COBRAND_SETTINGS["address_api"]
-    url = api["url"]
-    key = api["key"]
-    pageAttr = api["pageAttr"]
-
-    s = requests.Session()
-    s.headers.update({"Authorization": key})
-
     page = 1
     pages = 1
     addresses = []
     outside = False
     while page <= pages:
         params["page"] = page
-        r = s.get(url, params=params)
+        r = session.get(api["url"], params=params)
         data = r.json()
         if "data" not in data:
             return {"error": "Sorry, did not recognise that postcode"}
-        pages = data["data"].get(pageAttr, 0)
+        pages = data["data"].get(api["pageAttr"], 0)
         for address in data["data"]["address"]:
             if address["locality"] != "HACKNEY":
                 outside = True
