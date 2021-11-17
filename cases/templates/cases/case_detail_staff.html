@@ -151,7 +151,8 @@ var nw = nw || {};
     var point = new L.LatLng({{ case.point_as_latlon_string }});
     var map = nw.map = new L.Map("leaflet", {
         center: point,
-        zoom: 17
+        zoom: 17,
+        scrollWheelZoom: false
     });
     map.zoomControl.setPosition('topright');
     map.attributionControl.setPrefix('');
