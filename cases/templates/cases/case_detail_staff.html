@@ -1,6 +1,22 @@
 {% extends "base.html" %}
 {% load i18n %}
 
+{% block merging %}
+  {% with request.session.merging_case as duplicate %}
+    {% if duplicate and case.id != duplicate.id %}
+    <div class="lbh-merging-bar">
+      <div class="lbh-container">
+        <h5>Merging mode</h5>
+        <form action="{% url "case-merge" case.id %}" method="post">{% csrf_token %}
+          <input class="nw-button" type="submit" name="dupe" value="Merge {{ duplicate.name }} into this case" id="edit-form-submit">
+          <input class="nw-button nw-button--secondary" type="submit" name="stop" value="Stop looking for duplicates">
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  {% endwith %}
+{% endblock %}
+
 {% block content %}
 {% with request.session.merging_case as duplicate %}
 
@@ -12,21 +28,6 @@
     </div>
 </section>
 {% endif %}
-
-{% if duplicate and case.id != duplicate.id %}
-<div style="background-color: #ffe; padding: 1em 1em 0;">
-<form action="{% url "case-merge" case.id %}" method="post">{% csrf_token %}
-<input class="nw-button" type="submit" name="dupe" value="Merge {{ duplicate.name }} into this case" id="edit-form-submit">
-<input class="nw-button nw-button--secondary" type="submit" name="stop" value="Stop looking for duplicates">
-</form>
-</div>
-{% endif %}
-
-<!--
-<div>
-    <a href="{% url "cases" %}" class="nw-back-link">Back to all cases</a>
-</div>
--->
 
 <p class="nw-tag--id">{{ case.id }}</p>
 <h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>

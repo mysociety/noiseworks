@@ -263,3 +263,27 @@ ul.case-list-user li {
         padding: 0 0 0 5px;
     }
 }
+
+// Merging menu
+.lbh-merging-bar {
+    background-color: rgba(lbh-colour("lbh-a01"), 0.28);
+    padding: 1em 0;
+    margin-top:-2.25rem;
+    border: 1px solid rgba(lbh-colour("lbh-a01"), 0.36);
+    border-top: none;
+
+    form {
+        margin-top:1rem;
+    }
+
+    @include govuk-media-query($from: tablet) {
+        margin-top:-3.75rem;
+    }
+
+    .nw-button {
+        margin-top:0.5rem;
+        @include govuk-media-query($from: tablet) {
+            margin-top:0;
+        }
+    }
+}
