@@ -135,17 +135,17 @@
     <!-- Announcements go here -->
     <!-- Breadcrumbs go here -->
 
+    {% if messages %}
+    {% for message in messages %}
+    <section class="lbh-page-announcement lbh-page-announcement--info lbh-container" style="box-sizing: border-box; margin-bottom: 0;">
+      <h5 {% if message.tags %} class="lbh-page-announcement__title {{ message.tags }}" {% endif %} style="margin-bottom: 0;">{{ message }}</h5>
+    </section>
+    {% endfor %}
+    {% endif %}
+
     <main class="lbh-main-wrapper " id="main-content" role="main">
       {% block merging %}{% endblock %}
       <div class="lbh-container">
-        {% if messages %}
-            <ul class="messages">
-              {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-              {% endfor %}
-            </ul>
-        {% endif %}
-
         {% block content %}{% endblock %}
       </div>
     </main>
