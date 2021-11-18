@@ -45,17 +45,17 @@ class SignInForm(GDSForm, forms.Form):
 
 class CodeForm(GDSForm, forms.Form):
     code = forms.CharField(label="Token")
-    username = forms.CharField(widget=forms.HiddenInput)
+    user_id = forms.IntegerField(widget=forms.HiddenInput)
     timestamp = forms.CharField(widget=forms.HiddenInput)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.form_action = "/a/code"
 
-    def clean_username(self):
-        username = self.cleaned_data["username"]
+    def clean_user_id(self):
+        user_id = self.cleaned_data["user_id"]
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
             raise ValidationError("Bad request")
         user = user.pk.to_bytes(4, byteorder="big")
@@ -70,12 +70,12 @@ class CodeForm(GDSForm, forms.Form):
     def clean(self):
         if (
             "code" not in self.cleaned_data
-            or "username" not in self.cleaned_data
+            or "user_id" not in self.cleaned_data
             or "timestamp" not in self.cleaned_data
         ):
             return
         code = self.cleaned_data["code"]
-        user = self.cleaned_data["username"]
+        user = self.cleaned_data["user_id"]
         timestamp = self.cleaned_data["timestamp"]
 
         token = user + timestamp + code

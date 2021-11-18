@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import AbstractUser, UserManager as BaseManager
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
@@ -8,20 +9,22 @@ from noiseworks import cobrand
 
 
 class UserManager(BaseManager):
+    def create_user(self, username=None, **extra_fields):
+        username = username or str(uuid.uuid4())
+        return super().create_user(username, **extra_fields)
+
     def _create_user(self, username, email, password, phone="", **extra_fields):
         if not username:
             raise ValueError("The given username must be set")  # pragma: no cover
 
         phone_verified = False
         email_verified = False
-        phone_parsed = to_python(username)
-        if phone_parsed.is_valid():
+        phone_parsed = to_python(phone)
+        if phone_parsed and phone_parsed.is_valid():
             phone = phone_parsed
-            username = str(phone)
             phone_verified = True
-        elif "@" in username:
-            email = username
-            username = self.normalize_email(email)
+        elif email and "@" in email:
+            email = self.normalize_email(email)
             email_verified = True
 
         user = super()._create_user(

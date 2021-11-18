@@ -1,4 +1,5 @@
 import re
+import uuid
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains
@@ -12,7 +13,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def staff_user(db):
-    return User.objects.create_user(is_staff=True, username="foo@example.org")
+    return User.objects.create_user(is_staff=True, email="foo@example.org")
 
 
 @pytest.fixture
@@ -37,8 +38,13 @@ def sms_catcher(requests_mock):
     return sms_outbox
 
 
+def test_create_user_without_email_or_phone():
+    user = User.objects.create_user(first_name="No", last_name="Contact", address="Address")
+    assert user.id
+
+
 def test_create_phone_user():
-    user = User.objects.create_user(is_staff=True, username="0121 496 0000")
+    user = User.objects.create_user(is_staff=True, phone="0121 496 0000")
     assert user.phone_verified
     assert not user.email_verified
 
@@ -46,7 +52,7 @@ def test_create_phone_user():
 def test_bad_token(client):
     client.get(f"/a/badtoken")
     # And a token that is valid but for a user that does not exist
-    user = User(id=1, username="foo@example.org")
+    user = User(id=1, email="foo@example.org")
     token = create_token(user)
     client.get(f"/a/{token}")
 
@@ -86,9 +92,9 @@ def test_log_in_by_link_phone(is_valid, client, sms_catcher, settings):
 
 
 def test_log_in_by_code_errors(client):
-    form = CodeForm({"username": "foo@example.org", "code": "bad"})
+    form = CodeForm({"user_id": "123", "code": "bad"})
     assert form.errors == {
-        "username": ["Bad request"],
+        "user_id": ["Bad request"],
         "timestamp": ["This field is required."],
     }
 
@@ -99,13 +105,15 @@ def test_log_in_by_code(client):
     assertContains(response, "Please check your")
     m = re.search(b'timestamp[^>]*value="([^"]*)"', response.content)
     timestamp = m.group(1).decode()
+    m = re.search(b'user_id[^>]*value="([^"]*)"', response.content)
+    user_id = m.group(1).decode()
     m = re.search(r"Or enter this token: ([^\s]*)", mail.outbox[0].body)
     code = m.group(1)
     response = client.post(
-        "/a/code", {"username": email, "timestamp": timestamp, "code": "bad"}
+        "/a/code", {"user_id": user_id, "timestamp": timestamp, "code": "bad"}
     )
     response = client.post(
-        "/a/code", {"username": email, "timestamp": timestamp, "code": code}
+        "/a/code", {"user_id": user_id, "timestamp": timestamp, "code": code}
     )
     assert response.status_code == 302
 

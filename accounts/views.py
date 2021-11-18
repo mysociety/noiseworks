@@ -46,7 +46,10 @@ def show_form(request):
             else:
                 user = User.objects.get(phone=username, phone_verified=True)
         except User.DoesNotExist:
-            user = User.objects.create_user(username=username)
+            if username_type == "email":
+                user = User.objects.create_user(email=username)
+            else:
+                user = User.objects.create_user(phone=username)
         if user.is_staff:
             raise PermissionDenied
 
@@ -74,7 +77,7 @@ def show_form(request):
                 f"Please click the following link to access your noise cases:\n\n{url}\n\nOr enter this token: {signature}",
             )
 
-        form = CodeForm(initial={"username": username, "timestamp": timestamp})
+        form = CodeForm(initial={"user_id": user.id, "timestamp": timestamp})
         return render(request, "accounts/form_token.html", {"form": form})
 
     template = "accounts/form_signin.html"

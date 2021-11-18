@@ -55,16 +55,7 @@ class PersonPickForm(GDSForm, forms.Form):
         user = self.cleaned_data.pop("user")
         search = self.cleaned_data.pop("search")
         if not user:
-            user = User(**self.cleaned_data)
-            if user.phone:
-                user.phone_verified = True
-            if user.email:
-                user.email_verified = True
-            if user.phone:
-                user.username = str(user.phone)
-            else:  # user.email will be present
-                user.username = User.objects.normalize_email(user.email)
-            user.save()
+            user = User.objects.create_user(**self.cleaned_data)
         case.perpetrators.add(user)
         case.save()
         typ, _ = ActionType.objects.get_or_create(

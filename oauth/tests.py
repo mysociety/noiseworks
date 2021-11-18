@@ -56,7 +56,7 @@ def test_oauth_success(client, requests_mock):
     assert response.status_code == 302
 
     User = get_user_model()
-    u = User.objects.get(username="matthew@example.org")
+    u = User.objects.get(email="matthew@example.org", email_verified=True)
     assert u.first_name == "Matthew"
 
 
