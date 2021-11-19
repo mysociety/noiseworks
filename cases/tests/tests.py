@@ -216,7 +216,7 @@ def test_merging_cases(admin_client, case_1, case_other_uprn, action_types):
     assertContains(response, "We have forgotten your current merging.")
     assertNotContains(response, "Merge #{case_other_uprn.id} into this case")
     response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
-    response = admin_client.post(f"/cases/{case_1.id}/merge", {"dupe": 1})
+    response = admin_client.post(f"/cases/{case_1.id}/merge", {"dupe": 1}, follow=True)
     assertContains(response, "has been merged into")
 
     a = Action.objects.create(case=case_1, notes="Internal note", type=action_types[1])
