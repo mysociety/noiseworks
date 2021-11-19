@@ -2,6 +2,9 @@ import re
 from io import StringIO
 from django.core.management import call_command, CommandError
 import pytest
+from botocore.stub import Stubber
+from ..models import Case
+from cases.management.commands.export_data import client
 
 
 @pytest.fixture
@@ -50,6 +53,18 @@ def mock_things(requests_mock):
     requests_mock.get(re.compile("transport/ows"), json={"features": []})
 
 
+@pytest.fixture
+def case(db):
+    return Case.objects.create(kind="diy", ward="E05009373")
+
+
+@pytest.fixture
+def s3_stub():
+    with Stubber(client) as stubber:
+        yield stubber
+        stubber.assert_no_pending_responses()
+
+
 def test_random_command_bad_input(db):
     with pytest.raises(CommandError):
         call_command("add_random_cases")
@@ -73,5 +88,19 @@ def test_random_command(mock_things, db, call_params):
 
 
 def test_random_command_commit(mock_things, db, call_params):
-    # 70 is enough for the fixed random seed to return all possible values
-    call_command("add_random_cases", number=70, commit=True, **call_params)
+    # 71 is enough for the fixed random seed to return all possible values
+    call_command("add_random_cases", number=71, commit=True, **call_params)
+
+
+def test_export_data_file_command(case, db, tmpdir):
+    with pytest.raises(CommandError):
+        call_command("export_data")
+    call_command("export_data", dir=tmpdir, verbosity=3)
+
+
+def test_export_data_s3_command(case, db, s3_stub):
+    for i in range(6):
+        s3_stub.add_response("create_multipart_upload", service_response={"UploadId": "UploadId"})
+        s3_stub.add_response("upload_part", service_response={"ETag":"ETag"})
+        s3_stub.add_response("complete_multipart_upload", service_response={})
+    call_command("export_data", s3=True, verbosity=2)
