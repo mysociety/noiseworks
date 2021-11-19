@@ -235,7 +235,13 @@ COBRAND_SETTINGS = {
         "url": env.str("ADDRESS_API_URL", "https://example.com/"),
         "pageAttr": env.str("ADDRESS_API_PAGEATTR", "page_count"),
         "key": env.str("ADDRESS_API_KEY", "key"),
-    }
+    },
+    "data_export": {
+        "ACCESS_KEY_ID": env.str("EXPORT_KEY", None),
+        "SECRET_ACCESS_KEY": env.str("EXPORT_SECRET", None),
+        "REGION": env.str("EXPORT_REGION", None),
+        "BUCKET_NAME": env.str("EXPORT_BUCKET_NAME", None),
+    },
 }
 
 # Sending messages
