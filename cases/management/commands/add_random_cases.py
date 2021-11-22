@@ -81,6 +81,19 @@ class Command(BaseCommand):
             # Actions
             self.add_actions(case, case.modified, i < N - 10, i < N - 20)
 
+            if random.randint(1, 5) == 1:
+                # Add a perpetrator
+                id += 1
+                user = User(
+                    username=f"user-{id}",
+                    first_name="Perpetrator",
+                    last_name=f"{id}",
+                    address="1 High Street",
+                )
+                if options["commit"]:
+                    user.save()
+                    case.perpetrators.add(user)
+
             complaints = self._num_complaints()
 
             self.stdout.write(
