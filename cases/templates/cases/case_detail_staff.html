@@ -79,11 +79,13 @@
 </dl>
 
 {% if not case.merged_into %}
-
+<div class="nw-button-bar">
     <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
-    {% if not duplicate and not case.merged_into %}
-        <a href="{% url "case-merge" case.id %}" class="nw-button nw-button--secondary">Merge into another case</a>
-    {% endif %}
+    <a href="{% url "complaint-add" case.id %}" class="nw-button nw-button--secondary">Report a reoccurrence</a>
+  {% if not duplicate %}
+    <a href="{% url "case-merge" case.id %}" class="nw-button nw-button--secondary">Merge into another case</a>
+  {% endif %}
+</div>
 {% endif %}
 
 <h2 class="lbh-heading-h2 section-heading">Noise Source</h2>

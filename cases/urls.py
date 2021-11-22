@@ -1,9 +1,16 @@
 from django.urls import path
 from . import views
 
+recurrence_wizard = views.RecurrenceWizard.as_view(url_name="complaint-add-step")
+
+
 urlpatterns = [
     path("", views.case_list, name="cases"),
     path("/<int:pk>", views.case, name="case-view"),
+    path("/<int:pk>/complaint/add", recurrence_wizard, name="complaint-add"),
+    path(
+        "/<int:pk>/complaint/add/<step>", recurrence_wizard, name="complaint-add-step"
+    ),
     path("/<int:pk>/complaint/<int:complaint>", views.complaint, name="complaint"),
     path("/<int:pk>/edit-kind", views.edit_kind, name="case-edit-kind"),
     path("/<int:pk>/edit-location", views.edit_location, name="case-edit-location"),

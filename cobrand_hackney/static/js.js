@@ -36,4 +36,36 @@ document.querySelectorAll('.case-detail__map__overlay').forEach(function(b) {
     });
 });
 
+/* Generic script for handling show-this-or-not-if-this-selected */
+
+function show_hide_toggle(b, ids) {
+    b = b ? 'block' : 'none';
+    ids.forEach(function(el) {
+        document.getElementById(el).style.display = b;
+    });
+}
+function show_hide(input, value, ids) {
+    var inputs = document.querySelectorAll('input[name="' + input + '"]');
+    inputs.forEach(function(i) {
+        i.addEventListener('change', function(e) {
+            if (e.currentTarget.value == value) {
+                show_hide_toggle(true, ids);
+            } else {
+                show_hide_toggle(false, ids);
+            }
+        });
+    });
+    if (inputs.length) {
+        var el = document.querySelector('input[name="' + input + '"]:checked');
+        if (el) {
+            el.dispatchEvent(new Event('change'));
+        } else {
+            show_hide_toggle(false, ids);
+        }
+    }
+}
+
+show_hide("kind", "other", ["div_id_kind_other"]);
+show_hide("user_pick-user", "0", ['div_id_user_pick-first_name', 'div_id_user_pick-last_name', 'div_id_user_pick-email', 'div_id_user_pick-phone', 'div_id_user_pick-address']);
+
 })();
