@@ -100,3 +100,9 @@ class User(AbstractUser):
             return addr["string"] or self.uprn
         else:
             return "Unknown location"
+
+    @cached_property
+    def number_cases_involved(self):
+        perpetrated = self.cases_perpetrated.count()
+        reporting = self.complaints.aggregate(models.Count("case", distinct=True))
+        return perpetrated + reporting["case__count"]

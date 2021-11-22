@@ -13,8 +13,8 @@
       {% endif %}
         {{ person.first_name }}
         {{ person.last_name }}
-      {% if person.cases_perpetrated %}
-        {% blocktranslate count counter=person.cases_perpetrated.count with cases=person.cases_perpetrated.count trimmed %}
+      {% if person.number_cases_involved %}
+        {% blocktranslate count counter=person.number_cases_involved with cases=person.number_cases_involved trimmed %}
           ({{ cases }} case)
         {% plural %}
           ({{ cases }} cases)
