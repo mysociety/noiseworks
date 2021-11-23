@@ -65,6 +65,9 @@ def test_assigned_filter(
     case_1.save()
     response = admin_client.get("/cases?assigned=none")
     assertContains(response, f"/cases/{case_1.id}")
+    case_1.followers.add(admin_user)
+    response = admin_client.get("/cases?assigned=following")
+    assertContains(response, f"/cases/{case_1.id}")
 
 
 def test_ward_filter(admin_client, admin_user, case_1):

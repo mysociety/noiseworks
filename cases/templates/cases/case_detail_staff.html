@@ -75,6 +75,28 @@
       </a>
     </dd>
   </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Followers</dt>
+    <dd class="govuk-summary-list__value">
+      {% for follower in case.followers.all %}
+        {% if forloop.first %}<ul class="govuk-list govuk-list--bullet">{% endif %}
+        <li><a href="{% url "cases" %}?assigned={{ follower.id }}" class="nw-link--no-visited-state">{{ follower }}</a>
+        {% if forloop.last %}</ul>{% endif %}
+      {% empty %}
+        None
+      {% endfor %}
+    </dd>
+    <dd class="govuk-summary-list__actions">
+        <form action="{% url "case-follower-state" case.id %}" method="post">
+         {% if is_follower %}
+          <input class="nw-fake-link nw-link" type="submit" value="Unfollow this case" name="remove">
+         {% else %}
+          <input class="nw-fake-link nw-link" type="submit" value="Follow this case" name="add">
+         {% endif %}
+         {% csrf_token %}
+        </form>
+    </dd>
+  </div>
   {% endif %}
 </dl>
 

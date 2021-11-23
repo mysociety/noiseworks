@@ -1,5 +1,4 @@
 import datetime
-import re
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
@@ -8,7 +7,7 @@ from django.http import HttpRequest
 from django.utils.timezone import make_aware
 from accounts.models import User
 from ..models import Case, Complaint, ActionType, Action
-from ..forms import ReassignForm, ActionForm
+from ..forms import ActionForm
 
 pytestmark = pytest.mark.django_db
 
@@ -105,44 +104,6 @@ def test_bad_uprn(admin_client, case_bad_uprn):
     response = admin_client.get(f"/cases/{case_bad_uprn.id}")
     assertContains(response, "DIY")
     assertContains(response, "bad_uprn")
-
-
-def test_reassign():
-    form = ReassignForm(data={})
-    assert form.errors["assigned"] == ["This field is required."]
-
-
-def test_reassign_same_user(case_1, staff_user_1):
-    form = ReassignForm(instance=case_1, data={"assigned": staff_user_1.id})
-    form.save()
-    assert Action.objects.count() == 0
-
-
-def test_reassign_success(case_1, staff_user_2):
-    form = ReassignForm(instance=case_1, data={"assigned": staff_user_2.id})
-    assert form.is_valid()
-
-
-def test_reassign_ward_list(admin_client, admin_user, case_1, staff_user_1):
-    admin_user.wards = ["E05009372", case_1.ward]
-    admin_user.save()
-    response = admin_client.get(f"/cases/{case_1.id}/reassign")
-    assert re.search(
-        r'(?s)id="id_assigned_1"\s+value="'
-        + str(admin_user.id)
-        + r'".*?<div class="govuk-radios__divider">or</div>.*?id="id_assigned_2"\s+value="'
-        + str(staff_user_1.id)
-        + '"',
-        response.content.decode("utf-8"),
-    )
-
-
-def test_reassign_view(admin_client, case_1, staff_user_2):
-    response = admin_client.get(f"/cases/{case_1.id}/reassign")
-    assertContains(response, "staffuser2")
-    response = admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": 0})
-    assertContains(response, "valid choice")
-    admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": staff_user_2.id})
 
 
 def test_log_view(admin_client, case_1, action_types):

@@ -99,7 +99,13 @@ def case_staff(request, pk):
     # if redirect:
     #    return redirect(redirect)
 
-    return render(request, "cases/case_detail_staff.html", context={"case": case})
+    is_follower = case.followers.filter(pk=request.user.id)
+
+    return render(
+        request,
+        "cases/case_detail_staff.html",
+        context={"case": case, "is_follower": is_follower},
+    )
 
 
 @staff_member_required
@@ -108,6 +114,7 @@ def reassign(request, pk):
     form = forms.ReassignForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
+        case.followers.add(form.cleaned_data["assigned"])
         return redirect(case)
     return render(
         request,
@@ -117,6 +124,36 @@ def reassign(request, pk):
             "form": form,
         },
     )
+
+
+@staff_member_required
+def followers(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    form = forms.FollowersForm(request.POST or None, instance=case)
+    if form.is_valid():
+        form.save()
+        return redirect(case)
+    return render(
+        request,
+        "cases/followers.html",
+        {
+            "case": case,
+            "form": form,
+        },
+    )
+
+
+@staff_member_required
+def follower_state(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    if not request.POST:
+        return HttpResponseForbidden()
+    user = request.user
+    if request.POST.get("add"):
+        case.followers.add(user)
+    else:
+        case.followers.remove(user)
+    return redirect(case)
 
 
 @staff_member_required

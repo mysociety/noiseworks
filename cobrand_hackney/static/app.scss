@@ -58,7 +58,6 @@ $lbh-asset-path: "/static/hackney";
 .nw-page-announcement { @extend .lbh-page-announcement; }
 .nw-page-announcement--info { @extend .lbh-page-announcement--info; }
 .nw-page-announcement__content { @extend .lbh-page-announcement__content; }
-.nw-link--no-visited-state { @extend .lbh-link--no-visited-state; }
 
 .nw-tag--id {
     @extend .govuk-tag;
@@ -72,6 +71,7 @@ $lbh-asset-path: "/static/hackney";
 @import "typography";
 @import "forms";
 @import "buttons";
+@import "links";
 
 @import "timeline";
 @import "sections";
