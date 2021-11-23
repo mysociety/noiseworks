@@ -90,10 +90,7 @@ class Case(AbstractModel):
     where = models.CharField(max_length=9, choices=WHERE_CHOICES)
     estate = models.CharField(max_length=1, choices=ESTATE_CHOICES, blank=True)
 
-    perpetrators = models.ManyToManyField(
-        User,
-        related_name="cases_perpetrated",
-    )
+    perpetrators = models.ManyToManyField(User, related_name="cases_perpetrated")
 
     assigned = models.ForeignKey(
         User,
@@ -102,6 +99,7 @@ class Case(AbstractModel):
         on_delete=models.SET_NULL,
         related_name="assignations",
     )
+    followers = models.ManyToManyField(User, related_name="cases_following")
 
     history = HistoricalRecords()
     objects = CaseManager()

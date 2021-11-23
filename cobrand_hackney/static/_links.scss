@@ -1,0 +1,26 @@
+.nw-fake-link {
+    // reset common non-link styles (eg: button, input styles)
+    display: inline;
+    font-family: inherit;
+    font-size: 1em;
+    line-height: inherit;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none;
+    border-radius: 0;
+
+    // apply default link styles
+    cursor: pointer;
+    text-decoration: underline;
+    color: lbh-colour("lbh-link");
+    @include lbh-link();
+}
+
+.nw-link {
+    @extend .lbh-link;
+}
+
+.nw-link--no-visited-state {
+    @extend .lbh-link--no-visited-state;
+}

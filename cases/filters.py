@@ -23,6 +23,7 @@ class CaseFilter(django_filters.FilterSet):
     assigned = django_filters.ChoiceFilter(
         choices=[
             ("me", "Assigned to me"),
+            ("following", "Cases I am following"),
             ("others", "Assigned to others"),
             ("none", "Unassigned"),
         ],
@@ -73,6 +74,8 @@ class CaseFilter(django_filters.FilterSet):
     def assigned_filter(self, queryset, name, value):
         if value == "me":
             return queryset.filter(assigned=self.request.user)
+        elif value == "following":
+            return queryset.filter(followers=self.request.user)
         elif value == "others":
             return queryset.exclude(assigned=self.request.user).exclude(assigned=None)
         elif value == "none":

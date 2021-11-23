@@ -47,6 +47,41 @@ class ReassignForm(GDSForm, forms.ModelForm):
         return assigned
 
 
+class FollowersForm(GDSForm, forms.ModelForm):
+    """Change followers on a case"""
+
+    submit_text = "Update"
+
+    class Meta:
+        model = Case
+        fields = ["followers"]
+        widgets = {"followers": forms.CheckboxSelectMultiple}
+        help_texts = {"followers": "This ward’s team members shown first"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        staff_users = User.objects.filter(is_staff=True, is_active=True)
+        ward_staff = []
+        other_staff = []
+        for user in staff_users:
+            if user.wards and self.instance.ward in user.wards:
+                ward_staff.append(Choice(user.id, user))
+            else:
+                other_staff.append(Choice(user.id, user))
+        self.fields["followers"].choices = ward_staff + other_staff
+        self.fields["followers"].required = False
+
+        self.helper.legend_size = "xl"
+
+    def save(self):
+        super().save()
+        typ, _ = ActionType.objects.get_or_create(
+            name="Edit case", defaults={"visibility": "internal"}
+        )
+        Action.objects.create(case=self.instance, type=typ, notes="Updated followers")
+
+
 class KindForm(GDSForm, forms.ModelForm):
     """Update the kind of case"""
 
