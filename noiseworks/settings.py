@@ -196,6 +196,8 @@ TIME_INPUT_FORMATS = [
     "%I%p",
 ]
 
+FILTERS_EMPTY_CHOICE_LABEL = "Any"
+
 USE_TZ = True
 
 
