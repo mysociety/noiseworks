@@ -25,7 +25,8 @@ ADDRESS = {
 def test_edit_kind(admin_client):
     case = Case.objects.create(kind="diy", location_cache="preset")
     admin_client.get(f"/cases/{case.id}/edit-kind")
-    admin_client.post(f"/cases/{case.id}/edit-kind", {"kind": "music"})
+    # Follow so that we fetch the page and get a timeline with the edit in
+    admin_client.post(f"/cases/{case.id}/edit-kind", {"kind": "music"}, follow=True)
 
 
 @pytest.fixture
