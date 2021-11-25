@@ -1,12 +1,13 @@
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
 from django.db.models import Q, Count
+from django.forms.models import model_to_dict
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import mark_safe
 from django.utils.functional import cached_property
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords, ModelChange, ModelDelta
 from noiseworks import cobrand
 from accounts.models import User
 
@@ -238,6 +239,22 @@ class Case(AbstractModel):
             "time": edit.history_date,
         }
 
+    def diff_against(us, self, old_history):
+        """Copy of simple history's function from their master with a tweak for editable fields only."""
+        fields = {f.name for f in old_history.instance_type._meta.fields if f.editable}
+        changes = []
+        changed_fields = []
+        old_values = model_to_dict(old_history, fields=fields)
+        current_values = model_to_dict(self, fields=fields)
+        for field in fields:
+            old_value = old_values[field]
+            current_value = current_values[field]
+            if old_value != current_value:
+                changes.append(ModelChange(field, old_value, current_value))
+                changed_fields.append(field)
+
+        return ModelDelta(changes, changed_fields, old_history, self)
+
     def _timeline(self, actions, action_fn, complaints, history_to_show):
         data = []
         for action in actions:
@@ -254,11 +271,11 @@ class Case(AbstractModel):
             }
             data.append(row)
 
-        edits = self.history.all()
+        edits = self.history.select_related("modified_by", "assigned")
         if len(edits) > 1:
             edit = edits[0]
             for prev in edits[1:]:
-                diff = edit.diff_against(prev)
+                diff = self.diff_against(edit, prev)
                 changes = []
                 for d in diff.changes:
                     if d.field == "assigned":

@@ -86,7 +86,7 @@ def case_user(request, pk):
 
 @staff_member_required
 def case_staff(request, pk):
-    qs = Case.objects.select_related("assigned")
+    qs = Case.objects.select_related("assigned").prefetch_related("perpetrators")
     case = get_object_or_404(qs, pk=pk)
 
     # redirect = case.merged_into
