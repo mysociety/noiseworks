@@ -38,17 +38,6 @@ def normal_user(db):
 
 
 @pytest.fixture
-def normal_user_2(db):
-    return User.objects.create(
-        username="normal2@example.org",
-        email="normal2@example.org",
-        email_verified=True,
-        first_name="Normal",
-        last_name="User2",
-    )
-
-
-@pytest.fixture
 def case_1(db, staff_user_1, normal_user):
     return Case.objects.create(
         kind="diy", assigned=staff_user_1, created_by=normal_user, ward="E05009373"
@@ -90,13 +79,6 @@ def action_types(db):
         ActionType.objects.create(name="Letter sent", common=True),
         ActionType.objects.create(name="Noise witnessed"),
     ]
-
-
-@pytest.fixture
-def action_type(case_1, action_types):
-    return Action.objects.create(
-        case=case_1, notes="Internal note", type=action_types[1]
-    )
 
 
 def test_case_not_found(admin_client):
@@ -245,24 +227,6 @@ def test_complaint_view(admin_client, complaint):
 def test_complaint_bad_case(admin_client, case_other_uprn, complaint):
     response = admin_client.get(f"/cases/{case_other_uprn.id}/complaint/{complaint.id}")
     assert response.status_code == 302
-
-
-def test_case_list_user_view(client, normal_user, complaint):
-    client.force_login(normal_user)
-    response = client.get("/cases")
-    assertContains(response, "DIY")
-
-
-def test_case_detail_user_view(client, normal_user, complaint, action_type):
-    client.force_login(normal_user)
-    response = client.get(f"/cases/{complaint.case.id}")
-    assertContains(response, "Noise witnessed")
-
-
-def test_case_details_other_user_view(client, case_1, normal_user_2):
-    client.force_login(normal_user_2)
-    response = client.get(f"/cases/{case_1.id}")
-    assert response.status_code == 404
 
 
 def test_param_replace():

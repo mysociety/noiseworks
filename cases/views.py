@@ -31,10 +31,13 @@ def case_list(request):
 @login_required
 def case_list_user(request):
     cases = Case.objects.by_complainant(request.user)
+    out = []
+    for case in cases:
+        out.append(case.original_entry())
     return render(
         request,
         "cases/case_list_user.html",
-        {"cases": cases},
+        {"cases": out},
     )
 
 
@@ -77,6 +80,7 @@ def case_user(request, pk):
     qs = Case.objects.by_complainant(request.user)
     qs = qs.select_related("assigned")
     case = get_object_or_404(qs, pk=pk)
+    case = case.original_entry()
     return render(request, "cases/case_detail_user.html", context={"case": case})
 
 

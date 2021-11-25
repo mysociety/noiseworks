@@ -5,6 +5,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
+from simple_history.models import HistoricalRecords
 from noiseworks import cobrand
 from accounts.models import User
 
@@ -100,10 +101,19 @@ class Case(AbstractModel):
         related_name="assignations",
     )
 
+    history = HistoricalRecords()
     objects = CaseManager()
 
     class Meta:
         ordering = ("-id",)
+
+    @property
+    def _history_user(self):
+        return self.modified_by
+
+    @_history_user.setter
+    def _history_user(self, value):
+        self.modified_by = value  # pragma: no cover - not used?
 
     def get_absolute_url(self):
         return reverse("case-view", args=[self.pk])
@@ -111,6 +121,12 @@ class Case(AbstractModel):
     def save(self, *args, **kwargs):
         self.update_location_cache()
         return super().save(*args, **kwargs)
+
+    def original_entry(self):
+        r = self.reoccurrences
+        case = self.history.earliest().instance
+        case.reoccurrences = r
+        return case
 
     def update_location_cache(self):
         if self.location_cache:
