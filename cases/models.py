@@ -4,6 +4,7 @@ from django.db.models import Q, Count
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import mark_safe
 from django.utils.functional import cached_property
 from simple_history.models import HistoricalRecords
 from noiseworks import cobrand
@@ -201,7 +202,43 @@ class Case(AbstractModel):
         merged = merged[-1]["id"] if merged else None
         return merged
 
-    def _timeline(self, actions, action_fn, complaints):
+    def _timeline_edit_assign_entry(self, edit, prev, history_to_show):
+        if history_to_show == "all":
+            return {
+                "action": {
+                    "type": "assigned",
+                    "created": edit.history_date,
+                    "created_by": edit.modified_by,
+                    "old": prev.assigned,
+                    "new": edit.assigned,
+                },
+                "time": edit.history_date,
+            }
+        else:
+            return {
+                "summary": "Case assigned to officer",
+                "time": edit.history_date,
+            }
+
+    def _timeline_edit_entry(self, edit, changes):
+        return {
+            "action": {
+                "created": edit.history_date,
+                "created_by": edit.modified_by,
+                "type": "edit",
+                "notes": mark_safe(
+                    "<br>".join(
+                        [
+                            f"<strong>{c.field}</strong> from {c.old} to {c.new}"
+                            for c in changes
+                        ]
+                    )
+                ),
+            },
+            "time": edit.history_date,
+        }
+
+    def _timeline(self, actions, action_fn, complaints, history_to_show):
         data = []
         for action in actions:
             row = {
@@ -216,6 +253,28 @@ class Case(AbstractModel):
                 "time": complaint.created,
             }
             data.append(row)
+
+        edits = self.history.all()
+        if len(edits) > 1:
+            edit = edits[0]
+            for prev in edits[1:]:
+                diff = edit.diff_against(prev)
+                changes = []
+                for d in diff.changes:
+                    if d.field == "assigned":
+                        data.append(
+                            self._timeline_edit_assign_entry(
+                                edit, prev, history_to_show
+                            )
+                        )
+                    else:
+                        changes.append(d)
+
+                if changes and history_to_show == "all":
+                    data.append(self._timeline_edit_entry(edit, changes))
+
+                edit = prev
+
         data = sorted(data, reverse=True, key=lambda x: x["time"])
         return data
 
@@ -227,13 +286,18 @@ class Case(AbstractModel):
             return action.type.name
 
         return self._timeline(
-            self.actions_manual_reversed, action_fn, self.complaints_reversed
+            self.actions_public_reversed,
+            action_fn,
+            self.complaints_reversed,
+            "assigned",
         )
 
     @cached_property
     def timeline_staff(self):
         """Staff timeline shows all actions and complaints on the case and its merged cases"""
-        return self._timeline(self.actions_reversed, str, self.all_complaints_reversed)
+        return self._timeline(
+            self.actions_reversed, str, self.all_complaints_reversed, "all"
+        )
 
     @cached_property
     def action_merge_map(self):
@@ -282,7 +346,10 @@ class Case(AbstractModel):
 
     @property
     def last_action(self):
-        return self.actions_reversed[0] if len(self.actions_reversed) else None
+        for event in self.timeline_staff:
+            if "complaint" not in event:
+                return event["action"]
+        return None
 
 
 class Complaint(AbstractModel):

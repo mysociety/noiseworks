@@ -267,7 +267,7 @@ var nw = nw || {};
             </div>
           </details>
 
-    {% elif request.user.is_staff %}
+    {% else %}
         {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
         {% if entry.action.notes %}
             <details class="govuk-details lbh-details" data-module="govuk-details">
@@ -279,8 +279,7 @@ var nw = nw || {};
                 </div>
             </details>
         {% endif %}
-    {% else %}
-        {{ entry.summary }}
+
     {% endif %}
     <p class="lbh-body-m">{{ entry.time }}</p>
 </li>

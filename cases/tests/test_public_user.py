@@ -9,6 +9,11 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
+def staff_user_1(db):
+    return User.objects.create(is_staff=True, username="staffuser1")
+
+
+@pytest.fixture
 def normal_user(db):
     return User.objects.create(
         username="normal@example.org",
@@ -80,6 +85,15 @@ def test_case_detail_user_view(client, complaint, action_types):
     client.force_login(complaint.complainant)
     response = client.get(f"/cases/{complaint.case.id}")
     assertContains(response, "Noise witnessed")
+
+
+def test_case_detail_user_view_assignment(client, complaint, staff_user_1):
+    complaint.case.assigned = staff_user_1
+    complaint.case.save()
+    client.force_login(complaint.complainant)
+    response = client.get(f"/cases/{complaint.case.id}")
+    assertContains(response, "Case assigned to officer")
+    assertNotContains(response, "staffuser1")
 
 
 def test_case_details_other_user_view(client, case_1, normal_user_2):
