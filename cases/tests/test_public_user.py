@@ -67,7 +67,9 @@ def complaint(db, case_1, normal_user):
 
 @pytest.fixture
 def action_types(case_1):
-    at0 = ActionType.objects.create(name="Letter sent", common=True)
+    at0 = ActionType.objects.create(
+        name="Letter sent", common=True, visibility="public"
+    )
     at1 = ActionType.objects.create(name="Noise witnessed")
     Action.objects.create(case=case_1, notes="Internal note", type=at0)
     Action.objects.create(case=case_1, notes="Internal note", type=at1)
@@ -84,7 +86,8 @@ def test_case_list_user_view(client, complaint, edited_case):
 def test_case_detail_user_view(client, complaint, action_types):
     client.force_login(complaint.complainant)
     response = client.get(f"/cases/{complaint.case.id}")
-    assertContains(response, "Noise witnessed")
+    assertContains(response, "Letter sent")
+    assertNotContains(response, "Noise witnessed")
 
 
 def test_case_detail_user_view_assignment(client, complaint, staff_user_1):
