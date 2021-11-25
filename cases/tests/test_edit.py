@@ -22,12 +22,8 @@ ADDRESS = {
 }
 
 
-@pytest.fixture
-def case(db):
-    return Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
-
-
-def test_edit_kind(admin_client, case):
+def test_edit_kind(admin_client):
+    case = Case.objects.create(kind="diy", location_cache="preset")
     admin_client.get(f"/cases/{case.id}/edit-kind")
     admin_client.post(f"/cases/{case.id}/edit-kind", {"kind": "music"})
 
@@ -42,7 +38,7 @@ def form_defaults():
     }
 
 
-def test_edit_location(requests_mock, admin_client, case, form_defaults):
+def test_edit_location(requests_mock, admin_client, form_defaults):
     requests_mock.get(re.compile("postcode=BAD"), json={})
     requests_mock.get(
         re.compile("postcode=SW1A1AA"),
@@ -65,8 +61,10 @@ def test_edit_location(requests_mock, admin_client, case, form_defaults):
         },
     )
 
-    admin_client.get(f"/cases/{case.id}/edit-location")
+    case = Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
     assert case.location_display == "800m around a point in Shepherdess Walk"
+
+    admin_client.get(f"/cases/{case.id}/edit-location")
 
     # Post with no changes
     resp = admin_client.post(f"/cases/{case.id}/edit-location", form_defaults)
@@ -83,7 +81,7 @@ def test_edit_location(requests_mock, admin_client, case, form_defaults):
     assertContains(resp, "could not recognise that postcode")
 
 
-def test_edit_location_to_uprn(requests_mock, admin_client, case, form_defaults):
+def test_edit_location_to_uprn(requests_mock, admin_client, form_defaults):
     requests_mock.get(
         re.compile("postcode=E95RF"), json={"data": {"address": [ADDRESS]}}
     )
@@ -150,6 +148,8 @@ def test_edit_location_to_uprn(requests_mock, admin_client, case, form_defaults)
             ]
         },
     )
+
+    case = Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
     assert (
         case.location_display
         == "800m around a point near New Inn Street / New Inn Street"

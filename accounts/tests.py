@@ -17,11 +17,6 @@ def staff_user(db):
 
 
 @pytest.fixture
-def normal_user(db):
-    yield User.objects.create(first_name="Norma", last_name="User", uprn=10001)
-
-
-@pytest.fixture
 def sms_catcher(requests_mock):
     sms_outbox = []
 
@@ -134,7 +129,7 @@ def test_basic_user_editing(admin_client, staff_user):
     assert response.status_code == 302
 
 
-def test_address_display_uprn(normal_user):
+def test_address_display_uprn():
     with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {
             "string": "Flat 4, 2 Example Road, E8 2DP",
@@ -142,17 +137,20 @@ def test_address_display_uprn(normal_user):
             "latitude": 51,
             "longitude": -0.1,
         }
-        assert normal_user.address_display == "Flat 4, 2 Example Road, E8 2DP"
+        user = User.objects.create(first_name="Norma", last_name="User", uprn=10001)
+        assert user.address_display == "Flat 4, 2 Example Road, E8 2DP"
 
 
-def test_address_display_uprn_no_data(normal_user):
+def test_address_display_uprn_no_data():
     with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {"string": "", "ward": ""}
-        assert normal_user.address_display == 10001
+        user = User.objects.create(first_name="Norma", last_name="User", uprn=10001)
+        assert user.address_display == 10001
 
 
-def test_address_display_address(normal_user):
-    normal_user.address = "Other address"
-    normal_user.save()
-    assert normal_user.address_display == "Other address"
-    assert str(normal_user) == "Norma User, Other address"
+def test_address_display_address():
+    user = User.objects.create(
+        first_name="Norma", last_name="User", address="Other address", uprn=10001
+    )
+    assert user.address_display == "Other address"
+    assert str(user) == "Norma User, Other address"

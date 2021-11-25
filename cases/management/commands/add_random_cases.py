@@ -129,11 +129,9 @@ class Command(BaseCommand):
     def _pick_uprn(self, case):
         while True:
             case.uprn = random.choice(self.uprns)
-            display = case.location_display
+            display = case.update_location_cache()
             if case.location_cache:
                 break
-            else:
-                del case.__dict__["location_display"]  # Not get stuck in cached loop
 
     def _pick_kind(self):
         r = random.randint(1, 20)
@@ -270,11 +268,9 @@ class Command(BaseCommand):
     def _pick_user_uprn(self, user):
         while True:
             user.uprn = random.choice(self.uprns)
-            display = user.address_display
+            display = user.update_address()
             if user.address:
                 break
-            else:
-                del user.__dict__["address_display"]  # Not get stuck in cached loop
 
     # Actions
 

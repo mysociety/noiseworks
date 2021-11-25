@@ -501,7 +501,7 @@ class ReportingWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
     def get_context_data(self, **kwargs):
         if self.steps.current == "summary":
             data = kwargs["data"] = self.get_all_cleaned_data()
-            kwargs["case"] = Case(
+            case = kwargs["case"] = Case(
                 kind=data["kind"],
                 kind_other=data["kind_other"],
                 point=data.get("point"),
@@ -510,6 +510,7 @@ class ReportingWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
                 where=data["where"],
                 estate=data["estate"],
             )
+            case.update_location_cache()
 
             if data.get("user"):
                 user = User.objects.get(id=data["user"])

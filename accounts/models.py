@@ -83,23 +83,24 @@ class User(AbstractUser):
             name += f", {self.address}"
         return name
 
+    def save(self, *args, **kwargs):
+        self.update_address()
+        return super().save(*args, **kwargs)
+
+    def update_address(self):
+        if not self.address and self.uprn:
+            addr = cobrand.api.address_for_uprn(self.uprn)
+            if addr["string"]:
+                self.address = addr["string"]
+
     def get_best_time_display(self):
         best_time = self.best_time or []
         choices_dict = dict(self.BEST_TIME_CHOICES)
         return list(map(choices_dict.get, best_time))
 
-    @cached_property
+    @property
     def address_display(self):
-        if self.address:
-            return self.address
-        elif self.uprn:
-            addr = cobrand.api.address_for_uprn(self.uprn)
-            if addr["string"]:
-                self.address = addr["string"]
-                self.save()
-            return addr["string"] or self.uprn
-        else:
-            return "Unknown location"
+        return self.address or self.uprn or "Unknown location"
 
     @cached_property
     def number_cases_involved(self):

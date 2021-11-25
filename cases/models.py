@@ -108,26 +108,19 @@ class Case(AbstractModel):
     def get_absolute_url(self):
         return reverse("case-view", args=[self.pk])
 
-    @property
-    def kind_display(self):
-        if self.kind == "other":
-            return self.kind_other
-        else:
-            return self.get_kind_display()
+    def save(self, *args, **kwargs):
+        self.update_location_cache()
+        return super().save(*args, **kwargs)
 
-    @cached_property
-    def location_display(self):
+    def update_location_cache(self):
         if self.location_cache:
-            return self.location_cache
+            return
         elif self.uprn:
             addr = cobrand.api.address_for_uprn(self.uprn)
             if addr["string"]:
                 self.location_cache = addr["string"]
                 self.point = Point(addr["longitude"], addr["latitude"], srid=4326)
                 self.ward = ward_name_to_id(addr["ward"])
-                if self.id:
-                    self.save()
-            return addr["string"] or self.uprn
         elif self.point:
             park = cobrand.api.in_a_park(self.point)
             if park:
@@ -141,11 +134,17 @@ class Case(AbstractModel):
                 else:
                     desc = f"({self.point.x:.0f},{self.point.y:.0f})"
             self.location_cache = f"{self.radius}m around {desc}"
-            if self.id:
-                self.save()
-            return self.location_cache
+
+    @property
+    def kind_display(self):
+        if self.kind == "other":
+            return self.kind_other
         else:
-            return "Unknown location"
+            return self.get_kind_display()
+
+    @property
+    def location_display(self):
+        return self.location_cache or self.uprn or "Unknown location"
 
     @property
     def point_as_latlon_string(self):
