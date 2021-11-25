@@ -318,7 +318,7 @@ class Case(AbstractModel):
     @cached_property
     def all_complainants(self):
         complaints = self.all_complaints
-        return User.objects.filter(complaints__in=complaints)
+        return User.objects.filter(complaints__in=complaints).distinct()
 
     @cached_property
     def all_complaints(self):
