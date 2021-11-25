@@ -8,15 +8,6 @@ from noiseworks import cobrand
 from noiseworks.forms import GDSForm
 
 
-class LogActionMixin:
-    def save(self):
-        super().save()
-        typ, _ = ActionType.objects.get_or_create(
-            name="Edit case", defaults={"visibility": "internal"}
-        )
-        Action.objects.create(case=self.instance, type=typ, notes=self.log_note)
-
-
 class ReassignForm(GDSForm, forms.ModelForm):
     """Reassign a case to another staff user"""
 
@@ -55,24 +46,11 @@ class ReassignForm(GDSForm, forms.ModelForm):
         assigned = User.objects.get(id=assigned)
         return assigned
 
-    def save(self):
-        super().save()
-        if (
-            not self.current_assigned
-            or self.current_assigned.id != self.instance.assigned.id
-        ):
-            Action.objects.create(
-                case=self.instance,
-                assigned_old=self.current_assigned,
-                assigned_new=self.instance.assigned,
-            )
 
-
-class KindForm(LogActionMixin, GDSForm, forms.ModelForm):
+class KindForm(GDSForm, forms.ModelForm):
     """Update the kind of case"""
 
     submit_text = "Update"
-    log_note = "Updated type"
 
     class Meta:
         model = Case
@@ -124,11 +102,10 @@ class ActionForm(GDSForm, forms.ModelForm):
         super().save()
 
 
-class LocationForm(LogActionMixin, GDSForm, forms.ModelForm):
+class LocationForm(GDSForm, forms.ModelForm):
     """Update the location of case"""
 
     submit_text = "Update"
-    log_note = "Updated location"
 
     radius = forms.TypedChoiceField(
         coerce=int,

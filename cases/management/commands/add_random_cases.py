@@ -67,15 +67,19 @@ class Command(BaseCommand):
             else:
                 self._pick_uprn(case)
 
-            # Assign all cases created apart from most recent 10
-            if i < N - 10:
-                case.assigned = self.staff_for_ward[case.ward]
-
             if options["commit"]:
                 case.save()
 
-            # Actions for the assignment, and others as well
-            self.add_actions(case, dates[i], i < N - 10, i < N - 20)
+            # Assign all cases created apart from most recent 10
+            if i < N - 10:
+                case.assigned = self.staff_for_ward[case.ward]
+                case.modified = dates[i] + timedelta(hours=random.randint(1, 4))
+                case.modified_by = case.assigned
+                if options["commit"]:
+                    case.save()
+
+            # Actions
+            self.add_actions(case, case.modified, i < N - 10, i < N - 20)
 
             complaints = self._num_complaints()
 
@@ -277,28 +281,23 @@ class Command(BaseCommand):
     def add_actions(self, case, date, one_action, two_actions):
         if one_action:
             action_date = date + timedelta(hours=random.randint(1, 4))
-            self.create_action(case, action_date, assigned=case.assigned)
-            action_date += timedelta(hours=random.randint(1, 4))
             type = ActionType.objects.get(name="Contacted reporter")
-            self.create_action(case, action_date, type=type)
+            self.create_action(case, action_date, type)
         if two_actions:
             action_date += timedelta(hours=random.randint(24, 168))
             type = ActionType.objects.exclude(
                 name__in=("Contacted reporter", "Edit case")
             ).order_by("?")[0]
-            self.create_action(case, action_date, type=type)
+            self.create_action(case, action_date, type)
 
-    def create_action(self, case, date, type=None, assigned=None):
+    def create_action(self, case, date, type):
         if date > self.now:
             date = self.now
         action = Action(
             case=case, created_by=case.assigned, created=date, modified=date
         )
-        if type:
-            action.type = type
-            action.notes = "Internal notes about this action would be here"
-        else:
-            action.assigned_new = assigned
+        action.type = type
+        action.notes = "Internal notes about this action would be here"
         if self.commit:
             action.save()
 
