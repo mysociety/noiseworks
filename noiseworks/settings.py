@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 import environ
 from pathlib import Path
-import pgconnection
 from noiseworks.sass import inline_image
 
 
@@ -61,8 +60,7 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "compressor",
     "debug_toolbar",
-    "pgconnection",
-    "pgtrigger",
+    "simple_history",
     "crispy_forms",
     "django_filters",
     "accounts",
@@ -124,11 +122,9 @@ WSGI_APPLICATION = "noiseworks.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = pgconnection.configure(
-    {
-        "default": env.db(),
-    }
-)
+DATABASES = {
+    "default": env.db(),
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
