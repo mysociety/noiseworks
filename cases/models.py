@@ -310,9 +310,9 @@ class Case(AbstractModel):
         return actions
 
     @cached_property
-    def actions_manual_reversed(self):
+    def actions_public_reversed(self):
         actions = self.actions_reversed
-        actions = actions.get_manual()
+        actions = actions.get_public()
         return actions
 
     @cached_property
@@ -383,8 +383,8 @@ class ActionType(models.Model):
 
 
 class ActionQuerySet(models.QuerySet):
-    def get_manual(self):
-        return self.filter(type_id__isnull=False)
+    def get_public(self):
+        return self.filter(type__visibility="public")
 
 
 class ActionManager(models.Manager):
