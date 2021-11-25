@@ -241,9 +241,7 @@ class Case(AbstractModel):
     @cached_property
     def all_complainants(self):
         complaints = self.all_complaints
-        return User.objects.filter(complaints__in=complaints).annotate(
-            num_cases=Count("complaints__case", distinct=True)
-        )
+        return User.objects.filter(complaints__in=complaints)
 
     @cached_property
     def all_complaints(self):
