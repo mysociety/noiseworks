@@ -36,6 +36,8 @@ def code(request):
 
 
 def show_form(request):
+    if not settings.NON_STAFF_ACCESS:
+        return redirect("/")
     form = SignInForm(request.POST or None)
     if form.is_valid():
         username = form.cleaned_data["username"]

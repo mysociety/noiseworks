@@ -45,13 +45,24 @@ def _post_step(admin_client, case_1, step, data, **kwargs):
     )
 
 
-def test_normal_user_permission(client, normal_user, case_1, complaint):
+def test_normal_user_permission(client, normal_user, case_1, complaint, settings):
+    settings.NON_STAFF_ACCESS = True
     client.force_login(normal_user)
     resp = client.get(f"/cases/{case_1.id}/complaint/add")
     assert resp.status_code == 302
     complaint.delete()
     resp = client.get(f"/cases/{case_1.id}/complaint/add")
     assert resp.status_code == 404
+
+
+def test_non_staff_normal_user_permission(
+    client, normal_user, case_1, complaint, settings
+):
+    settings.NON_STAFF_ACCESS = False
+    client.force_login(normal_user)
+    resp = client.get(f"/cases/{case_1.id}/complaint/add")
+    assert resp.status_code == 302
+    assert resp.url == "/"
 
 
 def test_add_complaint_now_existing_user(admin_client, case_1, normal_user):

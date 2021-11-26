@@ -21,6 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
+    NON_STAFF_ACCESS=(bool, False),
     ALLOWED_HOSTS=(list, []),
 )
 environ.Env.read_env(BASE_DIR / ".env")
@@ -162,6 +163,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 LOGIN_URL = "/a"
+NON_STAFF_ACCESS = env("NON_STAFF_ACCESS")
 
 SESAME_MAX_AGE = 300
 SESAME_ONE_TIME = False

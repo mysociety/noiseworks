@@ -75,7 +75,17 @@ def action_types(case_1):
     Action.objects.create(case=case_1, notes="Internal note", type=at1)
 
 
-def test_case_list_user_view(client, complaint, edited_case):
+@pytest.fixture
+def non_staff_access(settings):
+    settings.NON_STAFF_ACCESS = True
+
+
+@pytest.fixture
+def only_staff_access(settings):
+    settings.NON_STAFF_ACCESS = False
+
+
+def test_case_list_user_view(client, complaint, edited_case, non_staff_access):
     client.force_login(complaint.complainant)
     response = client.get("/cases")
     assertContains(response, "DIY")
@@ -83,14 +93,16 @@ def test_case_list_user_view(client, complaint, edited_case):
     assertNotContains(response, "Staff edited location")
 
 
-def test_case_detail_user_view(client, complaint, action_types):
+def test_case_detail_user_view(client, complaint, action_types, non_staff_access):
     client.force_login(complaint.complainant)
     response = client.get(f"/cases/{complaint.case.id}")
     assertContains(response, "Letter sent")
     assertNotContains(response, "Noise witnessed")
 
 
-def test_case_detail_user_view_assignment(client, complaint, staff_user_1):
+def test_case_detail_user_view_assignment(
+    client, complaint, staff_user_1, non_staff_access
+):
     complaint.case.assigned = staff_user_1
     complaint.case.save()
     client.force_login(complaint.complainant)
@@ -99,14 +111,34 @@ def test_case_detail_user_view_assignment(client, complaint, staff_user_1):
     assertNotContains(response, "staffuser1")
 
 
-def test_case_details_other_user_view(client, case_1, normal_user_2):
+def test_case_details_other_user_view(client, case_1, normal_user_2, non_staff_access):
     client.force_login(normal_user_2)
     response = client.get(f"/cases/{case_1.id}")
     assert response.status_code == 404
 
 
-def test_case_location_display(client, complaint, edited_case):
+def test_case_location_display(client, complaint, edited_case, non_staff_access):
     client.force_login(complaint.complainant)
     response = client.get(f"/cases/{edited_case.id}")
     assertContains(response, "Entered location")
     assertNotContains(response, "Staff edited location")
+
+
+def test_non_staff_case_list_user_view(client, normal_user, only_staff_access):
+    client.force_login(normal_user)
+    response = client.get("/cases")
+    assert response.status_code == 302
+
+
+def test_non_staff_case_detail_user_view(
+    client, normal_user, case_1, only_staff_access
+):
+    client.force_login(normal_user)
+    response = client.get(f"/cases/{case_1.id}")
+    assert response.status_code == 302
+
+
+def test_non_staff_complaint_view(client, normal_user, complaint, only_staff_access):
+    client.force_login(normal_user)
+    response = client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
+    assert response.status_code == 302

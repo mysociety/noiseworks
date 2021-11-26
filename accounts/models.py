@@ -78,7 +78,7 @@ class User(AbstractUser):
         ordering = ("first_name", "last_name")
 
     def __str__(self):
-        name = self.get_full_name() or self.username
+        name = self.get_full_name() or self.email or self.username
         if self.address:
             name += f", {self.address}"
         return name

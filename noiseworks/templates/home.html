@@ -2,12 +2,24 @@
 
 {% block content %}
 
-<h1>In progress home page</h1>
+<h1>NoiseWorks</h1>
 
-{% if request.user.is_authenticated %}
-Logged in as {{ request.user }}.
+{% if request.user.is_staff %}
+<p>Logged in as {{ request.user }}.</p>
+
+<ul class="nw-list nw-list--bullet">
+    <li><a class="nw-link--no-visited-state" href="{% url "cases" %}">Show my cases</a>
+    <li><a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=none">Show unassigned cases</a>
+    <li><a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">Show all cases</a>
+</ul>
+
+{% elif "hackney.gov.uk" in request.user.email %}
+<p>Only approved Hackney accounts can access this system.
+Please contact your manager if you require access.</p>
+</p>
+<p><a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a></p>
 {% else %}
-<a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a>
+<p><a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a></p>
 {% endif %}
 
 {% endblock %}

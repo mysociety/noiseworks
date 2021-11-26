@@ -33,6 +33,16 @@ def sms_catcher(requests_mock):
     return sms_outbox
 
 
+@pytest.fixture
+def non_staff_access(settings):
+    settings.NON_STAFF_ACCESS = True
+
+
+@pytest.fixture
+def only_staff_access(settings):
+    settings.NON_STAFF_ACCESS = False
+
+
 def test_create_user_without_email_or_phone():
     user = User.objects.create_user(
         first_name="No", last_name="Contact", address="Address"
@@ -54,12 +64,17 @@ def test_bad_token(client):
     client.get(f"/a/{token}")
 
 
-def test_staff_logging_in_by_token(client, staff_user):
+def test_access_to_sign_in_page(client, only_staff_access):
+    response = client.get("/a")
+    assert response.status_code == 302
+
+
+def test_staff_logging_in_by_token(client, staff_user, non_staff_access):
     response = client.post("/a", {"username": "foo@example.org"})
     assert response.status_code == 403
 
 
-def test_log_in_by_link_email(client):
+def test_log_in_by_link_email(client, non_staff_access):
     response = client.post("/a", {"username": "foo"})
     assertContains(response, "Enter a valid email address")
     response = client.post("/a", {"username": "foo@example.org"})
@@ -71,7 +86,9 @@ def test_log_in_by_link_email(client):
 
 
 @patch("phonenumber_field.phonenumber.PhoneNumber.is_valid")
-def test_log_in_by_link_phone(is_valid, client, sms_catcher, settings):
+def test_log_in_by_link_phone(
+    is_valid, client, sms_catcher, settings, non_staff_access
+):
     is_valid.return_value = True
     settings.NOTIFY_API_KEY = (
         "hey-968e4931-c77f-442d-b306-9c062e0e4787-745ae299-aad9-4de6-9ce1-df4d547f6b92"
@@ -96,7 +113,7 @@ def test_log_in_by_code_errors(client):
     }
 
 
-def test_log_in_by_code(client):
+def test_log_in_by_code(client, non_staff_access):
     email = "foo@example.org"
     response = client.post("/a", {"username": email})
     assertContains(response, "Please check your")

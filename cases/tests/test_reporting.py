@@ -74,6 +74,12 @@ def test_new_existing_form(admin_client):
     admin_client.post("/cases/add/existing", {"existing": "new"})
 
 
+def test_user_new_existing_form(client, settings):
+    settings.NON_STAFF_ACCESS = False
+    resp = client.post("/cases/add/existing", {"get": "Start"})
+    assert resp.status_code == 302
+
+
 def _post_step(client, step, data, **kwargs):
     data = {f"{step}-{k}": v for k, v in data.items()}
     as_is = kwargs.pop("asis", {})
@@ -160,9 +166,15 @@ def test_staff_case_creation_new_user_map(admin_client, normal_user, mocks):
     post_step("summary", {"true_statement": 1}, follow=True)
 
 
-def test_user_case_creation(client, normal_user, mocks):
+def test_non_staff_user_case_creation(client, settings):
+    settings.NON_STAFF_ACCESS = False
+    resp = client.get(f"/cases/add/begin")
+    assert resp.status_code == 302
+
+
+def test_user_case_creation(client, normal_user, mocks, settings):
     """Gives details, picks address, map-based case"""
-    client.force_login(normal_user)
+    settings.NON_STAFF_ACCESS = True
     post_step = partial(_post_step, client)
     client.get(f"/cases/add/begin")
     resp = post_step(
