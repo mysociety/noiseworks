@@ -1,6 +1,7 @@
 import datetime
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
+from django.test import override_settings
 from django.utils.timezone import make_aware
 from accounts.models import User
 from ..models import Case, Complaint, ActionType, Action
@@ -75,6 +76,7 @@ def action_types(case_1):
     Action.objects.create(case=case_1, notes="Internal note", type=at1)
 
 
+@override_settings(NON_STAFF_ACCESS=True)
 def test_case_list_user_view(client, complaint, edited_case):
     client.force_login(complaint.complainant)
     response = client.get("/cases")
@@ -83,6 +85,7 @@ def test_case_list_user_view(client, complaint, edited_case):
     assertNotContains(response, "Staff edited location")
 
 
+@override_settings(NON_STAFF_ACCESS=True)
 def test_case_detail_user_view(client, complaint, action_types):
     client.force_login(complaint.complainant)
     response = client.get(f"/cases/{complaint.case.id}")
@@ -90,6 +93,7 @@ def test_case_detail_user_view(client, complaint, action_types):
     assertNotContains(response, "Noise witnessed")
 
 
+@override_settings(NON_STAFF_ACCESS=True)
 def test_case_detail_user_view_assignment(client, complaint, staff_user_1):
     complaint.case.assigned = staff_user_1
     complaint.case.save()
@@ -99,14 +103,37 @@ def test_case_detail_user_view_assignment(client, complaint, staff_user_1):
     assertNotContains(response, "staffuser1")
 
 
+@override_settings(NON_STAFF_ACCESS=True)
 def test_case_details_other_user_view(client, case_1, normal_user_2):
     client.force_login(normal_user_2)
     response = client.get(f"/cases/{case_1.id}")
     assert response.status_code == 404
 
 
+@override_settings(NON_STAFF_ACCESS=True)
 def test_case_location_display(client, complaint, edited_case):
     client.force_login(complaint.complainant)
     response = client.get(f"/cases/{edited_case.id}")
     assertContains(response, "Entered location")
     assertNotContains(response, "Staff edited location")
+
+
+@override_settings(NON_STAFF_ACCESS=False)
+def test_non_staff_case_list_user_view(client, normal_user):
+    client.force_login(normal_user)
+    response = client.get("/cases")
+    assert response.status_code == 302
+
+
+@override_settings(NON_STAFF_ACCESS=False)
+def test_non_staff_case_detail_user_view(client, normal_user, case_1):
+    client.force_login(normal_user)
+    response = client.get(f"/cases/{case_1.id}")
+    assert response.status_code == 302
+
+
+@override_settings(NON_STAFF_ACCESS=False)
+def test_non_staff_complaint_view(client, normal_user, complaint):
+    client.force_login(normal_user)
+    response = client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
+    assert response.status_code == 302

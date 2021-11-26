@@ -1,5 +1,6 @@
 import datetime
 import re
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -20,12 +21,14 @@ from accounts.models import User
 from . import map_utils
 
 
-@login_required(redirect_field_name="nxt")
+@login_required
 def case_list(request):
     if request.user.is_staff:
         return case_list_staff(request)
-    else:
+    elif settings.NON_STAFF_ACCESS:
         return case_list_user(request)
+    else:
+        return redirect("/")
 
 
 @login_required
@@ -67,12 +70,14 @@ def case_list_staff(request):
     )
 
 
-@login_required(redirect_field_name="nxt")
+@login_required
 def case(request, pk):
     if request.user.is_staff:
         return case_staff(request, pk)
-    else:
+    elif settings.NON_STAFF_ACCESS:
         return case_user(request, pk)
+    else:
+        return redirect("/")
 
 
 @login_required
@@ -267,6 +272,9 @@ def merge_start(request, case):
 
 @login_required
 def complaint(request, pk, complaint):
+    if not request.user.is_staff and not settings.NON_STAFF_ACCESS:
+        return redirect("/")
+
     case = get_object_or_404(Case, pk=pk)
     complaint = get_object_or_404(
         Complaint.objects.select_related("case"), pk=complaint

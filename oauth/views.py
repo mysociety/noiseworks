@@ -38,10 +38,10 @@ def verify(request):
     try:
         user = User.objects.get(email=email, email_verified=True)
     except User.DoesNotExist:
-        user = User.objects.create_user(email=email, is_staff=True)
+        user = User.objects.create_user(email=email)
     user.first_name = userinfo["given_name"]
     user.last_name = userinfo["family_name"]
     user.save()
 
     login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-    return redirect("/")  # XXX
+    return redirect(reverse("cases"))

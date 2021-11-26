@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains
 from django.core import mail
+from django.test import override_settings
 from sesame.tokens import create_token
 from .models import User
 from .forms import CodeForm
@@ -54,11 +55,19 @@ def test_bad_token(client):
     client.get(f"/a/{token}")
 
 
+@override_settings(NON_STAFF_ACCESS=False)
+def test_access_to_sign_in_page(client):
+    response = client.get("/a")
+    assert response.status_code == 302
+
+
+@override_settings(NON_STAFF_ACCESS=True)
 def test_staff_logging_in_by_token(client, staff_user):
     response = client.post("/a", {"username": "foo@example.org"})
     assert response.status_code == 403
 
 
+@override_settings(NON_STAFF_ACCESS=True)
 def test_log_in_by_link_email(client):
     response = client.post("/a", {"username": "foo"})
     assertContains(response, "Enter a valid email address")
@@ -70,6 +79,7 @@ def test_log_in_by_link_email(client):
     assert response.status_code == 302
 
 
+@override_settings(NON_STAFF_ACCESS=True)
 @patch("phonenumber_field.phonenumber.PhoneNumber.is_valid")
 def test_log_in_by_link_phone(is_valid, client, sms_catcher, settings):
     is_valid.return_value = True
