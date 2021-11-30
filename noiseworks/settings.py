@@ -214,6 +214,9 @@ STATICFILES_DIRS = [BASE_DIR / "noiseworks" / "static"]
 
 COMPRESS_PRECOMPILERS = (("text/x-scss", "django_libsass.SassCompiler"),)
 
+# Hash based on the content, not the mtime.
+COMPRESS_CSS_HASHING_METHOD = "content"
+
 LIBSASS_CUSTOM_FUNCTIONS = {
     "inline-image": inline_image,
 }
