@@ -109,7 +109,7 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     assertContains(resp, "A shop, bar, nightclub")
     assertContains(resp, "Line 1, Line 2, Line 3")
     today = datetime.date.today()
-    assertContains(resp, f"{today.strftime('%a, %d %b %Y')}, 9 p.m.")
+    assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
     assert Case.objects.count() == 1
     assert Complaint.objects.count() == 1
@@ -208,7 +208,7 @@ def test_user_case_creation(client, normal_user, mocks):
     assertContains(resp, "A shop, bar, nightclub")
     assertContains(resp, "180m around (536926,124099)")
     today = datetime.date.today()
-    assertContains(resp, f"{today.strftime('%a, %d %b %Y')}, 9 p.m.")
+    assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
 
 
