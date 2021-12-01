@@ -85,7 +85,7 @@ def test_add_complaint_now_existing_user(admin_client, case_1, normal_user):
         {"user_pick-search": "Normal", "user_pick-user": normal_user.id},
         follow=True,
     )
-    assertContains(resp, f"{yesterday.strftime('%a, %d %b %Y')}, 9 p.m.")
+    assertContains(resp, f"{yesterday.strftime('%a, %-d %b %Y')}, 9 p.m.")
     assertContains(resp, "Still ongoing")
     assertContains(resp, "Normal User, 1 High Street")
 
