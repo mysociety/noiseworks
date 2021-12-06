@@ -40,6 +40,8 @@ if env.str("BUGS_EMAIL", None):  # pragma: no cover
     SERVER_EMAIL = env("BUGS_EMAIL")
     ADMINS = (("mySociety bugs", env("BUGS_EMAIL")),)
 
+DEFAULT_EXCEPTION_REPORTER_FILTER = "noiseworks.debug.CustomExceptionReporterFilter"
+
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
