@@ -82,7 +82,7 @@ def action_types(db):
 
 def test_case_not_found(admin_client):
     response = admin_client.get("/cases/1")
-    assertContains(response, "Not Found", status_code=404)
+    assertContains(response, "not be found", status_code=404)
 
 
 def test_case(admin_client, case_1, complaint):

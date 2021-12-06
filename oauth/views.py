@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model, login
-from django.http import HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from authlib.integrations.django_client import OAuth
@@ -32,7 +32,7 @@ def verify(request):
         userinfo["aud"] != client.client_id
         or userinfo["hd"] != client.authorize_params["hd"]
     ):
-        return HttpResponseForbidden()
+        raise PermissionDenied
 
     email = userinfo["email"]
     try:

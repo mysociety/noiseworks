@@ -6,9 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -147,7 +147,7 @@ def followers(request, pk):
 def follower_state(request, pk):
     case = get_object_or_404(Case, pk=pk)
     if not request.POST:
-        return HttpResponseForbidden()
+        raise PermissionDenied
     user = request.user
     if request.POST.get("add"):
         case.followers.add(user)
@@ -213,7 +213,7 @@ def search_perpetrator(request, pk):
 def add_perpetrator(request, pk):
     case = get_object_or_404(Case, pk=pk)
     if not request.POST:
-        return HttpResponseForbidden()
+        raise PermissionDenied
     form = forms.PerpetratorPickForm(request.POST)
     if form.is_valid():
         form.save(case=case)

@@ -3,7 +3,6 @@ from math import ceil
 from django.conf import settings
 from django.contrib.auth import login, get_user_model
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 from sesame.tokens import create_token
