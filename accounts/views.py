@@ -1,7 +1,7 @@
 import base64
 from math import ceil
 from django.conf import settings
-from django.contrib.auth import login, get_user_model
+from django.contrib.auth import login, logout, get_user_model
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
@@ -32,6 +32,11 @@ def code(request):
         login(request, user)
         return redirect("cases")
     return render(request, "accounts/form_token.html", {"form": form})
+
+
+def signout(request):
+    logout(request)
+    return render(request, "accounts/signout.html")
 
 
 def show_form(request):

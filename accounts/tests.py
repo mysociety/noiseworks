@@ -171,3 +171,8 @@ def test_address_display_address():
     )
     assert user.address_display == "Other address"
     assert str(user) == "Norma User, Other address"
+
+
+def test_sign_out(client):
+    resp = client.get("/a/sign-out")
+    assertContains(resp, "signed out")

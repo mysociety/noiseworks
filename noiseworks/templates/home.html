@@ -5,12 +5,13 @@
 <h1>NoiseWorks</h1>
 
 {% if request.user.is_staff %}
-<p>Logged in as {{ request.user }}.</p>
+<p>Signed in as {{ request.user }}.</p>
 
 <ul class="nw-list nw-list--bullet">
     <li><a class="nw-link--no-visited-state" href="{% url "cases" %}">Show my cases</a>
     <li><a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=none">Show unassigned cases</a>
     <li><a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">Show all cases</a>
+    <li><a class="nw-link--no-visited-state" href="{% url "case-add" %}">Add new case</a>
 </ul>
 
 {% elif "hackney.gov.uk" in request.user.email %}
@@ -18,6 +19,15 @@
 Please contact your manager if you require access.</p>
 </p>
 <p><a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a></p>
+{% elif request.user.is_authenticated %}
+<p>Signed in as {{ request.user }}.
+
+<ul class="nw-list nw-list--bullet">
+    <li><a class="nw-link--no-visited-state" href="{% url "cases" %}">Show my cases</a>
+    <li><a class="nw-link--no-visited-state" href="{% url "case-add-intro" %}">Add new case</a>
+</ul>
+
+<p><a class="nw-button" href="{% url "accounts:sign-out" %}">Finish and leave service</a></p>
 {% else %}
 <p><a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a></p>
 {% endif %}
