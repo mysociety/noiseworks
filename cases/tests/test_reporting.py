@@ -214,7 +214,10 @@ def test_user_case_creation(client, normal_user, mocks, settings):
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
     resp = post_step("effect", {"effect": "Effect"}, follow=True)
-    assertContains(resp, "Normal User, No address, normal@example.org, +447900000000")
+    assertContains(
+        resp,
+        "Normal User, Line 1, Line 2, Line 3, E8 1DY, normal@example.org, +447900000000",
+    )
     assertContains(resp, "weekday, by email")
     assertContains(resp, "Other")
     assertContains(resp, "A shop, bar, nightclub")

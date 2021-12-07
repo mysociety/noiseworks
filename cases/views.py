@@ -580,9 +580,10 @@ class ReportingWizard(NamedUrlSessionWizardView):
                 user = User.objects.get(id=data["user"])
                 kwargs["reporting_user"] = user
             else:  # Must have name
-                address = (
-                    data.get("address_manual") or data.get("address") or "No address"
-                )
+                address = data.get("address_manual") or data.get("address")
+                user = User(uprn=data.get("address_uprn"), address=address)
+                user.update_address()
+                address = user.address_display
                 email = data.get("email") or "No email"
                 phone = data.get("phone") or "No phone"
                 kwargs[
