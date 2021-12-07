@@ -94,9 +94,12 @@ function same_contents(a, b) {
 
 function construct_case_locations_dropdown() {
     var inputs = document.querySelectorAll('.govuk-checkboxes__input[name=ward][type=checkbox]');
+    if (!inputs.length) {
+        return;
+    }
 
     var my_cases_option = '';
-    if (nw.user_wards.length) {
+    if (nw.user_wards && nw.user_wards.length) {
         var area_names = [];
         for (var i = 0; i < inputs.length; i++) {
             if (nw.user_wards.indexOf(inputs[i].value) > -1) {
