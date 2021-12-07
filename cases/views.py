@@ -374,7 +374,7 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
         user = request.user
         if user.is_staff:
             qs = Case.objects.all()
-        elif settings.NON_STAFF_ACCESS:
+        elif settings.NON_STAFF_ACCESS and user.is_authenticated:
             qs = Case.objects.by_complainant(user)
         else:
             return redirect("/")
@@ -444,8 +444,11 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
 
     def done(self, form_list, form_dict, **kwargs):
         # Save a new user if need be
-        picker = form_dict["user_pick"]
-        user = picker.save()
+        if "user_pick" in form_dict:
+            picker = form_dict["user_pick"]
+            user = picker.save()
+        else:
+            user = self.request.user.id
 
         data = self.get_all_cleaned_data()
         start = datetime.datetime.combine(

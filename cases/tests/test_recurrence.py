@@ -37,30 +37,28 @@ def complaint(db, case_1, normal_user):
     )
 
 
-def _post_step(admin_client, case_1, step, data, **kwargs):
-    return admin_client.post(
+def _post_step(client, case_1, step, data, **kwargs):
+    return client.post(
         f"/cases/{case_1.id}/complaint/add/{step}",
         {f"recurrence_wizard_{case_1.id}-current_step": step, **data},
         **kwargs,
     )
 
 
-def test_normal_user_permission(client, normal_user, case_1, complaint, settings):
+def test_normal_user_permission(client, normal_user, complaint, settings):
     settings.NON_STAFF_ACCESS = True
     client.force_login(normal_user)
-    resp = client.get(f"/cases/{case_1.id}/complaint/add")
+    resp = client.get(f"/cases/{complaint.case.id}/complaint/add")
     assert resp.status_code == 302
     complaint.delete()
-    resp = client.get(f"/cases/{case_1.id}/complaint/add")
+    resp = client.get(f"/cases/{complaint.case.id}/complaint/add")
     assert resp.status_code == 404
 
 
-def test_non_staff_normal_user_permission(
-    client, normal_user, case_1, complaint, settings
-):
+def test_non_staff_normal_user_permission(client, normal_user, complaint, settings):
     settings.NON_STAFF_ACCESS = False
     client.force_login(normal_user)
-    resp = client.get(f"/cases/{case_1.id}/complaint/add")
+    resp = client.get(f"/cases/{complaint.case.id}/complaint/add")
     assert resp.status_code == 302
     assert resp.url == "/"
 
@@ -157,3 +155,34 @@ def test_add_complaint_not_now_new_user_phone(admin_client, case_1, normal_user)
     _test_add_complaint_not_now_new_user(
         admin_client, case_1, normal_user, {"user_pick-phone": "07900000000"}
     )
+
+
+def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
+    settings.NON_STAFF_ACCESS = True
+    case = complaint.case
+    post_step = partial(_post_step, client, case)
+
+    client.force_login(normal_user)
+    client.get(f"/cases/{case.id}/complaint/add")
+
+    post_step("isitnow", {"isitnow-happening_now": "0"})
+    post_step(
+        "notnow",
+        {
+            "notnow-start_date_0": "12",
+            "notnow-start_date_1": "11",
+            "notnow-start_date_2": "2021",
+            "notnow-start_time": "9pm",
+            "notnow-end_time": "10pm",
+        },
+    )
+
+    post_step("rooms", {"rooms-rooms": "Room"})
+    post_step("describe", {"describe-description": "Desc"})
+    resp = post_step("effect", {"effect-effect": "Effect"}, follow=True)
+
+    assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
+    assertContains(resp, "Fri, 12 Nov 2021, 10 p.m.")
+
+    post_step("summary", {"summary-true_statement": 1})
+    client.get(f"/cases/{case.id}/complaint/add/done")
