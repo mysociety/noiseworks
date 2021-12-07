@@ -14,8 +14,11 @@
 
 <p>...</p>
 
-<p>
-    <a href="{% url "case-view" case.id %}">Show the case log</a>
-</p>
+{% if request.user.is_staff %}
+    <p><a href="{% url "case-view" case.id %}">Show the case log</a></p>
+{% else %}
+    <p><a class="nw-button nw-button--secondary" href="{% url "cases" %}">My cases</a>
+    <p><a class="nw-button" href="{% url "accounts:sign-out" %}">Finish and leave service</a></p>
+{% endif %}
 
 {% endblock %}
