@@ -13,7 +13,7 @@
     <dt class="govuk-summary-list__key">Reporting user</dt>
     <dd class="govuk-summary-list__value">{{ reporting_user }}</dd>
     <dd class="govuk-summary-list__actions">
-      <a class="nw-link--no-visited-state" href=""> <!-- TODO user_search OR about -->
+      <a class="nw-link--no-visited-state" href="{% if request.user.is_staff %}user_search{% else %}about{% endif %}">
         Change<span class="govuk-visually-hidden"> user</span>
       </a>
     </dd>
