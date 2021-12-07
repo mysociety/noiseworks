@@ -685,14 +685,20 @@ class ReportingWizard(NamedUrlSessionWizardView):
                     user = User.objects.get(phone=data["phone"], phone_verified=True)
                 except User.DoesNotExist:
                     user = User.objects.create_user(
-                        first_name=data["first_name"],
-                        last_name=data["last_name"],
                         email=data["email"],
                         phone=data["phone"],
-                        uprn=data.get("address_uprn", ""),
-                        address=data["address"] or data["address_manual"],
                     )
 
+        user.first_name = data["first_name"]
+        user.last_name = data["last_name"]
+        if not user.email_verified:
+            user.email = data["email"]
+        if not user.phone_verified:
+            user.phone = data["phone"]
+        user.uprn = data.get("address_uprn", "")
+        address = data.get("address") or data.get("address_manual")
+        if address:
+            user.address = address
         user.best_time = data["best_time"]
         user.best_method = data["best_method"]
         user.save()

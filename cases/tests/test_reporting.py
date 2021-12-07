@@ -177,6 +177,8 @@ def test_user_case_creation(client, normal_user, mocks, settings):
     settings.NON_STAFF_ACCESS = True
     post_step = partial(_post_step, client)
     client.get(f"/cases/add/begin")
+    normal_user.phone_verified = True
+    normal_user.save()
     resp = post_step(
         "about",
         {

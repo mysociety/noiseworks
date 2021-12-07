@@ -23,7 +23,7 @@ class UserManager(BaseManager):
         if phone_parsed and phone_parsed.is_valid():
             phone = phone_parsed
             phone_verified = True
-        elif email and "@" in email:
+        if email and "@" in email:
             email = self.normalize_email(email)
             email_verified = True
 
