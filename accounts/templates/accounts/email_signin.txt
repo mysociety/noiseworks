@@ -1,5 +1,5 @@
-Please click the following link to access your noise cases.
+Your Hackney NoiseWorks sign in token is {{ signature }}
+
+Alternatively, you can sign in on this device by following this link:
 
 {{ url }}
-
-Or enter this token: {{ signature }}

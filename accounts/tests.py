@@ -121,7 +121,7 @@ def test_log_in_by_code(client, non_staff_access):
     timestamp = m.group(1).decode()
     m = re.search(b'user_id[^>]*value="([^"]*)"', response.content)
     user_id = m.group(1).decode()
-    m = re.search(r"Or enter this token: ([^\s]*)", mail.outbox[0].body)
+    m = re.search(r"sign in token is ([^\s]*)", mail.outbox[0].body)
     code = m.group(1)
     response = client.post(
         "/a/code", {"user_id": user_id, "timestamp": timestamp, "code": "bad"}

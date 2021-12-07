@@ -80,7 +80,7 @@ def show_form(request):
         else:  # username_type will be "phone"
             send_sms(
                 str(user.phone),
-                f"Please click the following link to access your noise cases:\n\n{url}\n\nOr enter this token: {signature}",
+                f"Your Hackney NoiseWorks sign in token is {signature}\n\nAlternatively, you can sign in on this device by following this link:\n\n{url}",
             )
 
         form = CodeForm(initial={"user_id": user.id, "timestamp": timestamp})
