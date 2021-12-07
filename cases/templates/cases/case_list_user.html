@@ -38,6 +38,8 @@
 <h2>Report a new noise issue</h2>
 
 <p>If you are experiencing new noise nuisance, not present in the list above,
-you can <a href="">report a new noise issue</a>.</p>
+you can <a href="{% url "case-add-intro" %}">report a new noise issue</a>.</p>
+
+<p><a class="nw-button" href="{% url "accounts:sign-out" %}">Finish and leave service</a></p>
 
 {% endblock %}
