@@ -609,6 +609,8 @@ class ReportingWizard(NamedUrlSessionWizardView):
                 return {"geocode_choices": data["geocode_results"]}
         elif step == "best_time":
             return {"staff": self.request.user.is_active and self.request.user.is_staff}
+        elif step == "about":
+            return {"user": self.request.user.is_authenticated and self.request.user}
         elif step == "confirmation":
             data = self.storage.get_step_data("summary") or {}
             return {"token": data.get("token")}
@@ -620,6 +622,13 @@ class ReportingWizard(NamedUrlSessionWizardView):
             data = self.get_cleaned_data_for_step("user_search")
             if data:
                 return {"search": data["search"]}
+        elif step == "about" and self.request.user.is_authenticated:
+            return {
+                "first_name": self.request.user.first_name,
+                "last_name": self.request.user.last_name,
+                "email": self.request.user.email,
+                "phone": self.request.user.phone,
+            }
         elif step == "where-map":
             if "where-map" in self.initial_dict:  # no-JS map click
                 return self.initial_dict["where-map"]
@@ -707,6 +716,8 @@ class ReportingWizard(NamedUrlSessionWizardView):
         # Save a new user if need be
         if data.get("user"):
             user = User.objects.get(pk=data["user"])
+        elif self.request.user.is_authenticated:
+            user = self.request.user
         else:
             try:
                 user = User.objects.get(email=data["email"], email_verified=True)

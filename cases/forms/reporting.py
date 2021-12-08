@@ -46,6 +46,14 @@ class AboutYouForm(StepForm):
         help_text="We will call you on this number to discuss your report and if necessary arrange a visit",
     )
 
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user:
+            if user.email_verified:
+                self.fields["email"].disabled = True
+            if user.phone_verified:
+                self.fields["phone"].disabled = True
+
 
 class BestTimeForm(StepForm):
     title = "Contacting you"

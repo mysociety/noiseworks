@@ -31,7 +31,7 @@ def normal_user(db):
         username="normal@example.org",
         email="normal@example.org",
         email_verified=True,
-        phone="+447700900123",
+        phone="+447900000000",
         address="1 High Street",
         first_name="Normal",
         last_name="User",
@@ -173,13 +173,10 @@ def test_non_staff_user_case_creation(client, settings):
     assert resp.status_code == 302
 
 
-def test_user_case_creation(client, normal_user, mocks, settings):
+def _test_user_case_creation(logged_in, client):
     """Gives details, picks address, map-based case"""
-    settings.NON_STAFF_ACCESS = True
     post_step = partial(_post_step, client)
     client.get(f"/cases/add/begin")
-    normal_user.phone_verified = True
-    normal_user.save()
     resp = post_step(
         "about",
         {
@@ -227,13 +224,34 @@ def test_user_case_creation(client, normal_user, mocks, settings):
     assertContains(resp, "180m around (536926,124099)")
     today = datetime.date.today()
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
-    post_step("summary", {"true_statement": 1}, follow=True)
-    m = re.search(r"confirmation token is (\d+)", mail.outbox[0].body)
-    code = int(m.group(1))
-    resp = post_step("confirmation", {"code": code + 1})
-    assertContains(resp, "Incorrect or expired code")
-    resp = post_step("confirmation", {"code": code}, follow=True)
+    resp = post_step("summary", {"true_statement": 1}, follow=True)
+    if not logged_in:
+        m = re.search(r"confirmation token is (\d+)", mail.outbox[-1].body)
+        code = int(m.group(1))
+        resp = post_step("confirmation", {"code": code + 1})
+        assertContains(resp, "Incorrect or expired code")
+        resp = post_step("confirmation", {"code": code}, follow=True)
     assertContains(resp, "Case logged")
+
+
+def test_user_case_creation_not_logged_in(client, normal_user, mocks, settings):
+    settings.NON_STAFF_ACCESS = True
+    for email_verified in (True, False):
+        normal_user.email_verified = email_verified
+        for phone_verified in (True, False):
+            normal_user.phone_verified = phone_verified
+            normal_user.save()
+            _test_user_case_creation(False, client)
+
+
+def test_user_case_creation_logged_in(client, normal_user, mocks, settings):
+    settings.NON_STAFF_ACCESS = True
+    client.force_login(normal_user)
+    for verified in ("email", "phone"):
+        normal_user.email_verified = verified == "email"
+        normal_user.phone_verified = verified == "phone"
+        normal_user.save()
+        _test_user_case_creation(True, client)
 
 
 def test_error_conditions(admin_client, mocks):

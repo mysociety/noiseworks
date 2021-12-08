@@ -4,6 +4,12 @@ $lbh-asset-path: "/static/hackney";
 
 @import "node_modules/lbh-frontend/lbh/all";
 
+input[type=text]:disabled {
+    color: #555;
+    background-color: #eee;
+    opacity: 1;
+}
+
 .nw-panel {
     @extend .govuk-panel;
     @extend .govuk-panel--confirmation;

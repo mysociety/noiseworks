@@ -12,6 +12,10 @@
 or arrange a visit to listen to the noise ourselves.</p>
 {% elif wizard.steps.current == "postcode" %}
 <p>We do not accept anonymous reports, and may need your address should our team to visit to gather evidence.</p>
+{% elif wizard.steps.current == "about" and request.user.is_authenticated %}
+<p>If these are not your details, please
+<a href="{% url "accounts:sign-out" %}">sign out</a> and
+then create a new case.</p>
 {% endif %}
 
 <form action="" method="post">
