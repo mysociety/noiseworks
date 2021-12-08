@@ -1,4 +1,5 @@
 import datetime
+import random
 import re
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -14,6 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 from formtools.wizard.views import NamedUrlSessionWizardView
 from noiseworks.decorators import staff_member_required
+from noiseworks.message import send_sms, send_email
 from .filters import CaseFilter
 from .models import Case, Complaint, Action, ActionType
 from . import forms
@@ -365,6 +367,11 @@ def show_about_form(wizard):
     return not show_user_form(wizard)
 
 
+def show_confirmation_step(wizard):
+    user = wizard.request.user
+    return not user.is_authenticated
+
+
 class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
     template_name = "cases/complaint_add.html"
     context_object_name = "case"
@@ -602,6 +609,9 @@ class ReportingWizard(NamedUrlSessionWizardView):
                 return {"geocode_choices": data["geocode_results"]}
         elif step == "best_time":
             return {"staff": self.request.user.is_active and self.request.user.is_staff}
+        elif step == "confirmation":
+            data = self.storage.get_step_data("summary") or {}
+            return {"token": data.get("token")}
         return super().get_form_kwargs(step)
 
     def get_form_initial(self, step):
@@ -635,6 +645,24 @@ class ReportingWizard(NamedUrlSessionWizardView):
         if hasattr(form, "to_store"):
             data = data.copy()
             data.update(form.to_store)
+        if self.steps.current == "summary" and not self.request.user.is_authenticated:
+            data = data.copy()
+            token = str(random.randint(0, 999999)).zfill(6)
+            data["token"] = token
+            about_data = self.get_cleaned_data_for_step("about")
+            if about_data["email"]:
+                send_email(
+                    about_data["email"],
+                    "Confirm your noise case",
+                    "cases/add/email_confirm",
+                    {"token": token},
+                )
+            else:  # pragma: no cover # email or phone must both be present at present
+                send_sms(
+                    str(about_data["phone"]),
+                    f"Your confirmation token is {token}",
+                )
+
         return data
 
     form_list = [
@@ -656,6 +684,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
         ("describe", forms.DescribeNoiseForm),
         ("effect", forms.EffectForm),
         ("summary", forms.SummaryForm),
+        ("confirmation", forms.ConfirmationForm),
     ]
 
     condition_dict = {
@@ -668,6 +697,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
         "where-map": show_map_form,
         "isnow": show_happening_now_form,
         "notnow": show_not_happening_now_form,
+        "confirmation": show_confirmation_step,
     }
 
     @transaction.atomic

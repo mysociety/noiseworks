@@ -3,6 +3,7 @@ from functools import partial
 import re
 import pytest
 from pytest_django.asserts import assertContains
+from django.core import mail
 from accounts.models import User
 from ..models import Case, Complaint
 from ..forms import WhereMapForm
@@ -227,6 +228,12 @@ def test_user_case_creation(client, normal_user, mocks, settings):
     today = datetime.date.today()
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
+    m = re.search(r"confirmation token is (\d+)", mail.outbox[0].body)
+    code = int(m.group(1))
+    resp = post_step("confirmation", {"code": code + 1})
+    assertContains(resp, "Incorrect or expired code")
+    resp = post_step("confirmation", {"code": code}, follow=True)
+    assertContains(resp, "Case logged")
 
 
 def test_error_conditions(admin_client, mocks):

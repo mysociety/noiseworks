@@ -265,3 +265,17 @@ class WhereMapForm(StepForm):
             pass
         self.fields["point"].widget.radius = radius
         self.helper.radios_small = True
+
+
+class ConfirmationForm(StepForm):
+    code = forms.CharField(label="Token", max_length=6)
+
+    def __init__(self, token, *args, **kwargs):
+        self.token = token
+        super().__init__(*args, **kwargs)
+
+    def clean_code(self):
+        code = self.cleaned_data["code"]
+        if code != self.token:
+            raise forms.ValidationError("Incorrect or expired code")
+        return code
