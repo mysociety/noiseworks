@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from django.contrib.postgres.fields import ArrayField
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import mark_safe
+from django.utils.html import format_html, mark_safe
 from django.utils.functional import cached_property
 from simple_history.models import HistoricalRecords, ModelChange, ModelDelta
 from noiseworks import cobrand
@@ -227,10 +227,10 @@ class Case(AbstractModel):
                 "type": "edit",
                 "notes": mark_safe(
                     "<br>".join(
-                        [
-                            f"<strong>{c.field}</strong> from {c.old} to {c.new}"
-                            for c in changes
-                        ]
+                        format_html(
+                            "<strong>{}</strong> from {} to {}", c.field, c.old, c.new
+                        )
+                        for c in changes
                     )
                 ),
             },

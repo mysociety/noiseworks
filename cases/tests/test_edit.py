@@ -29,6 +29,16 @@ def test_edit_kind(admin_client):
     admin_client.post(f"/cases/{case.id}/edit-kind", {"kind": "music"}, follow=True)
 
 
+def test_edit_kind_other(admin_client):
+    case = Case.objects.create(kind="diy", location_cache="preset")
+    resp = admin_client.post(
+        f"/cases/{case.id}/edit-kind",
+        {"kind": "other", "kind_other": "<script>hello</script>"},
+        follow=True,
+    )
+    assertContains(resp, "from  to &lt;")
+
+
 @pytest.fixture
 def form_defaults():
     return {
