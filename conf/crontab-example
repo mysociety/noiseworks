@@ -1,0 +1,3 @@
+# Timed tasks
+
+0 0 * * * "/app/manage.py export_data --s3"
