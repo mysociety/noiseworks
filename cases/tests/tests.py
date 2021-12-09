@@ -77,6 +77,7 @@ def action_types(db):
     return [
         ActionType.objects.create(name="Letter sent", common=True),
         ActionType.objects.create(name="Noise witnessed"),
+        ActionType.objects.create(name="Abatement Notice “Section 80” served"),
     ]
 
 
@@ -161,6 +162,14 @@ def test_merging_cases(admin_client, case_1, case_other_uprn, action_types):
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "This case has been merged into")
     assertContains(response, "Noise witnessed")
+
+
+def test_case_had_abatement(admin_client, case_1, action_types):
+    assert not case_1.had_abatement_notice
+    response = admin_client.post(f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[2].id})
+    response = admin_client.post(f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[1].id})
+    case_1 = Case.objects.get(id=case_1.id)  # Refresh to get rid of cached properties
+    assert case_1.had_abatement_notice
 
 
 def test_action_manager(case_1, case_other_uprn):

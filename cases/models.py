@@ -366,6 +366,13 @@ class Case(AbstractModel):
                 return event["action"]
         return None
 
+    @property
+    def had_abatement_notice(self):
+        for action in self.actions_reversed:
+            if action.type_id and action.type.name == "Abatement Notice “Section 80” served":
+                return True
+        return False
+
 
 class Complaint(AbstractModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="complaints")
