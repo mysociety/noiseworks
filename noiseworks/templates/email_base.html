@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title></title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <style type="text/css">
+  {# Styles here will be applied by everything except Gmail.com #}
+  a { {{ link_style }} }
+  a:hover { {{ link_hover_style }} }
+
+  body, table, td, th {
+    font-family: {{ body_font_family }} !important;
+  }
+
+  @media only screen and (max-width: {{ wrapper_min_width|add:"-1" }}px) {
+    #main, .hint {
+      min-width: 0 !important;
+    }
+
+    #main table, #main tr, #main th {
+      display: block !important;
+    }
+
+    #primary_column,
+    #secondary_column {
+      width: auto !important;
+    }
+  }
+
+  @media only screen and (min-width: {{ wrapper_max_width }}px) {
+    .spacer-cell {
+      background-color: {{ body_background_color }};
+    }
+  }
+  </style>
+</head>
+<body style="{{ body_style }}">
+{% if staging %}
+  <table {{ wrapper_table|safe }} style="{{ td_style }}">
+    <tr>
+      <th class="spacer-cell"></th>
+      <th width="{{ wrapper_max_width }}" style="{{ td_style }}{{ warning_style }}" class="hint">
+        This email was sent from a staging site.
+      </th>
+      <th class="spacer-cell"></th>
+    </tr>
+  </table>
+{% endif %}
+  <table {{ wrapper_table|safe }} style="{{ wrapper_style }}">
+    <tr>
+      <th class="spacer-cell"></th>
+      <th width="{{ wrapper_max_width }}" style="{{ td_style }}{{ hint_style }}" class="hint">
+        {% block email_summary %}{% endblock %}
+      </th>
+      <th class="spacer-cell"></th>
+    </tr>
+  </table>
+  <table {{ wrapper_table|safe }} style="{{ wrapper_style }}">
+    <tr>
+      <th class="spacer-cell"></th>
+      <th width="{{ wrapper_max_width }}" style="{{ td_style }} min-width: {{ wrapper_min_width }}px;" id="main">
+        <table {{ table_reset|safe }}>
+          <tr>
+            <th colspan="{% block email_columns %}{% endblock %}" style="{{ td_style }}{{ header_style }}">
+              <img src="{{ logo_inline|safe }}" width="{{ logo_width }}" height="{{ logo_height }}" alt="{{ site_name }}" style="{{ logo_style }}"/>
+            </th>
+          </tr>
+          <tr>
+
+{% block content %}{% endblock %}
+
+          </tr>
+        </table>
+      </th>
+      <th class="spacer-cell"></th>
+    </tr>
+  </table>
+  <table {{ wrapper_table|safe }} style="{{ wrapper_style }}">
+    <tr>
+      <th class="spacer-cell"></th>
+      <th width="{{ wrapper_max_width }}" style="{{ td_style }}{{ hint_style }}" class="hint">
+        {% block email_footer %}This email was sent automatically, from an unmonitored email account. Please do not reply to it.{% endblock %}
+      </th>
+      <th class="spacer-cell"></th>
+    </tr>
+    <tr>
+      <th class="spacer-cell"></th>
+      <th width="{{ wrapper_max_width }}" style="{{ td_style }}{{ hint_style }}">
+        Powered by NoiseWorks
+      </th>
+      <th class="spacer-cell"></th>
+    </tr>
+  </table>
+</body>
+</html>

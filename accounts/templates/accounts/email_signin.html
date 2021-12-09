@@ -1,5 +1,20 @@
-<p>Your Hackney NoiseWorks sign in token is <strong>{{ signature }}</strong></p>
+{% extends "email_base.html" %}
 
-<p>Alternatively, you can sign in on this device by following this link:</p>
+{% block email_columns %}1{% endblock %}
+{% block email_summary %}Accessing your noise cases{% endblock %}
 
-<p><a href="{{ url }}">{{ url }}</a></p>
+{% block content %}
+
+<th style="{{ td_style }}{{ only_column_style }}">
+  <h1 style="{{ h1_style }}">Access your noise cases</h1>
+  <p style="{{ p_style }}">Your Hackney NoiseWorks sign in token is:</p>
+  <p style="margin: 20px auto; text-align: center; font-size:18px;">
+    <strong>{{ signature }}</strong>
+  </p>
+  <p style="{{ p_style }}">Alternatively, you can sign in on this device by following this link:</p>
+  <p style="margin: 20px auto; text-align: center">
+    <a style="{{ button_style }}" href="{{ url }}">Access my noise cases</a>
+  </p>
+</th>
+
+{% endblock %}
