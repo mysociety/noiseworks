@@ -1,13 +1,7 @@
-import re
-from unittest.mock import patch
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
-from django.contrib.gis.geos import Point
-from django.template import Context, Template
-from django.http import HttpRequest
+from pytest_django.asserts import assertContains
 from accounts.models import User
-from ..models import Case, Complaint, ActionType, Action
-from ..forms import ReassignForm, ActionForm
+from ..models import Case
 
 pytestmark = pytest.mark.django_db
 

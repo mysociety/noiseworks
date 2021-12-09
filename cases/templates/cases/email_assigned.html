@@ -1,0 +1,20 @@
+{% extends "email_base.html" %}
+
+{% block email_columns %}1{% endblock %}
+{% block email_summary %}Case has been assigned{% endblock %}
+
+{% block content %}
+
+<th style="{{ td_style }}{{ only_column_style }}">
+  <h1 style="{{ h1_style }}">Case assignment</h1>
+  <p style="{{ p_style }}">Hi {{ user }},</p>
+  <p style="{{ p_style }}">
+    You have been assigned to case #{{ case.id }}, {{ case.kind_display }} at
+    {{ case.location_display }}, by {{ by }}.
+  </p>
+  <p style="margin: 20px auto; text-align: center">
+    <a style="{{ button_style }}" href="{{ url }}">See case details</a>
+  </p>
+</th>
+
+{% endblock %}

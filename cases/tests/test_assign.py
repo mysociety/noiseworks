@@ -1,6 +1,7 @@
 import re
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
+from django.core import mail
 from accounts.models import User
 from ..models import Case, Action
 from ..forms import ReassignForm
@@ -15,7 +16,9 @@ def staff_user_1(db):
 
 @pytest.fixture
 def staff_user_2(db):
-    return User.objects.create(is_staff=True, username="staffuser2")
+    return User.objects.create(
+        is_staff=True, username="staffuser2", email="staffuser2@example.org"
+    )
 
 
 @pytest.fixture
@@ -75,6 +78,13 @@ def test_reassign_view(admin_client, case_1, staff_user_2):
     response = admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": 0})
     assertContains(response, "valid choice")
     admin_client.post(f"/cases/{case_1.id}/reassign", {"assigned": staff_user_2.id})
+    assert f"You have been assigned to case #{case_1.id}" in mail.outbox[0].body
+
+
+def test_reassign_view_to_yourself(client, case_1):
+    client.force_login(case_1.assigned)
+    client.post(f"/cases/{case_1.id}/reassign", {"assigned": case_1.assigned.id})
+    assert not len(mail.outbox)
 
 
 def test_followers(admin_client, admin_user, case_1, staff_user_2):

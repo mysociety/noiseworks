@@ -116,7 +116,16 @@ def reassign(request, pk):
     form = forms.ReassignForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
-        case.followers.add(form.cleaned_data["assigned"])
+        user = form.cleaned_data["assigned"]
+        case.followers.add(user)
+        if user.id != request.user.id:
+            url = request.build_absolute_uri(case.get_absolute_url())
+            send_email(
+                user.email,
+                "You have been assigned",
+                "cases/email_assigned",
+                {"case": case, "url": url, "user": user, "by": request.user},
+            )
         return redirect(case)
     return render(
         request,
