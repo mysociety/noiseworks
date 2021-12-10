@@ -3,7 +3,7 @@ import pytest
 from pytest_django.asserts import assertContains, assertNotContains
 from django.contrib.gis.geos import Point
 from accounts.models import User
-from ..models import Case
+from ..models import Case, Complaint
 
 pytestmark = pytest.mark.django_db
 
@@ -19,7 +19,7 @@ def normal_user(db):
         username="normal@example.org",
         email="normal@example.org",
         email_verified=True,
-        phone="+447700900123",
+        phone="+447900000000",
         first_name="Normal",
         last_name="User",
         best_time=["weekends"],
@@ -48,11 +48,7 @@ def test_list(admin_client, case_1):
     assertContains(response, "Cases")
 
 
-def test_assigned_filter(
-    admin_client, admin_user, case_1, case_location, requests_mock
-):
-    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
-    requests_mock.get(re.compile("transport/ows"), json={"features": []})
+def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     response = admin_client.get("/cases?assigned=others")
     assertContains(response, f"/cases/{case_1.id}")
     case_1.assigned = admin_user
@@ -81,11 +77,19 @@ def test_ward_filter(admin_client, admin_user, case_1):
     assertContains(response, f"/cases/{case_1.id}")
 
 
-def test_search(admin_client, case_1, requests_mock):
-    resp = admin_client.get("/cases?search=fireworks")
-    assertContains(resp, "Other")
-    resp = admin_client.get(f"/cases?search={case_1.id}")
-    assertContains(resp, "Other")
+def test_search(admin_client, case_1):
+    resp = admin_client.get("/cases?assigned=&search=fireworks")
+    assertContains(resp, "Fireworks")
+    resp = admin_client.get(f"/cases?assigned=&search={case_1.id}")
+    assertContains(resp, "Fireworks")
+
+
+def test_search_phone(admin_client, case_1):
+    Complaint.objects.create(
+        case=case_1, complainant=case_1.created_by, happening_now=True
+    )
+    resp = admin_client.get(f"/cases?assigned=&search=07900000000")
+    assertContains(resp, "Fireworks")
 
 
 def test_user_ward_js_array(admin_client):

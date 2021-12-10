@@ -2,6 +2,7 @@ import re
 from django import forms
 from django.db.models import Q
 import django_filters
+from phonenumber_field.phonenumber import to_python
 from .models import Case
 from .forms import FilterForm
 from .widgets import SearchWidget
@@ -94,6 +95,11 @@ class CaseFilter(django_filters.FilterSet):
         # roads = cobrand.api.matching_roads(value)
         # URPN cases in any of the addresses found by postcode/street lookup above
         # uprn_search = Q(uprn__in=addresses)
+
+        # If the search term is a phone number, canonicalise it for search
+        phone_parsed = to_python(value)
+        if phone_parsed and phone_parsed.is_valid():
+            value = str(phone_parsed)
 
         # Reporters with matching name/address/contact details
         queries |= (
