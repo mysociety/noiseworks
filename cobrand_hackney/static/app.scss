@@ -59,12 +59,6 @@ $lbh-asset-path: "/static/hackney";
 .nw-page-announcement--info { @extend .lbh-page-announcement--info; }
 .nw-page-announcement__content { @extend .lbh-page-announcement__content; }
 
-.nw-tag--id {
-    @extend .govuk-tag;
-    @extend .lbh-tag;
-    @extend .lbh-tag--green;
-}
-
 // Custom styles
 @import "variables";
 @import "colours";
@@ -77,6 +71,7 @@ $lbh-asset-path: "/static/hackney";
 @import "sections";
 @import "merge.scss";
 @import "person";
+@import "tags";
 
 span {
     font-family: $lbh-font-family;
@@ -199,14 +194,6 @@ ul.case-list-user li {
     padding-top: 1.5rem;
     padding-bottom: 1.5rem;
     margin-top: 0;
-
-    .nw-tag--id {
-        font-size: 13px;
-        font-size: 0.8125rem;
-        line-height: 19px;
-        line-height: 1.1875rem;
-        font-weight: bold;
-    }
 }
 
 .nw-case-list__empty {

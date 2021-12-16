@@ -29,7 +29,7 @@
 </section>
 {% endif %}
 
-<p class="nw-tag--id">{{ case.id }}</p>
+{% include "cases/_case_tags.html" with case=case %}
 <h1 style="margin-top: 0">{{ case.kind_display }} at {{ case.location_display }}</h1>
 
 <h2 class="lbh-heading-h2 section-heading">Case info</h2>

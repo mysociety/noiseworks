@@ -1,0 +1,35 @@
+.nw-tags {
+    display: flex;
+    margin-left: -5px;
+    margin-right: -5px;
+    margin-bottom: 0.5rem;
+
+    .nw-tag {
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+
+    * + * {
+        margin-top: 0;
+    }
+}
+
+.nw-tag {
+    @extend .govuk-tag;
+    @extend .lbh-tag;
+    line-height: 1.3;
+}
+
+.nw-tag--id {
+    @extend .lbh-tag--green;
+}
+
+.nw-tag--warning {
+    @extend .lbh-tag--red;
+}
+
+.nw-case-list .nw-tag {
+    font-size: 14px;
+    font-size: 0.875rem;
+    font-weight: bold;
+}

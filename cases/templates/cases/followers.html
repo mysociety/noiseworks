@@ -7,7 +7,7 @@
     <a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel</a>
 </div>
 
-<p class="nw-tag--id">{{ case.id }}</p>
+{% include "cases/_case_tags.html" with case=case %}
 
 {% error_summary form %}
 {% crispy form %}

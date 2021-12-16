@@ -7,7 +7,7 @@
     <a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel, back to case</a>
 </div>
 
-<p class="nw-tag--id">{{ case.id }}</p>
+{% include "cases/_case_tags.html" with case=case %}
 <h1 style="margin-top: 0">Log an action</h1>
 
 {% error_summary form %}

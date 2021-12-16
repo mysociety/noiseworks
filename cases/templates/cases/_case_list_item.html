@@ -1,7 +1,7 @@
 <li class="nw-case-list__item">
-    <a href="{% url 'case-view' case.id %}" class="nw-case-list__header nw-link--no-visited-state">
-        <span class="nw-tag--id">{{ case.id }}</span>
-        <span class="case-list__title">{{ case.kind_display }} at {{ case.location_display }}</span>
+    {% include "cases/_case_tags.html" with case=case %}
+    <a href="{% url 'case-view' case.id %}" class="case-list__title nw-link--no-visited-state">
+        {{ case.kind_display }} at {{ case.location_display }}
     </a>
     <dl class="nw-summary-list govuk-summary-list--no-border">
         <div class="govuk-summary-list__row">
