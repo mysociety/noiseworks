@@ -31,6 +31,17 @@ services:
       DEBUG: 1
       DATABASE_URL: 'postgis://postgres:password@db/noiseworks'
       COBRAND: cobrand_hackney
+      EMAIL_HOST: email.svc
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: always
+    ports:
+      - 1025:1025
+      - 8025:8025
+    networks:
+     default:
+       aliases:
+         - email.svc
 
 volumes:
   pgdata:
