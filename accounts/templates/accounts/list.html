@@ -6,7 +6,11 @@
 
 <ul class="nw-list">
 {% for user in users %}
-<li><a href="{% url "accounts:edit" user.id %}" class="nw-link--no-visited-state">{{ user }}</a>
+<li>{% if request.user.is_superuser %}
+    <a href="{% url "accounts:edit" user.id %}" class="nw-link--no-visited-state">{{ user }}</a> ({{ user.get_wards_display }})
+    {% else %}
+    {{ user }} ({{ user.get_wards_display }})
+{% endif %}</li>
 {% endfor %}
 </ul>
 

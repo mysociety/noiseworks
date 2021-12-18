@@ -107,3 +107,11 @@ class User(AbstractUser):
         perpetrated = self.cases_perpetrated.count()
         reporting = self.complaints.aggregate(models.Count("case", distinct=True))
         return perpetrated + reporting["case__count"]
+
+    def get_wards_display(self):
+        if not self.wards:
+            return "No wards"
+        wards = cobrand.api.wards()
+        wards = {ward["gss"]: ward["name"] for ward in wards}
+        wards = [wards.get(w) for w in self.wards]
+        return ", ".join(wards)

@@ -13,7 +13,9 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def staff_user(db):
-    return User.objects.create_user(is_staff=True, email="foo@example.org")
+    return User.objects.create_user(
+        is_staff=True, email="foo@example.org", wards=["E05009374"]
+    )
 
 
 @pytest.fixture
