@@ -35,6 +35,8 @@ class PersonPickForm(GDSForm, forms.Form):
             choices = []
         choices.append((0, "None, details below"))
         self.fields["user"].choices = choices
+        if len(choices) == 1:
+            self.initial["user"] = 0
 
     def clean(self):
         if "user" in self.cleaned_data and self.cleaned_data["user"] is None:
