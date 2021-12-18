@@ -92,6 +92,14 @@ def test_search_phone(admin_client, case_1):
     assertContains(resp, "Fireworks")
 
 
+def test_search_name(admin_client, case_1):
+    Complaint.objects.create(
+        case=case_1, complainant=case_1.created_by, happening_now=True
+    )
+    resp = admin_client.get(f"/cases?assigned=&search=Normal+User")
+    assertContains(resp, "Fireworks")
+
+
 def test_user_ward_js_array(admin_client):
     resp = admin_client.get(f"/cases")
     assertContains(resp, "nw.user_wards = []")

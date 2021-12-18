@@ -119,6 +119,16 @@ class CaseFilter(django_filters.FilterSet):
             | Q(perpetrators__phone__icontains=value)
         )
 
+        if " " in value:
+            f, l = value.split(maxsplit=2)
+            queries |= (
+                Q(complaints__complainant__first_name__icontains=f)
+                & Q(complaints__complainant__last_name__icontains=l)
+            ) | (
+                Q(perpetrators__first_name__icontains=f)
+                & Q(perpetrators__last_name__icontains=l)
+            )
+
         # Actions with matching notes
         queries |= Q(actions__notes__icontains=value)
 
