@@ -96,6 +96,8 @@ def edit(request, user_id):
     form = EditForm(request.POST or None, instance=user)
     if form.is_valid():
         form.save()
+        if request.GET.get("case"):
+            return redirect("case-view", request.GET.get("case"))
         return redirect("accounts:list")
     return render(request, "accounts/edit.html", {"form": form})
 

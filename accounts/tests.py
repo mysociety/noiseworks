@@ -146,6 +146,20 @@ def test_basic_user_editing(admin_client, staff_user):
         },
     )
     assert response.status_code == 302
+    assert response.url == "/a/list"
+
+
+def test_edit_redirect_back_to_case(admin_client, staff_user):
+    response = admin_client.post(
+        f"/a/{staff_user.id}/edit?case=123",
+        {
+            "best_time": ["weekday", "evening"],
+            "wards": ["E05009378", "E05009374"],
+            "best_method": "email",
+        },
+    )
+    assert response.status_code == 302
+    assert response.url == "/cases/123"
 
 
 def test_address_display_uprn():
