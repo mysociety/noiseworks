@@ -369,7 +369,10 @@ class Case(AbstractModel):
     @property
     def had_abatement_notice(self):
         for action in self.actions_reversed:
-            if action.type_id and action.type.name == "Abatement Notice “Section 80” served":
+            if (
+                action.type_id
+                and action.type.name == "Abatement Notice “Section 80” served"
+            ):
                 return True
         return False
 

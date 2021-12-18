@@ -166,8 +166,12 @@ def test_merging_cases(admin_client, case_1, case_other_uprn, action_types):
 
 def test_case_had_abatement(admin_client, case_1, action_types):
     assert not case_1.had_abatement_notice
-    response = admin_client.post(f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[2].id})
-    response = admin_client.post(f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[1].id})
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[2].id}
+    )
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[1].id}
+    )
     case_1 = Case.objects.get(id=case_1.id)  # Refresh to get rid of cached properties
     assert case_1.had_abatement_notice
 
