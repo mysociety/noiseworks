@@ -652,6 +652,11 @@ class ReportingWizard(NamedUrlSessionWizardView):
                 "email": self.request.user.email,
                 "phone": self.request.user.phone,
             }
+        elif step == "best_time" and self.request.user.is_authenticated:
+            return {
+                "best_time": self.request.user.best_time,
+                "best_method": self.request.user.best_method,
+            }
         elif step == "where-map":
             if "where-map" in self.initial_dict:  # no-JS map click
                 return self.initial_dict["where-map"]
