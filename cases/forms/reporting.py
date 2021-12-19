@@ -84,49 +84,35 @@ class BestTimeForm(StepForm):
 class PostcodeForm(StepForm):
     title = "What is your address?"
     postcode = forms.CharField(max_length=8)
-    addresses = forms.ChoiceField(
-        required=False, widget=forms.HiddenInput, label="Address"
-    )
-    address_uprn = forms.CharField(required=False, widget=forms.HiddenInput)
-    address_manual = forms.CharField(
-        label="Your address", widget=forms.HiddenInput, required=False
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper.radios_small = True
-
-    def clean(self):
-        if self.cleaned_data.get("addresses"):
-            self.cleaned_data["address_uprn"] = self.cleaned_data["addresses"]
-            del self.cleaned_data["addresses"]
-        return self.cleaned_data
-
-    def clean_addresses(self):
-        uprn = self.cleaned_data["addresses"]
-        if re.match("[0-9]+|missing$", uprn):
-            return uprn
-        if self.fields["addresses"].choices:
-            raise forms.ValidationError("Please select one of the addresses below")
-        return uprn
 
     def clean_postcode(self):
         pc = self.cleaned_data["postcode"]
-        self.fields["addresses"].choices = self.address_choices(pc)
-        self.fields["addresses"].widget = forms.RadioSelect()
-        self.fields["address_manual"].widget = forms.Textarea()
-        return pc
-
-    def address_choices(self, pc):
         addresses = cobrand.api.addresses_for_postcode(pc)
         if "error" in addresses:
             raise forms.ValidationError("We could not recognise that postcode")
         choices = []
         for addr in addresses["addresses"]:
             choices.append((addr["value"], addr["label"]))
-        choices[-1] = Choice(choices[-1][0], choices[-1][1], divider="or")
+        self.to_store = {"postcode_results": choices}
+        return pc
+
+
+class AddressForm(StepForm):
+    title = "What is your address?"
+    address_uprn = forms.ChoiceField(widget=forms.RadioSelect, label="Address")
+    address_manual = forms.CharField(
+        label="Your address", widget=forms.Textarea, required=False
+    )
+
+    def __init__(self, address_choices, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.radios_small = True
+        choices = []
+        for choice in address_choices:
+            choices.append(choice)
+        choices[-1] = Choice(*choices[-1], divider="or")
         choices.append(("missing", "I can’t find my address"))
-        return choices
+        self.fields["address_uprn"].choices = choices
 
 
 class ReportingKindForm(StepForm):

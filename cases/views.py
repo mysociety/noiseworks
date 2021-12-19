@@ -631,6 +631,9 @@ class ReportingWizard(NamedUrlSessionWizardView):
             return {"staff": self.request.user.is_active and self.request.user.is_staff}
         elif step == "about":
             return {"user": self.request.user.is_authenticated and self.request.user}
+        elif step == "address":
+            data = self.storage.get_step_data("postcode") or {}
+            return {"address_choices": data["postcode_results"]}
         elif step == "confirmation":
             data = self.storage.get_step_data("summary") or {}
             return {"token": data.get("token")}
@@ -700,6 +703,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
         ("about", forms.AboutYouForm),
         ("best_time", forms.BestTimeForm),
         ("postcode", forms.PostcodeForm),
+        ("address", forms.AddressForm),
         ("kind", forms.ReportingKindForm),
         ("where", forms.WhereForm),
         ("where-location", forms.WhereLocationForm),
@@ -721,6 +725,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
         "user_pick": show_user_form,
         "about": show_about_form,
         "postcode": show_about_form,
+        "address": show_about_form,
         "where-postcode-results": show_postcode_results_form,
         "where-geocode-results": show_geocode_results_form,
         "where-map": show_map_form,

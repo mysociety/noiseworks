@@ -70,7 +70,7 @@ show_hide("kind-kind", "other", ["div_id_kind-kind_other"]);
 show_hide("where-where", "residence", ["div_id_where-estate"]);
 show_hide("user_pick-user", "0", ['div_id_user_pick-first_name', 'div_id_user_pick-last_name', 'div_id_user_pick-email', 'div_id_user_pick-phone', 'div_id_user_pick-address']);
 show_hide("user", "0", ['div_id_first_name', 'div_id_last_name', 'div_id_email', 'div_id_phone', 'div_id_address']);
-show_hide("postcode-addresses", "missing", ["div_id_postcode-address_manual"]);
+show_hide("address-address_uprn", "missing", ["div_id_address-address_manual"]);
 
 // Creating a new dropdown "Case Locations"
 construct_case_locations_dropdown();
