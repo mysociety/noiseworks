@@ -173,7 +173,7 @@ def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
             "notnow-start_date_1": "11",
             "notnow-start_date_2": "2021",
             "notnow-start_time": "9pm",
-            "notnow-end_time": "10pm",
+            "notnow-end_time": "1am",
         },
     )
 
@@ -182,7 +182,7 @@ def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
     resp = post_step("effect", {"effect-effect": "Effect"}, follow=True)
 
     assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
-    assertContains(resp, "Fri, 12 Nov 2021, 10 p.m.")
+    assertContains(resp, "Sat, 13 Nov 2021, 1 a.m.")
 
     post_step("summary", {"summary-true_statement": 1})
     client.get(f"/cases/{case.id}/complaint/add/done")

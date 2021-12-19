@@ -381,6 +381,21 @@ def show_confirmation_step(wizard):
     return not user.is_authenticated
 
 
+def compile_dates(data):
+    start = datetime.datetime.combine(
+        data["start_date"], data["start_time"], tzinfo=timezone.get_current_timezone()
+    )
+    if data["happening_now"]:
+        end = timezone.now()
+    else:
+        end = datetime.datetime.combine(
+            data["start_date"], data["end_time"], tzinfo=timezone.get_current_timezone()
+        )
+        if end < start:
+            end += datetime.timedelta(days=1)
+    return start, end
+
+
 class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
     template_name = "cases/complaint_add.html"
     context_object_name = "case"
@@ -429,6 +444,10 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
                 "reporting_user"
             ] = f"{data['first_name']} {data['last_name']}, {data['address']}, {data['email']}, {data['phone']}"
 
+        if self.steps.current == "summary":
+            start, end = compile_dates(data)
+            kwargs["end_time"] = end
+
         return super().get_context_data(**kwargs)
 
     def get_form_initial(self, step):
@@ -467,19 +486,7 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
             user = self.request.user.id
 
         data = self.get_all_cleaned_data()
-        start = datetime.datetime.combine(
-            data["start_date"],
-            data["start_time"],
-            tzinfo=timezone.get_current_timezone(),
-        )
-        if data["happening_now"]:
-            end = timezone.now()
-        else:
-            end = datetime.datetime.combine(
-                data["start_date"],
-                data["end_time"],
-                tzinfo=timezone.get_current_timezone(),
-            )
+        start, end = compile_dates(data)
         complaint = Complaint(
             case=self.object,
             complainant_id=user,
@@ -591,6 +598,9 @@ class ReportingWizard(NamedUrlSessionWizardView):
                 estate=data["estate"],
             )
             case.update_location_cache()
+
+            start, end = compile_dates(data)
+            kwargs["end_time"] = end
 
             if data.get("user"):
                 user = User.objects.get(id=data["user"])
@@ -764,19 +774,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
         )
         case.save()
 
-        start = datetime.datetime.combine(
-            data["start_date"],
-            data["start_time"],
-            tzinfo=timezone.get_current_timezone(),
-        )
-        if data["happening_now"]:
-            end = timezone.now()
-        else:
-            end = datetime.datetime.combine(
-                data["start_date"],
-                data["end_time"],
-                tzinfo=timezone.get_current_timezone(),
-            )
+        start, end = compile_dates(data)
         complaint = Complaint(
             case=case,
             complainant=user,
