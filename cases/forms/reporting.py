@@ -276,6 +276,7 @@ class WhereMapForm(StepForm):
 
 
 class ConfirmationForm(StepForm):
+    title = "Confirmation"
     code = forms.CharField(label="Token", max_length=6)
 
     def __init__(self, token, *args, **kwargs):
