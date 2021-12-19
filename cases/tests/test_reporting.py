@@ -230,7 +230,7 @@ def _test_user_case_creation(logged_in, client):
         code = int(m.group(1))
         resp = post_step("confirmation", {"code": code + 1})
         assertContains(resp, "Incorrect or expired code")
-        resp = post_step("confirmation", {"code": code}, follow=True)
+        resp = post_step("confirmation", {"code": str(code).zfill(6)}, follow=True)
     assertContains(resp, "Case logged")
 
 
