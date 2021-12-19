@@ -31,10 +31,11 @@ class ReassignForm(GDSForm, forms.ModelForm):
         ward_staff = []
         other_staff = []
         for user in staff_users:
+            user_str = f"{user} ({user.get_wards_display()})"
             if user.wards and self.instance.ward in user.wards:
-                ward_staff.append(Choice(user.id, user))
+                ward_staff.append(Choice(user.id, user_str))
             else:
-                other_staff.append(Choice(user.id, user))
+                other_staff.append(Choice(user.id, user_str))
         if ward_staff:
             ward_staff[-1].divider = "or"
         self.fields["assigned"].choices = ward_staff + other_staff
