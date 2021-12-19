@@ -2,6 +2,7 @@ import datetime
 import random
 import re
 from django.conf import settings
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
@@ -762,6 +763,11 @@ class ReportingWizard(NamedUrlSessionWizardView):
         user.best_time = data["best_time"]
         user.best_method = data["best_method"]
         user.save()
+
+        if not self.request.user.is_authenticated:
+            login(
+                self.request, user, backend="django.contrib.auth.backends.ModelBackend"
+            )
 
         case = Case(
             kind=data["kind"],

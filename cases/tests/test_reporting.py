@@ -239,6 +239,7 @@ def test_user_case_creation_not_logged_in(client, normal_user, mocks, settings):
     for email_verified in (True, False):
         normal_user.email_verified = email_verified
         for phone_verified in (True, False):
+            client.logout()
             normal_user.phone_verified = phone_verified
             normal_user.save()
             _test_user_case_creation(False, client)
