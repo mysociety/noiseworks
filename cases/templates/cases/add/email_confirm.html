@@ -1,1 +1,16 @@
-<p>Your Hackney NoiseWorks confirmation token is <strong>{{ token }}</strong></p>
+{% extends "email_base.html" %}
+
+{% block email_columns %}1{% endblock %}
+{% block email_summary %}Confirming your noise case{% endblock %}
+
+{% block content %}
+
+<th style="{{ td_style }}{{ only_column_style }}">
+  <h1 style="{{ h1_style }}">Confirm your noise case</h1>
+  <p style="{{ p_style }}">Your Hackney NoiseWorks confirmation token is:</p>
+  <p style="margin: 20px auto; text-align: center; font-size:18px;">
+    <strong>{{ token }}</strong>
+  </p>
+</th>
+
+{% endblock %}
