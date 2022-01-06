@@ -4,6 +4,7 @@ import re
 import pytest
 from pytest_django.asserts import assertContains
 from django.core import mail
+from django.contrib.gis.geos import Point
 from accounts.models import User
 from ..models import Case, Complaint
 from ..forms import WhereMapForm
@@ -23,6 +24,9 @@ ADDRESS = {
     "longitude": -0.0575203934113829,
     "latitude": 51.5449668465297,
 }
+
+POINT = Point(-0.05, 51, srid=4326)
+POINT.transform(27700)
 
 
 @pytest.fixture
@@ -161,7 +165,7 @@ def test_staff_case_creation_new_user_map(admin_client, normal_user, mocks):
     assertContains(resp, "weekday, by email")
     assertContains(resp, "DIY")
     assertContains(resp, "A shop, bar, nightclub")
-    assertContains(resp, "180m around (536926,124099)")
+    assertContains(resp, f"180m around ({POINT.x:.0f},{POINT.y:.0f})")
     assertContains(resp, "Wed, 17 Nov 2021, 2 a.m.")
     assertContains(resp, "Wed, 17 Nov 2021, 3 a.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
@@ -221,7 +225,7 @@ def _test_user_case_creation(logged_in, client):
     assertContains(resp, "weekday, by email")
     assertContains(resp, "Other")
     assertContains(resp, "A shop, bar, nightclub")
-    assertContains(resp, "180m around (536926,124099)")
+    assertContains(resp, f"180m around ({POINT.x:.0f},{POINT.y:.0f})")
     today = datetime.date.today()
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
     resp = post_step("summary", {"true_statement": 1}, follow=True)
