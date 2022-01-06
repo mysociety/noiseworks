@@ -24,6 +24,18 @@ from accounts.models import User
 from . import map_utils
 
 
+def home(request):
+    if request.user.is_staff:
+        return redirect("cases")
+    elif request.user.is_authenticated:
+        if "hackney.gov.uk" in request.user.email:
+            return render(request, "home_unapproved.html")
+        else:
+            return redirect("cases")
+    else:
+        return redirect("case-add-intro")
+
+
 @login_required
 def case_list(request):
     if request.user.is_staff:
