@@ -136,7 +136,7 @@ def reassign(request, pk):
             send_email(
                 user.email,
                 "You have been assigned",
-                "cases/email_assigned",
+                "cases/email/assigned",
                 {"case": case, "url": url, "user": user, "by": request.user},
             )
         return redirect(case)
