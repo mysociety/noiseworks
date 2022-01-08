@@ -28,7 +28,9 @@
 
 .lbh-input,
 .lbh-textarea {
-    max-width: 30rem;
+    &:not([class*="govuk-input--width"]) {
+        max-width: 30rem;
+    }
 }
 
 // Counteract margin-bottom on label, if followed immediately by hint
