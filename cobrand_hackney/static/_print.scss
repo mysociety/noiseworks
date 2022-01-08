@@ -1,0 +1,49 @@
+@include govuk-media-query($media-type: print) {
+    // Hide menu and footer
+    .lbh-header__links,
+    .nw-site-footer {
+        display: none;
+    }
+
+    // Hide the URLs appended to links
+    a[href^="/"],
+    a[href^="http://"],
+    a[href^="https://"] {
+        &:after {
+            display: none;
+        }
+    }
+
+    // Hide "Change" etc links in summary lists
+    .govuk-summary-list__actions {
+        display: none;
+    }
+
+    // Hide buttons
+    .nw-button-bar,
+    .lbh-timeline .lbh-button,
+    .nw-person--empty {
+        display: none;
+    }
+
+    .lbh-container {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    // Make sure Hackney logo is visible even when background printing is disabled
+    .lbh-header__title-link,
+    .lbh-header__logo {
+        color: #000;
+    }
+
+    // No background-color for the header
+    .lbh-header__main {
+        background-color: transparent;
+    }
+
+    .nw-person {
+        background: transparent;
+        border: 1px solid #666;
+    }
+}
