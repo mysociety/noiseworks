@@ -10,6 +10,10 @@
     margin-top: 0;
 }
 
+.lbh-timeline__event {
+    padding-bottom: govuk-spacing(6);
+}
+
 .case-numbers {
     background-color: lbh-colour("lbh-grey-3");
     display: inline-block;
