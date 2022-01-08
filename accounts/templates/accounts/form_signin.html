@@ -8,7 +8,9 @@
 {% error_summary form %}
 {% crispy form %}
 
-<a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a>
+<aside class="nw-staff-signin">
+    <a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a>
+</aside>
 
 {% endblock %}
 
