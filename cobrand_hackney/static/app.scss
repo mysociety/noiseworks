@@ -90,12 +90,19 @@ footer {
     color: #fff;
     padding: govuk-spacing(6);
 }
+
 .noiseworks-footer {
-    text-align: right;
+    font-family: $lbh-font-family;
+    margin-top: 1rem;
+
+    @include govuk-media-query($from: tablet) {
+        text-align: right;
+        margin-top: 0.3rem; // vertically centred in footer, alongside Hackney logo
+    }
 }
 
 a.platform-logo {
-    vertical-align: middle;
+    vertical-align: -0.8em;
     display: inline-block;
     background-position: top left;
     background-repeat: no-repeat;
@@ -105,7 +112,7 @@ a.platform-logo {
     height: 0;
     padding-top: 2em;
     overflow: hidden;
-    margin-left: 0.25em;
+    margin-left: 0.5em;
     padding-right: 0.25em;
 }
 
