@@ -277,15 +277,7 @@ var nw = nw || {};
               <span class="govuk-details__summary-text"> Complaint details </span>
             </summary>
             <div class="govuk-details__text">
-                {{ entry.complaint.happening_now|yesno:"Happening now,Not happening now" }},
-                {% if entry.complaint.happening_now %}
-                    started {{ entry.complaint.start }}.
-                {% else %}
-                    {{ entry.complaint.start }} – {{ entry.complaint.end }}.
-                {% endif %}
-                Rooms: {{ entry.complaint.rooms }},
-                description: {{ entry.complaint.description }},
-                effect: {{ entry.complaint.effect }}.
+              {% include "cases/_complaint_summary.html" with complaint=entry.complaint %}
             </div>
           </details>
 
