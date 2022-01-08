@@ -42,6 +42,17 @@
         background-color: transparent;
     }
 
+    // Smaller text everywhere!
+    html {
+        font-size: 9pt;
+    }
+
+    // Fix incorrect font for summary lists
+    .nw-summary-list {
+        font-family: $lbh-font-family;
+        font-size: 1.2em;
+    }
+
     .nw-person {
         background: transparent;
         border: 1px solid #666;
