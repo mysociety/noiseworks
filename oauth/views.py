@@ -44,4 +44,4 @@ def verify(request):
     user.save()
 
     login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-    return redirect(reverse("cases") + '?assigned=me')
+    return redirect(reverse("cases") + "?assigned=me")

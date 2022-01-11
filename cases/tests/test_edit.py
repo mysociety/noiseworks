@@ -56,6 +56,17 @@ def test_edit_location(requests_mock, admin_client, form_defaults):
         json={"data": {"address": [{**ADDRESS, "locality": "WESTMINSTER"}]}},
     )
     requests_mock.get(
+        re.compile("point/27700"),
+        json={
+            "2508": {"type": "LBO", "name": "Hackney"},
+            "144391": {
+                "type": "LBW",
+                "codes": {"gss": "E05009378"},
+                "name": "Hoxton West",
+            },
+        },
+    )
+    requests_mock.get(
         re.compile("greenspaces/ows"),
         json={
             "features": [
@@ -98,6 +109,17 @@ def test_edit_location_to_uprn(requests_mock, admin_client, form_defaults):
     )
     requests_mock.get(
         re.compile("uprn=10008315925"), json={"data": {"address": [ADDRESS]}}
+    )
+    requests_mock.get(
+        re.compile("point/27700"),
+        json={
+            "2508": {"type": "LBO", "name": "Hackney"},
+            "144391": {
+                "type": "LBW",
+                "codes": {"gss": "E05009378"},
+                "name": "Hoxton West",
+            },
+        },
     )
     requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
     # Mock a road

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
 from django.db.models import Q, Count
@@ -7,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html, mark_safe
 from django.utils.functional import cached_property
+import requests
 from simple_history.models import HistoricalRecords, ModelChange, ModelDelta
 from noiseworks import cobrand
 from accounts.models import User
@@ -138,12 +140,21 @@ class Case(AbstractModel):
                 self.point = Point(addr["longitude"], addr["latitude"], srid=4326)
                 self.ward = ward_name_to_id(addr["ward"])
         elif self.point:
+            key = settings.MAPIT_API_KEY
+            data = requests.get(
+                f"https://mapit.mysociety.org/point/27700/{self.point.x},{self.point.y}?api_key={key}"
+            ).json()
+            if "2508" in data.keys():
+                ward = ""
+                for area in data.values():
+                    if area["type"] == "LBW":
+                        ward = area["codes"]["gss"]
+                self.ward = ward
+
             park = cobrand.api.in_a_park(self.point)
             if park:
-                self.ward = ward_name_to_id(park["new_ward"])
                 desc = f"a point in {park['name']}"
             else:
-                # Set ward here too?
                 roads = cobrand.api.nearest_roads(self.point)
                 if roads:
                     desc = f"a point near {roads}"

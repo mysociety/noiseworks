@@ -68,6 +68,17 @@ def mocks(requests_mock):
             {"lat": 52, "lon": -0.06, "display_name": "Another"},
         ],
     )
+    requests_mock.get(
+        re.compile("point/27700"),
+        json={
+            "2508": {"type": "LBO", "name": "Hackney"},
+            "144391": {
+                "type": "LBW",
+                "codes": {"gss": "E05009378"},
+                "name": "Hoxton West",
+            },
+        },
+    )
     requests_mock.get(re.compile(r"typename=greenspaces"), json={"features": []})
     requests_mock.get(re.compile(r"typename=transport"), json={"features": []})
 
