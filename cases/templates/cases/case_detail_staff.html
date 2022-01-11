@@ -279,7 +279,10 @@ var nw = nw || {};
             <div class="govuk-details__text">
               {% include "cases/_complaint_summary.html" with complaint=entry.complaint %}
             </div>
-          </details>
+        </details>
+        <div class="nw-printable-timeline-details" hidden>
+            {% include "cases/_complaint_summary.html" with complaint=entry.complaint %}
+        </div>
 
     {% else %}
         {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
@@ -292,6 +295,9 @@ var nw = nw || {};
                     {{ entry.action.notes }}
                 </div>
             </details>
+            <div class="nw-printable-timeline-details" hidden>
+                {{ entry.action.notes }}
+            </div>
         {% endif %}
 
     {% endif %}
