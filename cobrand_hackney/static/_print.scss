@@ -57,4 +57,17 @@
         background: transparent;
         border: 1px solid #666;
     }
+
+    .lbh-timeline .nw-printable-timeline-details {
+        display: block !important;
+        margin-top: govuk-spacing(1);
+        font-family: $lbh-font-family;
+        font-size: 1em;
+        padding: govuk-spacing(2);
+        border: 1px solid #666;
+    }
+
+    .lbh-timeline .lbh-details {
+        display: none !important;
+    }
 }
