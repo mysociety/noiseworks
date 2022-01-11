@@ -1,0 +1,35 @@
+<dl class="nw-summary-list">
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Complaint created
+    <dd class="govuk-summary-list__value">{{ complaint.created }}
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Complainant
+    <dd class="govuk-summary-list__value">{{ complaint.complainant }}
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise started</dt>
+    <dd class="govuk-summary-list__value">{{ complaint.start }}</dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Ended</dt>
+    <dd class="govuk-summary-list__value">
+    {% if complaint.happening_now %}
+        Still ongoing at
+    {% endif %}
+      {{ complaint.end }}
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Rooms affected
+    <dd class="govuk-summary-list__value">{{ complaint.rooms }}
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Noise description
+    <dd class="govuk-summary-list__value">{{ complaint.description }}
+  </div>
+  <div class="govuk-summary-list__row govuk-summary-list__row--no-border">
+    <dt class="govuk-summary-list__key">Effect of noise
+    <dd class="govuk-summary-list__value">{{ complaint.effect }}
+  </div>
+</dl>
