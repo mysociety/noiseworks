@@ -245,14 +245,16 @@ var nw = nw || {};
 
 {% endif %}
 
-<h2 class="lbh-heading-h2 section-heading">{% blocktranslate count counter=case.all_complainants|length trimmed %}
-    Reporter{% plural %}Reporters
-    {% endblocktranslate %}</h2>
+<h2 class="lbh-heading-h2 section-heading">
+  {% blocktranslate count counter=case.all_complainants|length trimmed %}
+    Complainant{% plural %}Complainants
+  {% endblocktranslate %}
+</h2>
 
 <ul class="nw-person-list">
   {% for person in case.all_complainants %}
     <li>
-        {% include 'cases/_person.html' with person=person case=case relationship='reporter' %}
+        {% include 'cases/_person.html' with person=person case=case relationship='complainant' %}
     </li>
   {% endfor %}
 </ul>

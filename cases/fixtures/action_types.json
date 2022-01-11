@@ -1,5 +1,5 @@
 [
-    {"model": "cases.actiontype", "pk": 1, "fields": {"name": "Contacted reporter", "common": true, "visibility": "public"}},
+    {"model": "cases.actiontype", "pk": 1, "fields": {"name": "Contacted complainant", "common": true, "visibility": "public"}},
     {"model": "cases.actiontype", "pk": 2, "fields": {"name": "Contacted perpetrator", "common": false, "visibility": "staff"}},
     {"model": "cases.actiontype", "pk": 3, "fields": {"name": "Noise abated", "common": false, "visibility": "staff"}},
     {"model": "cases.actiontype", "pk": 4, "fields": {"name": "Noise machine installed", "common": false, "visibility": "staff"}},

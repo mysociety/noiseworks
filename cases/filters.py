@@ -91,7 +91,7 @@ class CaseFilter(django_filters.FilterSet):
         if phone_parsed and phone_parsed.is_valid():
             value = str(phone_parsed)
 
-        # Reporters with matching name/address/contact details
+        # Complainants with matching name/address/contact details
         queries |= (
             Q(complaints__complainant__first_name__icontains=value)
             | Q(complaints__complainant__last_name__icontains=value)

@@ -72,13 +72,13 @@ class BestTimeForm(StepForm):
     def __init__(self, staff, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if staff:
-            self.title = "Contacting the reporter"
+            self.title = "Contacting the complainant"
             self.fields[
                 "best_time"
-            ].label = "When is the best time to contact the reporter?"
+            ].label = "When is the best time to contact the complainant?"
             self.fields[
                 "best_method"
-            ].label = "What is the best method for contacting the reporter?"
+            ].label = "What is the best method for contacting the complainant?"
 
 
 class PostcodeForm(StepForm):

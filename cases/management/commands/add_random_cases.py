@@ -294,12 +294,12 @@ class Command(BaseCommand):
     def add_actions(self, case, date, one_action, two_actions):
         if one_action:
             action_date = date + timedelta(hours=random.randint(1, 4))
-            type = ActionType.objects.get(name="Contacted reporter")
+            type = ActionType.objects.get(name="Contacted complainant")
             self.create_action(case, action_date, type)
         if two_actions:
             action_date += timedelta(hours=random.randint(24, 168))
             type = ActionType.objects.exclude(
-                name__in=("Contacted reporter", "Edit case")
+                name__in=("Contacted complainant", "Edit case")
             ).order_by("?")[0]
             self.create_action(case, action_date, type)
 

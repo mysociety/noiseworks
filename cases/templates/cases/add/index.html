@@ -8,7 +8,7 @@
 <h1 class="govuk-heading-l">{{ wizard.form.title }}</h1>
 
 {% if wizard.steps.current == "best_time" %}
-<p>We may need to talk to {% if request.user.is_staff %}the reporter{% else %}you{% endif %},
+<p>We may need to talk to {% if request.user.is_staff %}the complainant{% else %}you{% endif %},
 or arrange a visit to listen to the noise ourselves.</p>
 {% elif wizard.steps.current == "postcode" %}
 <p>We do not accept anonymous reports, and may need your address should our team to visit to gather evidence.</p>
