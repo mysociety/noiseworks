@@ -53,7 +53,7 @@ def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     assertContains(response, f"/cases/{case_1.id}")
     case_1.assigned = admin_user
     case_1.save()
-    response = admin_client.get("/cases")
+    response = admin_client.get("/cases?assigned=me")
     assertContains(response, f"/cases/{case_1.id}")
     response = admin_client.get(f"/cases?assigned={admin_user.id}")
     assertContains(response, f"/cases/{case_1.id}")
@@ -69,18 +69,22 @@ def test_assigned_filter(admin_client, admin_user, case_1, case_location):
 def test_ward_filter(admin_client, admin_user, case_1):
     admin_user.wards = ["E05009374"]
     admin_user.save()
-    response = admin_client.get("/cases?assigned=")
+    response = admin_client.get(
+        "/cases?" + "&".join(f"ward={ward}" for ward in admin_user.wards)
+    )
     assertNotContains(response, f"/cases/{case_1.id}")
     admin_user.wards = ["E05009372", case_1.ward]
     admin_user.save()
-    response = admin_client.get("/cases?assigned=")
+    response = admin_client.get(
+        "/cases?" + "&".join(f"ward={ward}" for ward in admin_user.wards)
+    )
     assertContains(response, f"/cases/{case_1.id}")
 
 
 def test_search(admin_client, case_1):
-    resp = admin_client.get("/cases?assigned=&search=fireworks")
+    resp = admin_client.get("/cases?search=fireworks")
     assertContains(resp, "Fireworks")
-    resp = admin_client.get(f"/cases?assigned=&search={case_1.id}")
+    resp = admin_client.get(f"/cases?search={case_1.id}")
     assertContains(resp, "Fireworks")
 
 
@@ -88,7 +92,7 @@ def test_search_phone(admin_client, case_1):
     Complaint.objects.create(
         case=case_1, complainant=case_1.created_by, happening_now=True
     )
-    resp = admin_client.get(f"/cases?assigned=&search=07900000000")
+    resp = admin_client.get(f"/cases?search=07900000000")
     assertContains(resp, "Fireworks")
 
 
@@ -96,7 +100,7 @@ def test_search_name(admin_client, case_1):
     Complaint.objects.create(
         case=case_1, complainant=case_1.created_by, happening_now=True
     )
-    resp = admin_client.get(f"/cases?assigned=&search=Normal+User")
+    resp = admin_client.get(f"/cases?search=Normal+User")
     assertContains(resp, "Fireworks")
 
 

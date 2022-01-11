@@ -9,7 +9,7 @@
 
     <h3>
       {% if person.email %}
-        <a href="{% url "cases" %}?assigned=&amp;search={{ person.email|urlencode }}">
+        <a href="{% url "cases" %}?search={{ person.email|urlencode }}">
       {% endif %}
         {{ person.first_name }}
         {{ person.last_name }}

@@ -125,11 +125,11 @@
       </div>
       <div class="lbh-header__links">
         {% if request.user.is_staff %}
-          <a href="{% url "cases" %}">My cases</a>
-          <a href="{% url "cases" %}?assigned=">All cases</a>
+          <a href="{% url "cases" %}?assigned=me">My cases</a>
+          <a href="{% url "cases" %}">All cases</a>
           <a href="{% url "case-add" %}">New case</a>
         {% else %}
-          <a href="{% url "cases" %}">My cases</a>
+          <a href="{% url "cases" %}?assigned=me">My cases</a>
           <a href="{% url "case-add-intro" %}">New case</a>
         {% endif %}
         {% if request.user.is_authenticated %}

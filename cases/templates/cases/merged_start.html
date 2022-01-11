@@ -22,9 +22,9 @@
 </div>
 
 {% if cases_same_uprn or cases_nearby %}
-    <p>Select a case to merge into, from the suggestions below, or <a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">the list of all cases</a></p>
+    <p>Select a case to merge into, from the suggestions below, or <a class="nw-link--no-visited-state" href="{% url "cases" %}">the list of all cases</a></p>
 {% else %}
-    <p>Select a case to merge into, from <a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=">the list of all cases</a></p>
+    <p>Select a case to merge into, from <a class="nw-link--no-visited-state" href="{% url "cases" %}">the list of all cases</a></p>
 {% endif %}
 
 {% if case.uprn and cases_same_uprn %}

@@ -59,8 +59,8 @@
     <nav id="main-nav" role="navigation">
 
     <ul class="nav-menu nav-menu--main">
-        <li><a href="{% url "cases" %}">My cases</a></li>
-        <li><a href="{% url "cases" %}?assigned=">All cases</a></li>
+        <li><a href="{% url "cases" %}?assigned=me">My cases</a></li>
+        <li><a href="{% url "cases" %}">All cases</a></li>
         <!-- <li><a href="">New case</a></li> -->
         <!-- <li><a href="">Dashboard</li> -->
       {% if user and user.is_staff %}

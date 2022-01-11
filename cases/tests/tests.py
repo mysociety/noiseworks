@@ -97,7 +97,7 @@ def test_case_uprn(admin_client, case_other_uprn):
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "Wombat")
     assertContains(response, "Flat 4, 2 Example Road")
-    response = admin_client.get(f"/cases?assigned=&uprn=10001")
+    response = admin_client.get(f"/cases?uprn=10001")
     assertContains(response, "Flat 4, 2 Example Road")
 
 

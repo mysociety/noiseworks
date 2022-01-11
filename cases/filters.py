@@ -48,23 +48,13 @@ class CaseFilter(django_filters.FilterSet):
         data = data.copy()
         user = kwargs["request"].user
         submitted = data.get("kind") is not None
-        # If the user has associated wards, and we've been asked for all/unassigned/others
-        # (but not via a filter form submission), use those wards by default
-        if (
-            user.wards
-            and not submitted
-            and data.get("assigned") in ("", "none", "others")
-        ):
-            data.setlistdefault("ward", user.wards)
-        # Default to showing cases assigned to the user
-        data.setdefault("assigned", "me")
         super().__init__(data, *args, **kwargs)
         self.filters.move_to_end("search", last=False)
         self.filters["kind"].label = "Noise type"
         self.filters["where"].label = "Noise location type"
         self.filters["estate"].label = "Hackney Estates property?"
         try:
-            user = User.objects.get(id=data["assigned"])
+            user = User.objects.get(id=data.get("assigned", ""))
             self.filters["assigned"].extra["choices"].append((user.id, user))
         except (User.DoesNotExist, ValueError):
             pass

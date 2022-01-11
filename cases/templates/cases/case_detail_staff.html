@@ -119,7 +119,7 @@
       <dt class="govuk-summary-list__key">Address</dt>
       <dd class="govuk-summary-list__value">
         {% if case.uprn %}
-            <a href="{% url "cases" %}?assigned=&amp;uprn={{ case.uprn }}">{{ case.location_display }}</a>
+            <a href="{% url "cases" %}?uprn={{ case.uprn }}">{{ case.location_display }}</a>
         {% else %}
             {{ case.location_display }}
         {% endif %}
@@ -165,7 +165,7 @@
   {% endif %}
     <div class="govuk-summary-list__row">
       <dt class="govuk-summary-list__key">Ward</dt>
-      <dd class="govuk-summary-list__value"><a href="{% url "cases" %}?assigned=&amp;ward={{ case.ward }}">{{ case.get_ward_display }}</a></dd>
+      <dd class="govuk-summary-list__value"><a href="{% url "cases" %}?ward={{ case.ward }}">{{ case.get_ward_display }}</a></dd>
       <dd class="govuk-summary-list__actions"></dd>
     </div>
 
