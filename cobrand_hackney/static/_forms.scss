@@ -38,3 +38,15 @@
     margin-top: -6px;
     margin-top: -0.375rem
 }
+
+// No need for visible "Area" fieldset legend when the "Case location"
+// select box has been inserted before it, by JavaScript.
+#div_id_case_location + #div_id_ward {
+    .govuk-fieldset__legend {
+        @extend .govuk-visually-hidden;
+    }
+
+    .govuk-checkboxes {
+        margin-top: 0;
+    }
+}
