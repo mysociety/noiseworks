@@ -110,7 +110,7 @@ function construct_case_locations_dropdown() {
             }
         }
         area_names = area_names.join(', ');
-        var area_label = 'My areas';
+        var area_label = 'My wards';
         if (area_names) {
             area_label += ' (' + area_names + ')';
         }
@@ -119,7 +119,7 @@ function construct_case_locations_dropdown() {
     var caseLocationDiv = document.createElement('div');
     caseLocationDiv.className = 'govuk-form-group lbh-form-group';
     caseLocationDiv.id = 'div_id_case_location';
-    caseLocationDiv.innerHTML = '<label for="id_case_location" class="govuk-label lbh-label">Case location</label>' + '<select class="govuk-select lbh-select" id="id_case_location"> <option value="all_areas" selected>All areas</option>' + my_cases_option + '<option value="selected_areas">Selected areas</option> <option value="outside_hackney">Outside Hackney</option> </select> ';
+    caseLocationDiv.innerHTML = '<label for="id_case_location" class="govuk-label lbh-label">Case location</label>' + '<select class="govuk-select lbh-select" id="id_case_location"> <option value="all_areas" selected>All wards</option>' + my_cases_option + '<option value="selected_areas">Selected wards</option> <option value="outside_hackney">Outside Hackney</option> </select> ';
 
     // Defining the div that contains all the ward checkboxes
     var area = document.getElementById("div_id_ward");

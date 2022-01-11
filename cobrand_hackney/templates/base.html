@@ -125,8 +125,11 @@
       </div>
       <div class="lbh-header__links">
         {% if request.user.is_staff %}
-          <a href="{% url "cases" %}?assigned=me">My cases</a>
           <a href="{% url "cases" %}">All cases</a>
+          <a href="{% url "cases" %}?assigned=me">My cases</a>
+        {% if request.user.wards %}
+          <a href="{% url "cases" %}{% for w in request.user.wards %}{% if forloop.first %}?{% else %}&amp;{% endif %}ward={{ w }}{% endfor %}">My ward{{ request.user.wards|length|pluralize }}</a>
+        {% endif %}
           <a href="{% url "case-add" %}">New case</a>
         {% else %}
           <a href="{% url "cases" %}?assigned=me">My cases</a>
