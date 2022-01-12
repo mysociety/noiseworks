@@ -62,7 +62,7 @@
         <table {{ table_reset|safe }}>
           <tr>
             <th colspan="{% block email_columns %}{% endblock %}" style="{{ td_style }}{{ header_style }}">
-              <img src="{{ logo_inline|safe }}" width="{{ logo_width }}" height="{{ logo_height }}" alt="{{ site_name }}" style="{{ logo_style }}"/>
+              <img src="cid:{{ logo_inline.id }}" width="{{ logo_width }}" height="{{ logo_height }}" alt="{{ site_name }}" style="{{ logo_style }}"/>
             </th>
           </tr>
           <tr>

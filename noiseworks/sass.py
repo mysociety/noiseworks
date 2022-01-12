@@ -3,22 +3,21 @@ import base64
 from django.contrib.staticfiles import finders
 
 
-def _inline_image(url, css):
+def _file_contents(url):
     path = finders.find(url)
     if path is None:  # pragma: no cover
         return ""
     data = open(path, "rb").read()
-    data = base64.b64encode(data).decode("utf-8")
-    type, _ = mimetypes.guess_type(path)
-    out = "data:%s;base64,%s" % (type, data)
-    if css:
-        out = "url('%s')" % out
-    return out
+    return path, data
 
 
 def inline_image(url):
-    return _inline_image(url, css=True)
+    path, data = _file_contents(url)
+    data = base64.b64encode(data).decode("utf-8")
+    type, _ = mimetypes.guess_type(path)
+    return f"url('data:{type};base64,{data}')"
 
 
 def inline_image_html(url):
-    return _inline_image(url, css=False)
+    path, data = _file_contents(url)
+    return data

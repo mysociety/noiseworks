@@ -1,4 +1,5 @@
 from noiseworks.sass import inline_image_html
+from email.utils import make_msgid
 from django.conf import settings
 
 
@@ -19,7 +20,10 @@ def override_colours():
 
     logo_width = "200"  # pixel measurement, but without 'px' suffix
     logo_height = "36"  # pixel measurement, but without 'px' suffix
-    logo_inline = inline_image_html("hackney/images/hackney-logo-white.png")
+    logo_inline = {
+        "id": make_msgid(domain="hackney.gov.uk")[1:-1],
+        "data": inline_image_html("hackney-logo-white.png"),
+    }
     header_padding = "20px 30px"
 
     return locals()

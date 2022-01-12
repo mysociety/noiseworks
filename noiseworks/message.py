@@ -1,5 +1,6 @@
+from email.mime.image import MIMEImage
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from notifications_python_client.notifications import NotificationsAPIClient
 from noiseworks import cobrand
@@ -22,7 +23,15 @@ def send_email(to, subject, template, data):
     settings.update(cobrand.email.override_settings(settings))
     data.update(settings)
     body_html = render_to_string(f"{template}.html", data)
-    send_mail(subject, body_text, None, [to], html_message=body_html)
+
+    logo = MIMEImage(data["logo_inline"]["data"])
+    logo.add_header("Content-ID", f"<{data['logo_inline']['id']}>")
+
+    message = EmailMultiAlternatives(subject, body_text, None, [to])
+    message.mixed_subtype = "related"
+    message.attach_alternative(body_html, "text/html")
+    message.attach(logo)
+    message.send()
 
 
 def email_colours():
