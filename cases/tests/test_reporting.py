@@ -135,6 +135,8 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     post_step("summary", {"true_statement": 1}, follow=True)
     assert Case.objects.count() == 1
     assert Complaint.objects.count() == 1
+    normal_user.refresh_from_db()
+    assert normal_user.first_name == "Normal"
 
 
 def test_staff_case_creation_new_user_map(admin_client, normal_user, mocks):

@@ -757,31 +757,36 @@ class ReportingWizard(NamedUrlSessionWizardView):
 
         # Save a new user if need be
         if data.get("user"):
+            # Staff picked a user, so use that without contact changes
             user = User.objects.get(pk=data["user"])
-        elif self.request.user.is_authenticated:
-            user = self.request.user
         else:
-            try:
-                user = User.objects.get(email=data["email"], email_verified=True)
-            except User.DoesNotExist:
+            if self.request.user.is_authenticated:
+                user = self.request.user
+            else:
                 try:
-                    user = User.objects.get(phone=data["phone"], phone_verified=True)
+                    user = User.objects.get(email=data["email"], email_verified=True)
                 except User.DoesNotExist:
-                    user = User.objects.create_user(
-                        email=data["email"],
-                        phone=data["phone"],
-                    )
+                    try:
+                        user = User.objects.get(
+                            phone=data["phone"], phone_verified=True
+                        )
+                    except User.DoesNotExist:
+                        user = User.objects.create_user(
+                            email=data["email"],
+                            phone=data["phone"],
+                        )
 
-        user.first_name = data["first_name"]
-        user.last_name = data["last_name"]
-        if not user.email_verified:
-            user.email = data["email"]
-        if not user.phone_verified:
-            user.phone = data["phone"]
-        user.uprn = data.get("address_uprn", "")
-        address = data.get("address") or data.get("address_manual")
-        if address:
-            user.address = address
+            user.first_name = data["first_name"]
+            user.last_name = data["last_name"]
+            if not user.email_verified:
+                user.email = data["email"]
+            if not user.phone_verified:
+                user.phone = data["phone"]
+            user.uprn = data.get("address_uprn", "")
+            address = data.get("address") or data.get("address_manual")
+            if address:
+                user.address = address
+
         user.best_time = data["best_time"]
         user.best_method = data["best_method"]
         user.save()
