@@ -156,7 +156,7 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user,
     )
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
     post_step("kind", {"kind": "diy"})
-    post_step("where", {"where": "business"})
+    post_step("where", {"where": "residence"})
     post_step("where-location", {"search": "Foobar2"})
     post_step("where-geocode-results", {"geocode_result": "-0.05,51"})
     post_step("where-map", {"point": "POINT (-0.05 51)", "radius": 180, "zoom": 16})
@@ -177,7 +177,7 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user,
     assertContains(resp, "Different User, Address")
     assertContains(resp, "weekday, by email")
     assertContains(resp, "DIY")
-    assertContains(resp, "A shop, bar, nightclub")
+    assertContains(resp, "A house, flat, park or street")
     assertContains(resp, f"180m around ({POINT.x:.0f},{POINT.y:.0f})")
     assertContains(resp, "Wed, 17 Nov 2021, 2 a.m.")
     assertContains(resp, "Wed, 17 Nov 2021, 3 a.m.")
@@ -212,7 +212,7 @@ def _test_user_case_creation(logged_in, client):
     post_step("address", {"address_uprn": "10008315925"})
     post_step("kind", {"kind": "other"})
     post_step("kind", {"kind": "other", "kind_other": "Other"})
-    post_step("where", {"where": "business"})
+    post_step("where", {"where": "residence", "estate": "n"})
     post_step("where-location", {"search": "Foobar1"})
 
     # Couple of non-JS requests in here to test that
@@ -239,7 +239,7 @@ def _test_user_case_creation(logged_in, client):
     )
     assertContains(resp, "weekday, by email")
     assertContains(resp, "Other")
-    assertContains(resp, "A shop, bar, nightclub")
+    assertContains(resp, "A house, flat, park or street")
     assertContains(resp, f"180m around ({POINT.x:.0f},{POINT.y:.0f})")
     today = datetime.date.today()
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
@@ -251,6 +251,14 @@ def _test_user_case_creation(logged_in, client):
         assertContains(resp, "Incorrect or expired code")
         resp = post_step("confirmation", {"code": str(code).zfill(6)}, follow=True)
     assertContains(resp, "Case logged")
+
+    email = mail.outbox[-1]
+    assert "new noise report has been submitted" in email.body
+    assert "Line 1, Line 2, Line 3" in email.body
+    assert f"180m around ({POINT.x:.0f},{POINT.y:.0f})" in email.body
+    assert "weekday, by email" in email.body
+    assert "Hoxton West" in email.body
+    assert "9 p.m." in email.body
 
 
 def test_user_case_creation_not_logged_in(client, normal_user, mocks, settings):

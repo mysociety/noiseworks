@@ -15,6 +15,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
 from formtools.wizard.views import NamedUrlSessionWizardView
+from noiseworks import cobrand
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_sms, send_email
 from .filters import CaseFilter
@@ -511,6 +512,7 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
             effect=data["effect"],
         )
         complaint.save()
+        send_staff_email(self.request, complaint, new=False)
         return render(
             self.request,
             "cases/complaint_add_done.html",
@@ -783,9 +785,8 @@ class ReportingWizard(NamedUrlSessionWizardView):
             if not user.phone_verified:
                 user.phone = data["phone"]
             user.uprn = data.get("address_uprn", "")
-            address = data.get("address") or data.get("address_manual")
-            if address:
-                user.address = address
+            user.address = data.get("address") or data.get("address_manual")
+            user.update_address()
 
         user.best_time = data["best_time"]
         user.best_method = data["best_method"]
@@ -819,8 +820,32 @@ class ReportingWizard(NamedUrlSessionWizardView):
             effect=data["effect"],
         )
         complaint.save()
+        send_staff_email(self.request, complaint, new=True)
         return render(
             self.request,
             "cases/add/done.html",
             {"data": data, "case": case},
         )
+
+
+def send_staff_email(request, complaint, new):
+    case = complaint.case
+    dest = cobrand.email.case_destination(case)
+    if new:
+        subject = f"Noise report: {case.location_display}"
+        template = "submit_report"
+    else:
+        subject = f"Noise reoccurrence: {case.location_display}"
+        template = "submit_reoccurrence"
+    url = request.build_absolute_uri(case.get_absolute_url())
+    send_email(
+        dest,
+        subject,
+        f"cases/email/{template}",
+        {
+            "complaint": complaint,
+            "case": case,
+            "complainant": complaint.complainant,
+            "url": url,
+        },
+    )

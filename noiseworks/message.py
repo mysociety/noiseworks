@@ -17,9 +17,9 @@ def send_sms(to, text):
 def send_email(to, subject, template, data):
     body_text = render_to_string(f"{template}.txt", data)
     settings = email_colours()
-    settings.update(cobrand.email.colours())
+    settings.update(cobrand.email.override_colours())
     email_settings(settings)
-    settings.update(cobrand.email.settings(settings))
+    settings.update(cobrand.email.override_settings(settings))
     data.update(settings)
     body_html = render_to_string(f"{template}.html", data)
     send_mail(subject, body_text, None, [to], html_message=body_html)

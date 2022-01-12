@@ -1,0 +1,50 @@
+{% extends "email_base.html" %}
+
+{% block email_columns %}1{% endblock %}
+{% block email_summary %}New noise report{% endblock %}
+
+{% block content %}
+
+<th style="{{ td_style }}{{ only_column_style }}">
+  <h1 style="{{ h1_style }}">New noise report</h1>
+  <p style="margin: 20px auto; text-align: center">
+    <a style="{{ button_style }}" href="{{ url }}">See case details</a>
+  </p>
+
+  <p style="{{ p_style }}">
+    Noise source: {{ case.location_display }}
+  </p>
+
+  <h2 style="{{ h2_style }}">Reported by</h2>
+  <p style="{{ p_style }}">
+  Name: {{ complainant.get_full_name }}
+  <br>Email: {{ complainant.email }}
+  <br>Phone: {{ complainant.phone }}
+  <br>Address: {{ complainant.address_display }}
+  <br>Availability: {{ complainant.best_time|join:" or " }}, by {{ complainant.best_method }}
+  </p>
+
+  <h2 style="{{ h2_style }}">Details</h2>
+  <p style="{{ p_style }}">
+  Kind of noise: {{ case.kind_display }}
+  <br>Noise source: {{ case.location_display }}
+  <br>Ward: {{ case.get_ward_display }}
+  <br>Where is the noise coming from? {{ case.get_where_display }}
+  <br>Is the residence a Hackney Estates property? {{ case.get_estate_display }}
+  </p>
+
+  <h2 style="{{ h2_style }}">Complaint details</h2>
+  <p style="{{ p_style }}">
+  Noise started: {{ complaint.start }}
+  <br>Noise ended: {% if complaint.happening_now %}Ongoing at {% endif %}{{ complaint.end }}
+  <br>Rooms affected: {{ complaint.rooms }}
+  <br>Noise description: {{ complaint.description }}
+  <br>Effect on complainant: {{ complaint.effect }}
+  </p>
+
+  <p style="margin: 20px auto; text-align: center">
+    <a style="{{ button_style }}" href="{{ url }}">See case details</a>
+  </p>
+</th>
+
+{% endblock %}
