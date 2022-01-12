@@ -139,7 +139,7 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     assert normal_user.first_name == "Normal"
 
 
-def test_staff_case_creation_new_user_map(admin_client, normal_user, mocks):
+def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user, mocks):
     """Picks new user, map based source"""
     post_step = partial(_post_step, admin_client)
     admin_client.get(f"/cases/add/begin")
@@ -182,6 +182,8 @@ def test_staff_case_creation_new_user_map(admin_client, normal_user, mocks):
     assertContains(resp, "Wed, 17 Nov 2021, 2 a.m.")
     assertContains(resp, "Wed, 17 Nov 2021, 3 a.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
+    admin_user.refresh_from_db()
+    assert admin_user.first_name == ""
 
 
 def test_non_staff_user_case_creation(client, settings):

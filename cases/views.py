@@ -760,7 +760,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
             # Staff picked a user, so use that without contact changes
             user = User.objects.get(pk=data["user"])
         else:
-            if self.request.user.is_authenticated:
+            if self.request.user.is_authenticated and not self.request.user.is_staff:
                 user = self.request.user
             else:
                 try:
