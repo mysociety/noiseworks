@@ -1,7 +1,8 @@
 from noiseworks.sass import inline_image_html
+from django.conf import settings
 
 
-def colours():
+def override_colours():
     color_green = "#00b341"
     color_black = "#000000"
     color_white = "#FFFFFF"
@@ -24,7 +25,7 @@ def colours():
     return locals()
 
 
-def settings(settings):
+def override_settings(settings):
     only_column_style = "{only_column_style} border: 1px solid {column_divider_color}; border-top: none;".format(
         **settings
     )
@@ -35,3 +36,15 @@ def settings(settings):
         **settings
     )
     return locals()
+
+
+def case_destination(case):
+    emails = settings.COBRAND_SETTINGS["staff_destination"]
+    if case.ward == "outside":
+        return emails["outside"]
+    elif case.where == "business":
+        return emails["business"]
+    elif case.estate == "y":
+        return emails["hackney-housing"]
+    else:
+        return emails["housing"]

@@ -1,0 +1,30 @@
+Hi,
+
+A new noise reoccurrence has been submitted.
+
+See full case details: {{ url }}
+
+Reoccurrence details:
+  Noise started: {{ complaint.start }}
+  Noise ended: {% if complaint.happening_now %}Ongoing at {% endif %}{{ complaint.end }}
+  Rooms affected: {{ complaint.rooms }}
+  Noise description: {{ complaint.description }}
+  Effect on complainant: {{ complaint.effect }}
+
+Reported by:
+  Name: {{ complainant.get_full_name }}
+  Email: {{ complainant.email }}
+  Phone: {{ complainant.phone }}
+  Address: {{ complainant.address_display }}
+  Availability: {{ complainant.best_time|join:" or " }}, by {{ complainant.best_method }}
+
+Case details:
+  Kind of noise: {{ case.kind_display }}
+  Noise source: {{ case.location_display }}
+  Ward: {{ case.get_ward_display }}
+  Where is the noise coming from? {{ case.get_where_display }}
+  Is the residence a Hackney Estates property? {{ case.get_estate_display }}
+
+See full case details: {{ url }}
+
+NoiseWorks

@@ -1,6 +1,7 @@
 import datetime
 from functools import partial
 import pytest
+from django.core import mail
 from pytest_django.asserts import assertContains
 from accounts.models import User
 from ..models import Case, Complaint
@@ -25,7 +26,9 @@ def normal_user(db):
 
 @pytest.fixture
 def case_1(db, normal_user):
-    return Case.objects.create(kind="diy", created_by=normal_user, ward="E05009373")
+    return Case.objects.create(
+        kind="diy", created_by=normal_user, ward="outside", where="residence"
+    )
 
 
 @pytest.fixture
@@ -87,9 +90,7 @@ def test_add_complaint_now_existing_user(admin_client, case_1, normal_user):
     assertContains(resp, "Still ongoing")
     assertContains(resp, "Normal User, 1 High Street")
 
-    post_step("summary", {"summary-true_statement": 1})
-
-    admin_client.get(f"/cases/{case_1.id}/complaint/add/done")
+    post_step("summary", {"summary-true_statement": 1}, follow=True)
 
 
 def _test_add_complaint_not_now_new_user(admin_client, case_1, normal_user, user_data):
@@ -141,8 +142,7 @@ def _test_add_complaint_not_now_new_user(admin_client, case_1, normal_user, user
     assertContains(resp, "Fri, 12 Nov 2021, 10 p.m.")
     assertContains(resp, "Norman Normal")
 
-    post_step("summary", {"summary-true_statement": 1})
-    admin_client.get(f"/cases/{case_1.id}/complaint/add/done")
+    post_step("summary", {"summary-true_statement": 1}, follow=True)
 
 
 def test_add_complaint_not_now_new_user_email(admin_client, case_1, normal_user):
@@ -184,5 +184,11 @@ def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
     assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
     assertContains(resp, "Sat, 13 Nov 2021, 1 a.m.")
 
-    post_step("summary", {"summary-true_statement": 1})
-    client.get(f"/cases/{case.id}/complaint/add/done")
+    post_step("summary", {"summary-true_statement": 1}, follow=True)
+
+    email = mail.outbox[-1]
+    assert 'noise reoccurrence' in email.body
+    assert 'Fri, 12 Nov 2021, 9 p.m.' in email.body
+    assert 'Sat, 13 Nov 2021, 1 a.m.' in email.body
+    assert '1 High Street' in email.body
+    assert 'DIY' in email.body
