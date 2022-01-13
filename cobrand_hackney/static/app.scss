@@ -87,34 +87,59 @@ span {
 
 footer {
     background-color: lbh-colour("lbh-primary-hover");
-    color: #fff;
-    padding: govuk-spacing(6);
+    color: lbh-colour("lbh-text-white");
+    padding: govuk-spacing(6) 0;
     margin-top: 0;
-}
 
-.noiseworks-footer {
-    font-family: $lbh-font-family;
-    margin-top: 1rem;
+    a {
+        &:link {
+            color: lbh-colour("lbh-text-white");
+            text-decoration: none;
+        }
 
-    @include govuk-media-query($from: tablet) {
-        text-align: right;
-        margin-top: 0.3rem; // vertically centred in footer, alongside Hackney logo
+        &:hover {
+            border-bottom: 1px solid currentColor;
+        }
+    }
+
+    .nw-inline-list {
+        margin-top: 0;
+
+        @include govuk-media-query($from: tablet) {
+            justify-content: flex-end;
+        }
     }
 }
 
-a.platform-logo {
-    vertical-align: -0.8em;
-    display: inline-block;
-    background-position: top left;
-    background-repeat: no-repeat;
-    background-size: auto 1.8em;
-    background-image: inline-image("noiseworks-logo-single-colour-light.png");
-    width: 8em;
-    height: 0;
-    padding-top: 2em;
-    overflow: hidden;
-    margin-left: 0.5em;
-    padding-right: 0.25em;
+.noiseworks-footer {
+    background: lbh-colour("lbh-black");
+    color: lbh-colour("lbh-text-white");
+    font-family: $lbh-font-family;
+    padding: govuk-spacing(4) 0;
+    margin-top: 0;
+
+    p {
+        color: inherit;
+        font-size: 0.75rem;
+
+        @include govuk-media-query($from: tablet) {
+            text-align: right;
+        }
+    }
+
+    .platform-logo {
+        vertical-align: -0.8em;
+        display: inline-block;
+        background-position: top left;
+        background-repeat: no-repeat;
+        background-size: auto 1.8em;
+        background-image: inline-image("noiseworks-logo-single-colour-light.png");
+        width: 7.8em;
+        height: 0;
+        padding-top: 2em;
+        overflow: hidden;
+        margin-left: 0.5em;
+    }
 }
 
 // Generic classes
