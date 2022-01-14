@@ -255,7 +255,7 @@ def _test_user_case_creation(logged_in, client):
         resp = post_step("confirmation", {"code": code + 1})
         assertContains(resp, "Incorrect or expired code")
         resp = post_step("confirmation", {"code": str(code).zfill(6)}, follow=True)
-    assertContains(resp, "Case logged")
+    assertContains(resp, "Thank you for reporting")
 
     email = mail.outbox[-1]
     assert "new noise report has been submitted" in email.body
