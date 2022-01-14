@@ -20,5 +20,6 @@
     {"model": "cases.actiontype", "pk": 19, "fields": {"name": "Community Trigger received", "common": false, "visibility": "staff"}},
     {"model": "cases.actiontype", "pk": 20, "fields": {"name": "Case referred to another partner (eg Police, Housing)", "common": false, "visibility": "staff"}},
     {"model": "cases.actiontype", "pk": 21, "fields": {"name": "Case closed", "common": false, "visibility": "staff"}},
-    {"model": "cases.actiontype", "pk": 22, "fields": {"name": "Edit case", "common": false, "visibility": "internal"}}
+    {"model": "cases.actiontype", "pk": 22, "fields": {"name": "Edit case", "common": false, "visibility": "internal"}},
+    {"model": "cases.actiontype", "pk": 23, "fields": {"name": "Visit", "common": false, "visibility": "staff"}}
 ]
