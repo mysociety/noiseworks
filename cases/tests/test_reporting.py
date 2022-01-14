@@ -2,7 +2,7 @@ import datetime
 from functools import partial
 import re
 import pytest
-from pytest_django.asserts import assertContains
+from pytest_django.asserts import assertContains, assertNotContains
 from django.core import mail
 from django.contrib.gis.geos import Point
 from accounts.models import User
@@ -58,14 +58,15 @@ def mocks(requests_mock):
     requests_mock.get(
         re.compile(r"q=Foobar1"),
         json=[
-            {"lat": 51, "lon": -0.05, "display_name": "Result"},
+            {"lat": 51, "lon": -0.05, "display_name": "Result, Hackney, London"},
         ],
     )
     requests_mock.get(
         re.compile(r"q=Foobar2"),
         json=[
-            {"lat": 51, "lon": -0.05, "display_name": "Result"},
-            {"lat": 52, "lon": -0.06, "display_name": "Another"},
+            {"lat": 51, "lon": -0.05, "display_name": "Result, Hackney, London"},
+            {"lat": 52, "lon": -0.06, "display_name": "Another, Hackney, London"},
+            {"lat": 90, "lon": 0, "display_name": "North Pole"},
         ],
     )
     requests_mock.get(
@@ -159,7 +160,9 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user,
     resp = post_step("where", {"where": "residence"})
     assertContains(resp, "Please pick the type of residence")
     post_step("where", {"where": "residence", "estate": "y"})
-    post_step("where-location", {"search": "Foobar2"})
+    resp = post_step("where-location", {"search": "Foobar2"}, follow=True)
+    assertContains(resp, "Another")
+    assertNotContains(resp, "North Pole")
     post_step("where-geocode-results", {"geocode_result": "-0.05,51"})
     post_step("where-map", {"point": "POINT (-0.05 51)", "radius": 180, "zoom": 16})
     post_step("isitnow", {"happening_now": "0"})
