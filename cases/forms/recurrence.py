@@ -69,7 +69,9 @@ class RoomsAffectedForm(StepForm):
 class DescribeNoiseForm(StepForm):
     title = "Details of the noise"
     description = forms.CharField(
-        widget=forms.Textarea, label="Can you describe the noise?"
+        widget=forms.Textarea,
+        label="Can you describe the noise?",
+        help_text="Please include as much detail as possible e.g. if the Noise is about a car alarm include the car’s colour, car registration etc",
     )
 
 
