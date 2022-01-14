@@ -234,5 +234,11 @@ def geocode(q):
     data = r.json()
     out = []
     for row in data:
-        out.append((f"{row['lon']},{row['lat']}", row["display_name"]))
+        name = row["display_name"]
+        if "London" not in name:
+            continue
+        name = name.replace(", United Kingdom", "")
+        name = name.replace(", London, Greater London, England", "")
+        name = name.replace(", London Borough of Hackney", "")
+        out.append((f"{row['lon']},{row['lat']}", name))
     return out
