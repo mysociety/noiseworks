@@ -1,0 +1,14 @@
+Hi,
+
+Your new noise reoccurrence has been submitted.
+
+Reoccurrence details:
+  Noise started: {{ complaint.start }}
+  Noise ended: {% if complaint.happening_now %}Ongoing at {% endif %}{{ complaint.end }}
+  Rooms affected: {{ complaint.rooms }}
+  Noise description: {{ complaint.description }}
+  Effect on complainant: {{ complaint.effect }}
+
+See case details: {{ url }}
+
+NoiseWorks

@@ -186,9 +186,16 @@ def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
 
     post_step("summary", {"summary-true_statement": 1}, follow=True)
 
-    email = mail.outbox[-1]
+    assert len(mail.outbox) == 2
+    email = mail.outbox[0]
     assert "noise reoccurrence" in email.body
     assert "Fri, 12 Nov 2021, 9 p.m." in email.body
     assert "Sat, 13 Nov 2021, 1 a.m." in email.body
     assert "1 High Street" in email.body
     assert "DIY" in email.body
+    email = mail.outbox[1]
+    assert "noise reoccurrence" in email.body
+    assert "Fri, 12 Nov 2021, 9 p.m." in email.body
+    assert "Sat, 13 Nov 2021, 1 a.m." in email.body
+    assert "1 High Street" not in email.body
+    assert "DIY" not in email.body

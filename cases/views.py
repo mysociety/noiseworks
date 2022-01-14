@@ -512,7 +512,7 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
             effect=data["effect"],
         )
         complaint.save()
-        send_staff_email(self.request, complaint, new=False)
+        send_emails(self.request, complaint, "reoccurrence")
         return render(
             self.request,
             "cases/complaint_add_done.html",
@@ -814,7 +814,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
             effect=data["effect"],
         )
         complaint.save()
-        send_staff_email(self.request, complaint, new=True)
+        send_emails(self.request, complaint, "report")
         return render(
             self.request,
             "cases/add/done.html",
@@ -822,24 +822,20 @@ class ReportingWizard(NamedUrlSessionWizardView):
         )
 
 
-def send_staff_email(request, complaint, new):
+def send_emails(request, complaint, template):
     case = complaint.case
-    dest = cobrand.email.case_destination(case)
-    if new:
-        subject = f"Noise report: {case.location_display}"
-        template = "submit_report"
-    else:
-        subject = f"Noise reoccurrence: {case.location_display}"
-        template = "submit_reoccurrence"
+    subject = f"Noise {template}: {case.location_display}"
+    staff_dest = cobrand.email.case_destination(case)
     url = request.build_absolute_uri(case.get_absolute_url())
+    complainant = complaint.complainant
     send_email(
-        dest,
+        staff_dest,
         subject,
-        f"cases/email/{template}",
-        {
-            "complaint": complaint,
-            "case": case,
-            "complainant": complaint.complainant,
-            "url": url,
-        },
+        f"cases/email/submit_{template}",
+        {"complaint": complaint, "case": case, "complainant": complainant, "url": url},
     )
+    if complainant.email:
+        params = {"complaint": complaint, "url": url}
+        if template == "report":
+            params["case"] = case
+        send_email(complainant.email, subject, f"cases/email/logged_{template}", params)

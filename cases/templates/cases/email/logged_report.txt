@@ -1,0 +1,21 @@
+Hi,
+
+Your new noise report has been submitted.
+
+Details:
+  Kind of noise: {{ case.kind_display }}
+  Noise source: {{ case.location_display }}
+  Ward: {{ case.get_ward_display }}
+  Where is the noise coming from? {{ case.get_where_display }}
+  Is the residence a Hackney Estates property? {{ case.get_estate_display }}
+
+Complaint details:
+  Noise started: {{ complaint.start }}
+  Noise ended: {% if complaint.happening_now %}Ongoing at {% endif %}{{ complaint.end }}
+  Rooms affected: {{ complaint.rooms }}
+  Noise description: {{ complaint.description }}
+  Effect on complainant: {{ complaint.effect }}
+
+See case details: {{ url }}
+
+NoiseWorks

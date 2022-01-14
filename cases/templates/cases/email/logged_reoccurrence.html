@@ -1,0 +1,24 @@
+{% extends "email_base.html" %}
+
+{% block email_columns %}1{% endblock %}
+{% block email_summary %}Your additional report has been submitted{% endblock %}
+
+{% block content %}
+
+<th style="{{ td_style }}{{ only_column_style }}">
+  <h1 style="{{ h1_style }}">New noise reoccurrence</h1>
+
+  <p style="{{ p_style }}">
+  Noise started: {{ complaint.start }}
+  <br>Noise ended: {% if complaint.happening_now %}Ongoing at {% endif %}{{ complaint.end }}
+  <br>Rooms affected: {{ complaint.rooms }}
+  <br>Noise description: {{ complaint.description }}
+  <br>Effect on complainant: {{ complaint.effect }}
+  </p>
+
+  <p style="margin: 20px auto; text-align: center">
+    <a style="{{ button_style }}" href="{{ url }}">See case</a>
+  </p>
+</th>
+
+{% endblock %}

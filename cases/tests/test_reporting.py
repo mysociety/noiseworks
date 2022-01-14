@@ -255,19 +255,27 @@ def _test_user_case_creation(logged_in, client):
     resp = post_step("summary", {"true_statement": 1}, follow=True)
     if not logged_in:
         m = re.search(r"confirmation token is (\d+)", mail.outbox[-1].body)
+        mail.outbox = []
         code = int(m.group(1))
         resp = post_step("confirmation", {"code": code + 1})
         assertContains(resp, "Incorrect or expired code")
         resp = post_step("confirmation", {"code": str(code).zfill(6)}, follow=True)
     assertContains(resp, "Thank you for reporting")
 
-    email = mail.outbox[-1]
-    assert "new noise report has been submitted" in email.body
-    assert "Line 1, Line 2, Line 3" in email.body
-    assert f"180m around ({POINT.x:.0f},{POINT.y:.0f})" in email.body
-    assert "weekday, by email" in email.body
-    assert "Hoxton West" in email.body
-    assert "9 p.m." in email.body
+    assert len(mail.outbox) == 2
+    for r in range(2):
+        email = mail.outbox[r]
+        assert "new noise report has been submitted" in email.body
+        assert f"180m around ({POINT.x:.0f},{POINT.y:.0f})" in email.body
+        assert "Hoxton West" in email.body
+        assert "9 p.m." in email.body
+        if r == 0:
+            assert "Line 1, Line 2, Line 3" in email.body
+            assert "weekday, by email" in email.body
+        else:
+            assert "weekday, by email" not in email.body
+            assert "Line 1, Line 2, Line 3" not in email.body
+    mail.outbox = []
 
 
 def test_user_case_creation_not_logged_in(client, normal_user, mocks, settings):
