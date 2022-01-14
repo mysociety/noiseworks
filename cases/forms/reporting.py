@@ -153,9 +153,16 @@ class WhereForm(StepForm):
         label="Is the residence a Hackney Estates property?",
         widget=forms.RadioSelect,
         required=False,
-        help_text="Optional",
         choices=Case.ESTATE_CHOICES,
     )
+
+    def clean(self):
+        where = self.cleaned_data.get("where")
+        estate = self.cleaned_data.get("estate")
+        if where == "residence" and not estate:
+            self.add_error(
+                "estate", forms.ValidationError("Please pick the type of residence")
+            )
 
 
 def canonical_postcode(pc):
