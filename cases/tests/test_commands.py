@@ -1,5 +1,5 @@
 import re
-from io import StringIO
+from unittest.mock import mock_open
 from django.core.management import call_command, CommandError
 import pytest
 from botocore.stub import Stubber
@@ -8,14 +8,11 @@ from cases.management.commands.export_data import client
 
 
 @pytest.fixture
-def call_params(db):
-    call_command("loaddata", "action_types", stdout=StringIO())
+def call_params(db, capsys, monkeypatch):
+    call_command("loaddata", "action_types")
     uprns = "1\n2\n3\n4"
-    return {
-        "uprns": StringIO(uprns),
-        "fixed": True,
-        "stdout": StringIO(),
-    }
+    monkeypatch.setattr("builtins.open", lambda x: mock_open(read_data=uprns)())
+    return {"uprns": "uprns.csv", "fixed": True}
 
 
 @pytest.fixture
@@ -65,11 +62,12 @@ def s3_stub():
         stubber.assert_no_pending_responses()
 
 
-def test_random_command_bad_input(db):
+def test_random_command_bad_input(db, monkeypatch):
     with pytest.raises(CommandError):
         call_command("add_random_cases")
+    monkeypatch.setattr("builtins.open", lambda x: mock_open(read_data="")())
     with pytest.raises(CommandError):
-        call_command("add_random_cases", uprns=StringIO())
+        call_command("add_random_cases", uprns="uprns.csv")
 
 
 def test_random_command_no_mapit(requests_mock, mock_things, db, call_params):

@@ -1,9 +1,10 @@
 import re
 import uuid
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 import pytest
 from pytest_django.asserts import assertContains
 from django.core import mail
+from django.core.management import call_command, CommandError
 from sesame.tokens import create_token
 from .models import User
 from .forms import CodeForm
@@ -192,3 +193,46 @@ def test_address_display_address():
 def test_sign_out(client):
     resp = client.get("/a/sign-out")
     assertContains(resp, "signed out")
+
+
+def test_add_staff_command(db, capsys, monkeypatch):
+    with pytest.raises(CommandError):
+        call_command("add_staff_users")
+
+    data_dict = {
+        "bad.csv": "Name,Email,Wards\nTest Test,test1@example.org,Bad Ward\n",
+        "good.csv": "Name,Email,Wards\nTest Test,test2@example.org\nTester McTest,test3@example.org,Hackney Central|Victoria",
+        "goodmap.csv": "Name,Email,Wards\nTest Test,test2@example.org\nTest Test,test4@example.org,North",
+        "mapping.csv": "Name,Ward\nNorth,Hackney Central\nNorth,Stoke Newington",
+    }
+
+    def open_side_effect(name):
+        return mock_open(read_data=data_dict.get(name))()
+
+    monkeypatch.setattr("builtins.open", open_side_effect)
+
+    with pytest.raises(CommandError):
+        call_command("add_staff_users", csv_file="bad.csv")
+
+    call_command("add_staff_users", csv_file="good.csv")
+    assert User.objects.count() == 0, "no change in users without commit"
+    call_command("add_staff_users", csv_file="good.csv", commit=True)
+    user = User.objects.get(email="test2@example.org")
+    assert user.first_name == "Test"
+    assert user.is_staff
+    user = User.objects.get(email="test3@example.org")
+    assert user.wards == ["E05009372", "E05009386"]
+
+    staff = "Name,Email,Wards\nTest Test,test2@example.org\nTest Test,test4@example.org,North"
+    mapping = "Name,Ward\nNorth,Hackney Central\nNorth,Stoke Newington"
+    call_command(
+        "add_staff_users",
+        csv_file="goodmap.csv",
+        ward_mapping="mapping.csv",
+        commit=True,
+    )
+    output = capsys.readouterr()
+    assert "test2@example.org already exists" in output.out
+    assert "test4@example.org" in output.out
+    user = User.objects.get(email="test4@example.org")
+    assert user.wards == ["E05009372", "E05009385"]
