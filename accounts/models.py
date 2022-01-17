@@ -76,6 +76,18 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ("first_name", "last_name")
+        constraints = [
+            models.UniqueConstraint(
+                name="unique_email",
+                fields=["email"],
+                condition=models.Q(email_verified=True),
+            ),
+            models.UniqueConstraint(
+                name="unique_phone",
+                fields=["phone"],
+                condition=models.Q(phone_verified=True),
+            ),
+        ]
 
     def __str__(self):
         name = self.get_full_name() or self.email or self.username
