@@ -32,6 +32,7 @@ def case_1(db, staff_user, normal_user):
     return Case.objects.create(
         kind="other",
         kind_other="Fireworks",
+        location_cache="123 High Street, Hackney",
         assigned=staff_user,
         created_by=normal_user,
         ward="E05009373",
@@ -85,6 +86,11 @@ def test_search(admin_client, case_1):
     resp = admin_client.get("/cases?search=fireworks")
     assertContains(resp, "Fireworks")
     resp = admin_client.get(f"/cases?search={case_1.id}")
+    assertContains(resp, "Fireworks")
+
+
+def test_search_multiple_spaces(admin_client, case_1):
+    resp = admin_client.get("/cases?search=123+high+street")
     assertContains(resp, "Fireworks")
 
 

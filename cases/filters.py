@@ -110,7 +110,7 @@ class CaseFilter(django_filters.FilterSet):
         )
 
         if " " in value:
-            f, l = value.split(maxsplit=2)
+            f, l = value.split(maxsplit=1)
             queries |= (
                 Q(complaints__complainant__first_name__icontains=f)
                 & Q(complaints__complainant__last_name__icontains=l)
