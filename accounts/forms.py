@@ -1,5 +1,6 @@
 import base64
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 import phonenumbers
@@ -24,12 +25,17 @@ class SignInForm(GDSForm, forms.Form):
     username = forms.CharField(label="Email or mobile number")
     username_type = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not settings.NOTIFY_API_KEY:
+            self.fields["username"].label = "Email address"
+
     def clean_username(self):
         username = self.cleaned_data["username"]
         any_valid = False
 
         phone_number = to_python(username)
-        if phone_number.is_valid():
+        if phone_number.is_valid() and settings.NOTIFY_API_KEY:
             if phone_number.is_mobile():
                 self.cleaned_data["username_type"] = "phone"
                 return username
