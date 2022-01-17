@@ -65,7 +65,7 @@ def _gen_token(nonce, domain):
     token["id_token"] = generate_id_token(
         token,
         {
-            "email": f"matthew@{domain}",
+            "email": f"Matthew@{domain}",
             "name": "Matthew Smith",
             "given_name": "Matthew",
             "family_name": "Smith",

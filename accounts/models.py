@@ -97,6 +97,7 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         self.update_address()
+        self.email = self.email.lower()
         return super().save(*args, **kwargs)
 
     def update_address(self):

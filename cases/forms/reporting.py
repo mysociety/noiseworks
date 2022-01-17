@@ -37,7 +37,7 @@ class AboutYouForm(StepForm):
 
     first_name = forms.CharField()
     last_name = forms.CharField()
-    email = forms.CharField(
+    email = forms.EmailField(
         label="Email address",
         help_text="We’ll only use this to send you updates on your report",
     )
@@ -53,6 +53,9 @@ class AboutYouForm(StepForm):
                 self.fields["email"].disabled = True
             if user.phone_verified:
                 self.fields["phone"].disabled = True
+
+    def clean_email(self):
+        return self.cleaned_data["email"].lower()
 
 
 class BestTimeForm(StepForm):

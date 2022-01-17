@@ -60,6 +60,10 @@ class PersonPickForm(GDSForm, forms.Form):
         user = User.objects.get(id=user)
         return user.id
 
+    def clean_email(self):
+        return self.cleaned_data["email"].lower()
+
+    # Only used by reoccurrence form currently
     def save(self):
         user = self.cleaned_data.pop("user")
         search = self.cleaned_data.pop("search")

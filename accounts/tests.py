@@ -72,7 +72,7 @@ def test_access_to_sign_in_page(client, only_staff_access):
 
 
 def test_staff_logging_in_by_token(client, staff_user, non_staff_access):
-    response = client.post("/a", {"username": "foo@example.org"})
+    response = client.post("/a", {"username": "Foo@example.org"})
     assert response.status_code == 403
 
 

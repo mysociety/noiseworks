@@ -34,7 +34,7 @@ def verify(request):
     ):
         raise PermissionDenied
 
-    email = userinfo["email"]
+    email = userinfo["email"].lower()
     try:
         user = User.objects.get(email=email, email_verified=True)
     except User.DoesNotExist:
