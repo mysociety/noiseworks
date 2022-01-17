@@ -92,7 +92,7 @@ footer {
     margin-top: 0;
 
     a {
-        &:link {
+        &:link, &:visited {
             color: lbh-colour("lbh-text-white");
             text-decoration: none;
         }
