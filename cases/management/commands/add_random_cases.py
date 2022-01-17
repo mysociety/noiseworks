@@ -322,8 +322,7 @@ class Command(BaseCommand):
 
     def load_uprns(self, uprns_file=None):
         uprns = []
-        f = hasattr(uprns_file, "read") and uprns_file or open(uprns_file)
-        for line in f:
+        for line in open(uprns_file):
             uprns.append(int(line))
         self._uprns = uprns
 
