@@ -294,7 +294,7 @@ var nw = nw || {};
                   <span class="govuk-details__summary-text"> Internal notes </span>
                 </summary>
                 <div class="govuk-details__text">
-                    {{ entry.action.notes }}
+                    {{ entry.action.notes|urlize }}
                 </div>
             </details>
             <div class="nw-printable-timeline-details" hidden>
