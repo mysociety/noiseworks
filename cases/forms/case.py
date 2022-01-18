@@ -107,6 +107,11 @@ class ActionForm(GDSForm, forms.ModelForm):
         fields = ["type", "notes"]
 
     type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
+    notes = forms.CharField(
+        widget=forms.Textarea,
+        label="Internal notes",
+        help_text="You can upload documents by adding a link or links to shared documents",
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -124,9 +129,6 @@ class ActionForm(GDSForm, forms.ModelForm):
         if common:
             common[-1].divider = "or"
         self.fields["type"].choices = common + other
-
-        self.fields["notes"].label = "Internal notes"
-        self.fields["notes"].required = True
 
     def clean_type(self):
         type = self.cleaned_data["type"]
