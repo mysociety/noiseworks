@@ -1,5 +1,6 @@
 from django import forms
 from django.db.models import Q
+from django.utils.html import format_html, mark_safe
 from accounts.models import User
 from ..models import Action, ActionType
 from phonenumber_field.formfields import PhoneNumberField
@@ -40,17 +41,28 @@ class PersonPickForm(GDSForm, forms.Form):
 
     def clean(self):
         if "user" in self.cleaned_data and self.cleaned_data["user"] is None:
+            email = self.cleaned_data.get("email")
+            phone = self.cleaned_data.get("phone")
             if (
                 not self.cleaned_data["first_name"]
                 or not self.cleaned_data["last_name"]
-                or not (
-                    self.cleaned_data.get("email")
-                    or self.cleaned_data.get("phone")
-                    or self.cleaned_data["address"]
-                )
+                or not (email or phone or self.cleaned_data["address"])
             ):
                 raise forms.ValidationError(
                     "Please specify a name and at least one of email/phone/address"
+                )
+            existing_user = User.objects.check_existing(email, phone)
+            if existing_user:
+                ch = self.fields["user"].choices
+                for i, c in enumerate(list(ch)):
+                    if c[0] == existing_user.id:
+                        ch.pop(i)
+                        ch.insert(
+                            0,
+                            (c[0], mark_safe(format_html(f"<strong>{c[1]}</strong>"))),
+                        )
+                raise forms.ValidationError(
+                    "There is an existing user with those details (highlighted first below), please pick or change the details you entered"
                 )
 
     def clean_user(self):
@@ -63,7 +75,6 @@ class PersonPickForm(GDSForm, forms.Form):
     def clean_email(self):
         return self.cleaned_data["email"].lower()
 
-    # Only used by reoccurrence form currently
     def save(self):
         user = self.cleaned_data.pop("user")
         search = self.cleaned_data.pop("search")

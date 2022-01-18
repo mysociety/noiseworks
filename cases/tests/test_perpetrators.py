@@ -56,25 +56,20 @@ def test_add_perpetrator(admin_client, case_1, normal_user, normal_user_2):
         f"/cases/{case_1.id}/add-perpetrator",
         {"search": "normal", "user": normal_user.id},
     )
+    params = {"search": "normal", "user": 0, "first_name": "Normal"}
+    resp = admin_client.post(
+        f"/cases/{case_1.id}/add-perpetrator",
+        {**params, "last_name": "User2", "email": "normal2@example.org"},
+        follow=True,
+    )
+    assertContains(resp, "There is an existing user")
     admin_client.post(
         f"/cases/{case_1.id}/add-perpetrator",
-        {
-            "search": "normal",
-            "user": 0,
-            "first_name": "Normal",
-            "last_name": "User3",
-            "email": "normal3@example.org",
-        },
+        {**params, "last_name": "User3", "email": "normal3@example.org"},
     )
     admin_client.post(
         f"/cases/{case_1.id}/add-perpetrator",
-        {
-            "search": "normal",
-            "user": 0,
-            "first_name": "Normal",
-            "last_name": "User4",
-            "phone": "07900000000",
-        },
+        {**params, "last_name": "User4", "phone": "07900000000"},
     )
 
 
