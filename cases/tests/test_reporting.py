@@ -51,6 +51,7 @@ def mocks(requests_mock):
     )
     requests_mock.get(re.compile(r"postcode=BAD"), json={"error": "Error goes here"})
     requests_mock.get(re.compile(r"postcode=SW1A\+1AA"), json={"error": "Bad postcode"})
+    requests_mock.get(re.compile(r"postcode=E1\+6GB"), json={"data": {"address": []}})
     requests_mock.get(
         re.compile(r"uprn=10008315925"), json={"data": {"address": [ADDRESS]}}
     )
@@ -117,6 +118,8 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
     post_step("kind", {"kind": "diy"}, follow=True)
     post_step("where", {"where": "business"})
+    resp = post_step("where-location", {"search": "E16GB"}, follow=True)
+    assertContains(resp, "could not recognise that postcode")
     post_step("where-location", {"search": "SW1A 1AA"})
     post_step("where-location", {"search": "Foobar0"})
     post_step("where-location", {"search": "E8 3DY"})
@@ -212,6 +215,7 @@ def _test_user_case_creation(logged_in, client):
     )
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
     post_step("postcode", {"postcode": "BAD"})
+    post_step("postcode", {"postcode": "E1 6GB"}, follow=True)
     post_step("postcode", {"postcode": "E8 3DY"})
     post_step("address", {"addresses": "missing"})
     post_step("address", {"address_uprn": "10008315925"})

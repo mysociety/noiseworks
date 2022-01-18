@@ -91,7 +91,7 @@ class PostcodeForm(StepForm):
     def clean_postcode(self):
         pc = self.cleaned_data["postcode"]
         addresses = cobrand.api.addresses_for_postcode(pc)
-        if "error" in addresses:
+        if "error" in addresses or not len(addresses.get("addresses", [])):
             raise forms.ValidationError("We could not recognise that postcode")
         choices = []
         for addr in addresses["addresses"]:
@@ -194,7 +194,7 @@ class WhereLocationForm(StepForm):
         canon_postcode = canonical_postcode(search)
         if canon_postcode:
             addresses = cobrand.api.addresses_for_postcode(canon_postcode)
-            if "error" in addresses:
+            if "error" in addresses or not len(addresses.get("addresses", [])):
                 raise forms.ValidationError("We could not recognise that postcode")
             choices = []
             for addr in addresses["addresses"]:
