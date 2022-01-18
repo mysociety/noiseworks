@@ -758,25 +758,20 @@ class ReportingWizard(NamedUrlSessionWizardView):
         data = self.get_all_cleaned_data()
 
         # Save a new user if need be
-        if data.get("user"):
-            # Staff picked a user, so use that without contact changes
-            user = User.objects.get(pk=data["user"])
+        if "user_pick" in form_dict:
+            picker = form_dict["user_pick"]
+            user = picker.save()
+            user = User.objects.get(id=user)
         else:
-            if self.request.user.is_authenticated and not self.request.user.is_staff:
+            if self.request.user.is_authenticated:
                 user = self.request.user
             else:
-                try:
-                    user = User.objects.get(email=data["email"], email_verified=True)
-                except User.DoesNotExist:
-                    try:
-                        user = User.objects.get(
-                            phone=data["phone"], phone_verified=True
-                        )
-                    except User.DoesNotExist:
-                        user = User.objects.create_user(
-                            email=data["email"],
-                            phone=data["phone"],
-                        )
+                user = User.objects.check_existing(data["email"], data["phone"])
+                if not user:
+                    user = User.objects.create_user(
+                        email=data["email"],
+                        phone=data["phone"],
+                    )
 
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
@@ -786,7 +781,6 @@ class ReportingWizard(NamedUrlSessionWizardView):
                 user.phone = data["phone"]
             user.uprn = data.get("address_uprn", "")
             user.address = data.get("address") or data.get("address_manual")
-            user.update_address()
 
         user.best_time = data["best_time"]
         user.best_method = data["best_method"]

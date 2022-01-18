@@ -127,17 +127,17 @@ def _test_add_complaint_not_now_new_user(admin_client, case_1, normal_user, user
 
     resp = post_step("user_pick", {"user_pick-search": "Normal", "user_pick-user": 0})
     assertContains(resp, "Please specify a name")
+    params = {
+        "user_pick-search": "Normal",
+        "user_pick-user": 0,
+        "user_pick-first_name": "Norman",
+        "user_pick-last_name": "Normal",
+    }
     resp = post_step(
-        "user_pick",
-        {
-            "user_pick-search": "Normal",
-            "user_pick-user": 0,
-            "user_pick-first_name": "Norman",
-            "user_pick-last_name": "Normal",
-            **user_data,
-        },
-        follow=True,
+        "user_pick", {**params, "user_pick-email": normal_user.email}, follow=True
     )
+    assertContains(resp, "There is an existing user")
+    resp = post_step("user_pick", {**params, **user_data}, follow=True)
     assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
     assertContains(resp, "Fri, 12 Nov 2021, 10 p.m.")
     assertContains(resp, "Norman Normal")

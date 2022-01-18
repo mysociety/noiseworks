@@ -38,6 +38,19 @@ class UserManager(BaseManager):
         )
         return user
 
+    def check_existing(self, email=None, phone=None):
+        if email:
+            try:
+                return User.objects.get(email=email, email_verified=True)
+            except User.DoesNotExist:
+                pass
+        if phone:
+            try:
+                return User.objects.get(phone=phone, phone_verified=True)
+            except User.DoesNotExist:
+                pass
+        return None
+
 
 class User(AbstractUser):
     BEST_METHOD_CHOICES = [
