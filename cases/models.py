@@ -56,12 +56,20 @@ class CaseManager(models.Manager):
 
 class Case(AbstractModel):
     KIND_CHOICES = [
+        ("animal", "Animal noise"),
+        ("buskers", "Buskers"),
         ("car", "Car alarm"),
+        ("construction", "Construction site noise"),
+        ("deliveries", "Deliveries"),
         ("diy", "DIY"),
-        ("dog", "Dog barking"),
         ("alarm", "House / intruder alarm"),
-        ("music", "Music"),
+        ("music-pub", "Music from pub"),
+        ("music-club", "Music from club/bar"),
+        ("music-other", "Music - other"),
+        ("roadworks", "Noise from roadworks"),
         ("road", "Noise on the road"),
+        ("plant-machinery", "Plant noise - machinery"),
+        ("plant-street", "Plant noise - machinery on street"),
         ("shouting", "Shouting"),
         ("tv", "TV"),
         ("other", "Other"),
@@ -80,7 +88,7 @@ class Case(AbstractModel):
     ]
 
     # Type
-    kind = models.CharField("Type", max_length=10, choices=KIND_CHOICES)
+    kind = models.CharField("Type", max_length=15, choices=KIND_CHOICES)
     kind_other = models.CharField("Other type", max_length=100, blank=True)
 
     # Location
