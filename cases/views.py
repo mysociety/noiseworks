@@ -753,10 +753,7 @@ class ReportingWizard(NamedUrlSessionWizardView):
         "confirmation": show_confirmation_step,
     }
 
-    @transaction.atomic
-    def done(self, form_list, form_dict, **kwargs):
-        data = self.get_all_cleaned_data()
-
+    def create_data(self, form_dict, data):
         # Save a new user if need be
         if "user_pick" in form_dict:
             picker = form_dict["user_pick"]
@@ -814,11 +811,18 @@ class ReportingWizard(NamedUrlSessionWizardView):
             effect=data["effect"],
         )
         complaint.save()
+        return complaint
+
+    def done(self, form_list, form_dict, **kwargs):
+        data = self.get_all_cleaned_data()
+
+        with transaction.atomic():
+            complaint = self.create_data(form_dict, data)
         send_emails(self.request, complaint, "report")
         return render(
             self.request,
             "cases/add/done.html",
-            {"data": data, "case": case},
+            {"data": data, "case": complaint.case},
         )
 
 
