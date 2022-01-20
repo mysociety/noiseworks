@@ -45,7 +45,14 @@ def normal_user(db):
 
 
 @pytest.fixture
-def mocks(requests_mock):
+def mocks(requests_mock, settings):
+    settings.COBRAND_SETTINGS["staff_destination"] = {
+        "outside": "outside@example.org",
+        "business": "business@example.org",
+        "hackney-housing": "hh@example.org,hh2@example.org",
+        "housing": "housing@example.org",
+    }
+
     requests_mock.get(
         re.compile(r"postcode=E8\+3DY"), json={"data": {"address": [ADDRESS]}}
     )
@@ -190,6 +197,8 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user,
     assertContains(resp, "Wed, 17 Nov 2021, 2 a.m.")
     assertContains(resp, "Wed, 17 Nov 2021, 3 a.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
+    assert len(mail.outbox) == 1
+    assert len(mail.outbox[0].to) == 2
     admin_user.refresh_from_db()
     assert admin_user.first_name == ""
 

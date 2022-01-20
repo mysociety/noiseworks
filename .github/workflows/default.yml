@@ -64,7 +64,6 @@ jobs:
         SECRET_KEY: 'secret'
         DATABASE_URL: 'postgis://postgres:password@localhost/noiseworks'
         COBRAND: 'cobrand_hackney'
-        STAFF_DESTINATION: '{"outside":"outside@example.org","business":"business@example.org","hackney-housing":"hh@example.org","housing":"housing@example.org"}'
       run: coverage run -m pytest
 
     - name: Upload code coverage

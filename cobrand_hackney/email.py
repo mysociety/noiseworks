@@ -45,10 +45,12 @@ def override_settings(settings):
 def case_destination(case):
     emails = settings.COBRAND_SETTINGS["staff_destination"]
     if case.ward == "outside":
-        return emails["outside"]
+        email = emails["outside"]
     elif case.where == "business":
-        return emails["business"]
+        email = emails["business"]
     elif case.estate == "n":
-        return emails["housing"]
+        email = emails["housing"]
     else:  # So yes and don't know treated the same
-        return emails["hackney-housing"]
+        email = emails["hackney-housing"]
+    email = email.split(",")
+    return email

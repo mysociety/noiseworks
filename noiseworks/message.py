@@ -16,6 +16,8 @@ def send_sms(to, text):
 
 
 def send_email(to, subject, template, data):
+    if not isinstance(to, list):
+        to = [to]
     body_text = render_to_string(f"{template}.txt", data)
     settings = email_colours()
     settings.update(cobrand.email.override_colours())
@@ -27,7 +29,7 @@ def send_email(to, subject, template, data):
     logo = MIMEImage(data["logo_inline"]["data"])
     logo.add_header("Content-ID", f"<{data['logo_inline']['id']}>")
 
-    message = EmailMultiAlternatives(subject, body_text, None, [to])
+    message = EmailMultiAlternatives(subject, body_text, None, to)
     message.mixed_subtype = "related"
     message.attach_alternative(body_html, "text/html")
     message.attach(logo)

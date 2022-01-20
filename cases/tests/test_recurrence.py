@@ -40,6 +40,16 @@ def complaint(db, case_1, normal_user):
     )
 
 
+@pytest.fixture
+def staff_dest(settings):
+    settings.COBRAND_SETTINGS["staff_destination"] = {
+        "outside": "outside@example.org",
+        "business": "business@example.org",
+        "hackney-housing": "hh@example.org,hh2@example.org",
+        "housing": "housing@example.org",
+    }
+
+
 def _post_step(client, case_1, step, data, **kwargs):
     return client.post(
         f"/cases/{case_1.id}/complaint/add/{step}",
@@ -66,7 +76,7 @@ def test_non_staff_normal_user_permission(client, normal_user, complaint, settin
     assert resp.url == "/"
 
 
-def test_add_complaint_now_existing_user(admin_client, case_1, normal_user):
+def test_add_complaint_now_existing_user(admin_client, case_1, normal_user, staff_dest):
     post_step = partial(_post_step, admin_client, case_1)
 
     admin_client.get(f"/cases/{case_1.id}/complaint/add", follow=True)
@@ -145,19 +155,25 @@ def _test_add_complaint_not_now_new_user(admin_client, case_1, normal_user, user
     post_step("summary", {"summary-true_statement": 1}, follow=True)
 
 
-def test_add_complaint_not_now_new_user_email(admin_client, case_1, normal_user):
+def test_add_complaint_not_now_new_user_email(
+    admin_client, case_1, normal_user, staff_dest
+):
     _test_add_complaint_not_now_new_user(
         admin_client, case_1, normal_user, {"user_pick-email": "norman@example.org"}
     )
 
 
-def test_add_complaint_not_now_new_user_phone(admin_client, case_1, normal_user):
+def test_add_complaint_not_now_new_user_phone(
+    admin_client, case_1, normal_user, staff_dest
+):
     _test_add_complaint_not_now_new_user(
         admin_client, case_1, normal_user, {"user_pick-phone": "07900000000"}
     )
 
 
-def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
+def test_add_complaint_as_normal_user(
+    client, complaint, normal_user, settings, staff_dest
+):
     settings.NON_STAFF_ACCESS = True
     case = complaint.case
     post_step = partial(_post_step, client, case)
