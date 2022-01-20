@@ -84,7 +84,11 @@ def show_form(request):
             )
 
         form = CodeForm(initial={"user_id": user.id, "timestamp": timestamp})
-        return render(request, "accounts/form_token.html", {"form": form})
+        return render(
+            request,
+            "accounts/form_token.html",
+            {"form": form, "username_type": username_type},
+        )
 
     template = "accounts/form_signin.html"
     return render(request, template, {"form": form})
