@@ -114,6 +114,10 @@ def test_log_in_by_code_errors(client):
         "user_id": ["Bad request"],
         "timestamp": ["This field is required."],
     }
+    form = CodeForm({"user_id": "123", "code": "99999999999", "timestamp": "!!!"})
+    assert form.errors == {
+        "user_id": ["Bad request"],
+    }
 
 
 def test_log_in_by_code(client, non_staff_access):
@@ -130,7 +134,7 @@ def test_log_in_by_code(client, non_staff_access):
         "/a/code", {"user_id": user_id, "timestamp": timestamp, "code": "bad"}
     )
     response = client.post(
-        "/a/code", {"user_id": user_id, "timestamp": timestamp, "code": code}
+        "/a/code", {"user_id": user_id, "timestamp": timestamp, "code": code.title()}
     )
     assert response.status_code == 302
 

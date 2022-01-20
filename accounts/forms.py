@@ -68,10 +68,17 @@ class CodeForm(GDSForm, forms.Form):
         return user
 
     def clean_code(self):
-        return base32_to_bytes(self.cleaned_data["code"], length=5)
+        try:
+            code = self.cleaned_data["code"].lower()
+            return base32_to_bytes(code, length=5)
+        except (OverflowError, ValueError):
+            return b""
 
     def clean_timestamp(self):
-        return base32_to_bytes(self.cleaned_data["timestamp"], length=4)
+        try:
+            return base32_to_bytes(self.cleaned_data["timestamp"], length=4)
+        except (OverflowError, ValueError):
+            return b""
 
     def clean(self):
         if (
