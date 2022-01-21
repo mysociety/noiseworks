@@ -24,13 +24,17 @@ class PersonPickForm(GDSForm, forms.Form):
         search = self.data.get("search") or self.initial.get("search")
         if search:
             search = search.lower()
-            choices = User.objects.filter(
+            queries = (
                 Q(first_name__icontains=search)
                 | Q(last_name__icontains=search)
                 | Q(address__icontains=search)
                 | Q(email__icontains=search)
                 | Q(phone__icontains=search)
             )
+            if " " in search:
+                f, l = search.split(maxsplit=1)
+                queries |= Q(first_name__icontains=f) & Q(last_name__icontains=l)
+            choices = User.objects.filter(queries)
             choices = list(map(lambda x: (x.id, str(x)), choices))
         else:
             choices = []

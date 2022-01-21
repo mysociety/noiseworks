@@ -90,10 +90,10 @@ def test_add_complaint_now_existing_user(admin_client, case_1, normal_user, staf
     post_step("describe", {"describe-description": "Desc"})
     post_step("effect", {"effect-effect": "Effect"})
 
-    post_step("user_search", {"user_search-search": "Normal"})
+    post_step("user_search", {"user_search-search": "Normal User"})
     resp = post_step(
         "user_pick",
-        {"user_pick-search": "Normal", "user_pick-user": normal_user.id},
+        {"user_pick-search": "Normal User", "user_pick-user": normal_user.id},
         follow=True,
     )
     assertContains(resp, f"{yesterday.strftime('%a, %-d %b %Y')}, 9 p.m.")
