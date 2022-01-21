@@ -148,6 +148,7 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     assert Complaint.objects.count() == 1
     normal_user.refresh_from_db()
     assert normal_user.first_name == "Normal"
+    admin_client.get(f"/cases/add/summary")
 
 
 def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user, mocks):
@@ -270,6 +271,9 @@ def _test_user_case_creation(logged_in, client):
         assertContains(resp, "Incorrect or expired code")
         resp = post_step("confirmation", {"code": str(code).zfill(6)}, follow=True)
     assertContains(resp, "Thank you for reporting")
+    client.get(
+        f"/cases/add/address"
+    )  # Test fetching this page after submission does not error
 
     assert len(mail.outbox) == 2
     for r in range(2):

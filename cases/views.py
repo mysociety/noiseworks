@@ -410,10 +410,30 @@ def compile_dates(data):
     return start, end
 
 
-class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
+class CaseWizard(NamedUrlSessionWizardView):
+    def get(self, *args, **kwargs):
+        """Always reset if begin page visited."""
+        step_url = kwargs.get("step", None)
+        if step_url is None:
+            self.storage.reset()
+            # self.storage.current_step = self.steps.first
+            return redirect(self.get_step_url(self.steps.current))
+
+        data = self.storage.get_step_data(self.summary_check_page)
+        if step_url == "summary" and not data:
+            return redirect(self.get_step_url(self.steps.first))
+        data = self.storage.get_step_data("postcode")
+        if step_url == "address" and not data:
+            return redirect(self.get_step_url(self.steps.first))
+
+        return super().get(*args, **kwargs)
+
+
+class RecurrenceWizard(LoginRequiredMixin, CaseWizard):
     template_name = "cases/complaint_add.html"
     context_object_name = "case"
     model = Case
+    summary_check_page = "isitnow"
 
     def dispatch(self, request, *args, **kwargs):
         user = request.user
@@ -426,15 +446,6 @@ class RecurrenceWizard(LoginRequiredMixin, NamedUrlSessionWizardView):
         self.object = get_object_or_404(qs, pk=kwargs["pk"])
 
         return super().dispatch(request, *args, **kwargs)
-
-    def get(self, *args, **kwargs):
-        """Always reset if begin page visited."""
-        step_url = kwargs.get("step", None)
-        if step_url is None:
-            self.storage.reset()
-            # self.storage.current_step = self.steps.first
-            return redirect(self.get_step_url(self.steps.current))
-        return super().get(*args, **kwargs)
 
     def get_prefix(self, request, *args, **kwargs):
         """To make sure we have separate stored wizard data per case per session"""
@@ -537,21 +548,14 @@ def report_existing_qn(request):
     return render(request, "cases/add/existing.html", {"form": form})
 
 
-class ReportingWizard(NamedUrlSessionWizardView):
+class ReportingWizard(CaseWizard):
+    summary_check_page = "kind"
+
     def dispatch(self, request, *args, **kwargs):
         user = request.user
         if not user.is_staff and not settings.NON_STAFF_ACCESS:
             return redirect("/")
         return super().dispatch(request, *args, **kwargs)
-
-    def get(self, *args, **kwargs):
-        """Always reset if begin page visited."""
-        step_url = kwargs.get("step", None)
-        if step_url is None:
-            self.storage.reset()
-            # self.storage.current_step = self.steps.first
-            return redirect(self.get_step_url(self.steps.current))
-        return super().get(*args, **kwargs)
 
     def _deal_with_no_js_map_click(self):
         """If we have clicked the map or no-JS zoom buttons, deal with that

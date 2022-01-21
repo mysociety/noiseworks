@@ -201,6 +201,7 @@ def test_add_complaint_as_normal_user(
     assertContains(resp, "Sat, 13 Nov 2021, 1 a.m.")
 
     post_step("summary", {"summary-true_statement": 1}, follow=True)
+    resp = client.get(f"/cases/{case.id}/complaint/add/summary", follow=True)
 
     assert len(mail.outbox) == 2
     email = mail.outbox[0]
