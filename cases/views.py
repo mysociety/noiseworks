@@ -314,7 +314,7 @@ def merge_action(request, case):
 def merge_start(request, case):
     request.session["merging_case"] = {
         "id": case.id,
-        "name": f"#{case.id}",
+        "name": f"{case.kind_display} at {case.location_display}",
     }
 
     cases_same_uprn = Case.objects.filter(uprn=case.uprn).exclude(id=case.id)

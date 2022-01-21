@@ -8,7 +8,7 @@
       <div class="lbh-container">
         <h5>Merging mode</h5>
         <form action="{% url "case-merge" case.id %}" method="post">{% csrf_token %}
-          <input class="nw-button" type="submit" name="dupe" value="Merge {{ duplicate.name }} into this case" id="edit-form-submit">
+          <input class="nw-button" type="submit" name="dupe" value="Merge #{{ duplicate.id }} ({{ duplicate.name }}) into this case" id="edit-form-submit">
           <input class="nw-button nw-button--secondary" type="submit" name="stop" value="Stop looking for duplicates">
         </form>
       </div>

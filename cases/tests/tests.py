@@ -147,12 +147,12 @@ def test_merging_cases(admin_client, case_1, case_other_uprn, action_types):
     response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
     assertContains(response, "Select a case to merge into")
     response = admin_client.get(f"/cases/{case_1.id}")
-    assertContains(response, f"Merge #{case_other_uprn.id} into this case")
+    assertContains(response, f"Merge #{case_other_uprn.id} (Wombat at Flat 4, 2 Example Road, E8 2DP) into this case")
     response = admin_client.post(
         f"/cases/{case_other_uprn.id}/merge", {"stop": 1}, follow=True
     )
     assertContains(response, "We have forgotten your current merging.")
-    assertNotContains(response, "Merge #{case_other_uprn.id} into this case")
+    assertNotContains(response, f"Merge #{case_other_uprn.id} (Wombat at Flat 4, 2 Example Road, E8 2DP) into this case")
     response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
     response = admin_client.post(f"/cases/{case_1.id}/merge", {"dupe": 1}, follow=True)
     assertContains(response, "has been merged into")
