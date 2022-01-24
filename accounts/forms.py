@@ -99,20 +99,16 @@ class CodeForm(GDSForm, forms.Form):
         self.user = user
 
 
-def get_wards():
-    wards = cobrand.api.wards()
-    wards = {ward["gss"]: ward["name"] for ward in wards}
-    return list(wards.items())
-
-
-class EditForm(GDSForm, forms.ModelForm):
+class EditUserForm(GDSForm, forms.ModelForm):
     best_time = forms.MultipleChoiceField(
         choices=User.BEST_TIME_CHOICES,
         widget=forms.CheckboxSelectMultiple,
         required=False,
     )
-    wards = forms.MultipleChoiceField(
-        choices=get_wards, widget=forms.CheckboxSelectMultiple, required=False
+    best_method = forms.ChoiceField(
+        choices=User.BEST_METHOD_CHOICES + [("", "Unknown")],
+        widget=forms.RadioSelect,
+        required=False,
     )
 
     class Meta:
@@ -128,5 +124,28 @@ class EditForm(GDSForm, forms.ModelForm):
             "address",
             "best_time",
             "best_method",
+        )
+
+
+def get_wards():
+    wards = cobrand.api.wards()
+    wards = {ward["gss"]: ward["name"] for ward in wards}
+    return list(wards.items())
+
+
+class EditStaffForm(GDSForm, forms.ModelForm):
+    wards = forms.MultipleChoiceField(
+        choices=get_wards, widget=forms.CheckboxSelectMultiple, required=False
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "email_verified",
+            "phone",
+            "phone_verified",
             "wards",
         )

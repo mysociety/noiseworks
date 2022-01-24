@@ -13,6 +13,11 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
+def normal_user(db):
+    return User.objects.create_user(email="user@example.org")
+
+
+@pytest.fixture
 def staff_user(db):
     return User.objects.create_user(
         is_staff=True, email="foo@example.org", wards=["E05009374"]
@@ -139,16 +144,12 @@ def test_log_in_by_code(client, non_staff_access):
     assert response.status_code == 302
 
 
-def test_basic_user_editing(admin_client, staff_user):
+def test_basic_user_editing(admin_client, normal_user):
     response = admin_client.get("/a/list")
-    response = admin_client.get(f"/a/{staff_user.id}/edit")
+    response = admin_client.get(f"/a/{normal_user.id}/edit")
     response = admin_client.post(
-        f"/a/{staff_user.id}/edit",
-        {
-            "best_time": ["weekday", "evening"],
-            "wards": ["E05009378", "E05009374"],
-            "best_method": "email",
-        },
+        f"/a/{normal_user.id}/edit",
+        {"best_time": ["weekday", "evening"], "best_method": "email"},
     )
     assert response.status_code == 302
     assert response.url == "/a/list"
@@ -157,11 +158,7 @@ def test_basic_user_editing(admin_client, staff_user):
 def test_edit_redirect_back_to_case(admin_client, staff_user):
     response = admin_client.post(
         f"/a/{staff_user.id}/edit?case=123",
-        {
-            "best_time": ["weekday", "evening"],
-            "wards": ["E05009378", "E05009374"],
-            "best_method": "email",
-        },
+        {"wards": ["E05009378", "E05009374"]},
     )
     assert response.status_code == 302
     assert response.url == "/cases/123"

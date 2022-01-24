@@ -10,7 +10,7 @@ from sesame.utils import get_user
 from noiseworks.base32 import bytes_to_base32
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_sms, send_email
-from .forms import SignInForm, CodeForm, EditForm
+from .forms import SignInForm, CodeForm, EditUserForm, EditStaffForm
 
 User = get_user_model()
 
@@ -97,7 +97,10 @@ def show_form(request):
 @staff_member_required
 def edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
-    form = EditForm(request.POST or None, instance=user)
+    if user.is_staff:
+        form = EditStaffForm(request.POST or None, instance=user)
+    else:
+        form = EditUserForm(request.POST or None, instance=user)
     if form.is_valid():
         form.save()
         if request.GET.get("case"):
