@@ -8,7 +8,7 @@
 <th style="{{ td_style }}{{ only_column_style }}">
   <h1 style="{{ h1_style }}">New noise reoccurrence</h1>
   <p style="margin: 20px auto; text-align: center">
-    <a style="{{ button_style }}" href="{{ url }}">See case details</a>
+    <a style="{{ button_style }}" href="{{ url }}">See case #{{ case.id }} details</a>
   </p>
 
   <h2 style="{{ h2_style }}">Reoccurrence details</h2>
@@ -31,7 +31,8 @@
 
   <h2 style="{{ h2_style }}">Case details</h2>
   <p style="{{ p_style }}">
-  Kind of noise: {{ case.kind_display }}
+  Reference: {{ case.id }}
+  <br>Kind of noise: {{ case.kind_display }}
   <br>Noise source: {{ case.location_display }}
   <br>Ward: {{ case.get_ward_display }}
   <br>Where is the noise coming from? {{ case.get_where_display }}
@@ -39,7 +40,7 @@
   </p>
 
   <p style="margin: 20px auto; text-align: center">
-    <a style="{{ button_style }}" href="{{ url }}">See case details</a>
+    <a style="{{ button_style }}" href="{{ url }}">See case #{{ case.id }} details</a>
   </p>
 </th>
 

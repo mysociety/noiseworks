@@ -19,6 +19,7 @@ Reported by:
   Availability: {{ complainant.best_time|join:" or " }}, by {{ complainant.best_method }}
 
 Case details:
+  Reference: {{ case.id }}
   Kind of noise: {{ case.kind_display }}
   Noise source: {{ case.location_display }}
   Ward: {{ case.get_ward_display }}
