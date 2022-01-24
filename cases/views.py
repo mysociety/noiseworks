@@ -62,7 +62,12 @@ def case_list_user(request):
 
 @staff_member_required
 def case_list_staff(request):
-    qs = Case.objects.unmerged()
+    if request.GET.get("search"):
+        # If there is a search, include merged cases so that it can find
+        # the complainant on those cases, those IDs and anything else
+        qs = Case.objects.all()
+    else:
+        qs = Case.objects.unmerged()
     f = CaseFilter(request.GET, queryset=qs, request=request)
 
     paginator = Paginator(f.qs, 20)

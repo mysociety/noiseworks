@@ -110,6 +110,24 @@ def test_search_name(admin_client, case_1):
     assertContains(resp, "Fireworks")
 
 
+def test_search_merged_case(admin_client):
+    c1 = Case.objects.create(
+        kind="diy",
+        ward="E05009373",
+        location_cache="Combined case",
+        point=Point(470267, 122766),
+    )
+    c2 = Case.objects.create(
+        kind="diy",
+        ward="E05009373",
+        location_cache="Merged case",
+        point=Point(470267, 122766),
+    )
+    c1.actions.create(case_old=c2)
+    resp = admin_client.get(f"/cases?search={c2.id}")
+    assertContains(resp, "Merged case")
+
+
 def test_user_ward_js_array(admin_client):
     resp = admin_client.get(f"/cases")
     assertContains(resp, "nw.user_wards = []")
