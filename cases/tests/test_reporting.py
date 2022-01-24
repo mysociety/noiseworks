@@ -230,6 +230,8 @@ def _test_user_case_creation(logged_in, client):
     post_step("address", {"addresses": "missing"})
     post_step("address", {"address_uprn": "10008315925"})
     post_step("kind", {"kind": "other"})
+    resp = post_step("kind", {"kind": "other", "kind_other": "Other " * 20})
+    assertContains(resp, "at most 100 characters")
     post_step("kind", {"kind": "other", "kind_other": "Other"})
     post_step("where", {"where": "residence", "estate": "n"})
     post_step("where-location", {"search": "Foobar1"})

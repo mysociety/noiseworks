@@ -126,7 +126,7 @@ class ReportingKindForm(StepForm):
         help_text="Please see <a href='https://hackney.gov.uk/noise' target='_blank'>https://hackney.gov.uk/noise</a> for the kinds of noise we can and can’t deal with.",
         choices=Case.KIND_CHOICES,
     )
-    kind_other = forms.CharField(label="Other", required=False)
+    kind_other = forms.CharField(label="Other", required=False, max_length=100)
 
     def clean(self):
         kind = self.cleaned_data.get("kind")
