@@ -210,8 +210,29 @@ def test_non_staff_user_case_creation(client, settings):
     assert resp.status_code == 302
 
 
-def _test_user_case_creation(logged_in, client):
+@pytest.mark.parametrize(
+    "logged_in,email_verified,phone_verified",
+    [
+        (False, True, True),
+        (False, True, False),
+        (False, False, True),
+        (False, False, False),
+        (True, True, False),
+        (True, False, True),
+    ],
+)
+def test_user_case_creation(
+    logged_in, email_verified, phone_verified, normal_user, client, mocks, settings
+):
     """Gives details, picks address, map-based case"""
+    settings.NON_STAFF_ACCESS = True
+
+    if logged_in:
+        client.force_login(normal_user)
+    normal_user.email_verified = email_verified
+    normal_user.phone_verified = phone_verified
+    normal_user.save()
+
     post_step = partial(_post_step, client)
     client.get(f"/cases/add/begin")
     resp = post_step(
@@ -291,27 +312,6 @@ def _test_user_case_creation(logged_in, client):
             assert "weekday, by email" not in email.body
             assert "Line 1, Line 2, Line 3" not in email.body
     mail.outbox = []
-
-
-def test_user_case_creation_not_logged_in(client, normal_user, mocks, settings):
-    settings.NON_STAFF_ACCESS = True
-    for email_verified in (True, False):
-        normal_user.email_verified = email_verified
-        for phone_verified in (True, False):
-            client.logout()
-            normal_user.phone_verified = phone_verified
-            normal_user.save()
-            _test_user_case_creation(False, client)
-
-
-def test_user_case_creation_logged_in(client, normal_user, mocks, settings):
-    settings.NON_STAFF_ACCESS = True
-    client.force_login(normal_user)
-    for verified in ("email", "phone"):
-        normal_user.email_verified = verified == "email"
-        normal_user.phone_verified = verified == "phone"
-        normal_user.save()
-        _test_user_case_creation(True, client)
 
 
 def test_error_conditions(admin_client, mocks):
