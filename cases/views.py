@@ -317,10 +317,15 @@ def merge_start(request, case):
         "name": f"{case.kind_display} at {case.location_display}",
     }
 
-    cases_same_uprn = Case.objects.filter(uprn=case.uprn).exclude(id=case.id)
-    cases_nearby = Case.objects.filter(point__dwithin=(case.point, D(m=500))).exclude(
-        id=case.id
-    )
+    qs = Case.objects.unmerged()
+    cases_same_uprn = []
+    cases_nearby = []
+    if case.uprn:
+        cases_same_uprn = qs.filter(uprn=case.uprn).exclude(id=case.id)
+    if case.point:
+        cases_nearby = qs.filter(point__dwithin=(case.point, D(m=500))).exclude(
+            id=case.id
+        )
 
     return render(
         request,

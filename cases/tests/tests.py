@@ -139,31 +139,6 @@ def test_action_output(
     assert str(a) == f"None, case {case_1.id}, unknown action"
 
 
-def test_merging_cases(admin_client, case_1, case_other_uprn, action_types):
-    response = admin_client.post(
-        f"/cases/{case_other_uprn.id}/merge", {"stop": 1}, follow=True
-    )
-    assertNotContains(response, "We have forgotten your current merging.")
-    response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
-    assertContains(response, "Select a case to merge into")
-    response = admin_client.get(f"/cases/{case_1.id}")
-    assertContains(response, f"Merge #{case_other_uprn.id} (Wombat at Flat 4, 2 Example Road, E8 2DP) into this case")
-    response = admin_client.post(
-        f"/cases/{case_other_uprn.id}/merge", {"stop": 1}, follow=True
-    )
-    assertContains(response, "We have forgotten your current merging.")
-    assertNotContains(response, f"Merge #{case_other_uprn.id} (Wombat at Flat 4, 2 Example Road, E8 2DP) into this case")
-    response = admin_client.post(f"/cases/{case_other_uprn.id}/merge")
-    response = admin_client.post(f"/cases/{case_1.id}/merge", {"dupe": 1}, follow=True)
-    assertContains(response, "has been merged into")
-
-    a = Action.objects.create(case=case_1, notes="Internal note", type=action_types[1])
-
-    response = admin_client.get(f"/cases/{case_other_uprn.id}")
-    assertContains(response, "This case has been merged into")
-    assertContains(response, "Noise witnessed")
-
-
 def test_case_had_abatement(admin_client, case_1, action_types):
     assert not case_1.had_abatement_notice
     response = admin_client.post(

@@ -3,7 +3,7 @@
 
 {% block merging %}
   {% with request.session.merging_case as duplicate %}
-    {% if duplicate and case.id != duplicate.id %}
+    {% if duplicate and case.id != duplicate.id and not case.merged_into %}
     <div class="lbh-merging-bar">
       <div class="lbh-container">
         <h5>Merging mode</h5>
