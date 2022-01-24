@@ -55,7 +55,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 COBRAND = env("COBRAND")
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
+    "noiseworks.apps.NWAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
