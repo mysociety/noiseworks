@@ -98,7 +98,10 @@ def show_form(request):
 def edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if user.is_staff:
-        form = EditStaffForm(request.POST or None, instance=user)
+        if request.user.has_perm("accounts.change_user"):
+            form = EditStaffForm(request.POST or None, instance=user)
+        else:
+            raise PermissionDenied
     else:
         form = EditUserForm(request.POST or None, instance=user)
     if form.is_valid():

@@ -4,6 +4,8 @@ from unittest.mock import patch, mock_open
 import pytest
 from pytest_django.asserts import assertContains
 from django.core import mail
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command, CommandError
 from sesame.tokens import create_token
 from .models import User
@@ -150,6 +152,27 @@ def test_basic_user_editing(admin_client, normal_user):
     response = admin_client.post(
         f"/a/{normal_user.id}/edit",
         {"best_time": ["weekday", "evening"], "best_method": "email"},
+    )
+    assert response.status_code == 302
+    assert response.url == "/a/list"
+
+
+def test_staff_user_editing_by_staff(client, staff_user):
+    client.force_login(staff_user)
+    response = client.get(f"/a/{staff_user.id}/edit")
+    assert response.status_code == 403
+
+
+def test_staff_user_editing(client, staff_user):
+    permission = Permission.objects.get(
+        codename="change_user", content_type=ContentType.objects.get_for_model(User)
+    )
+    staff_user.user_permissions.add(permission)
+    client.force_login(staff_user)
+    client.get(f"/a/{staff_user.id}/edit")
+    response = client.post(
+        f"/a/{staff_user.id}/edit",
+        {"wards": ["E05009378", "E05009374"]},
     )
     assert response.status_code == 302
     assert response.url == "/a/list"
