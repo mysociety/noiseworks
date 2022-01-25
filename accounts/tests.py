@@ -171,10 +171,11 @@ def test_user_adding(client, staff_user):
     assert user.is_staff
 
 
-def test_basic_user_editing(admin_client, normal_user):
-    response = admin_client.get("/a/list")
-    response = admin_client.get(f"/a/{normal_user.id}/edit")
-    response = admin_client.post(
+def test_basic_user_editing(client, staff_user, normal_user):
+    client.force_login(staff_user)
+    response = client.get("/a/list")
+    response = client.get(f"/a/{normal_user.id}/edit")
+    response = client.post(
         f"/a/{normal_user.id}/edit",
         {"best_time": ["weekday", "evening"], "best_method": "email"},
     )

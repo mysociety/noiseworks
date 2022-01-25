@@ -101,6 +101,13 @@ class CodeForm(GDSForm, forms.Form):
 
 
 class UserForm(GDSForm, forms.ModelForm):
+    is_staff = forms.BooleanField(label="Staff member", initial=True, required=False)
+
+    def __init__(self, can_edit_staff, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not can_edit_staff:
+            del self.fields["is_staff"]
+
     def clean_email(self):
         return self.cleaned_data["email"].lower()
 
@@ -138,6 +145,7 @@ class EditUserForm(UserForm):
         fields = (
             "first_name",
             "last_name",
+            "is_staff",
             "email",
             "email_verified",
             "phone",
@@ -165,6 +173,7 @@ class EditStaffForm(UserForm):
         fields = (
             "first_name",
             "last_name",
+            "is_staff",
             "email",
             "email_verified",
             "phone",
@@ -182,9 +191,10 @@ class EditStaffForm(UserForm):
         self.fields["email_verified"].required = True
         self.fields["email_verified"].initial = True
         self.fields["email_verified"].disabled = True
+        if not self.instance.pk:
+            self.fields["is_staff"].disabled = True
 
     def save(self, *args, **kwargs):
         if not self.instance.username:
             self.instance.username = str(uuid.uuid4())
-            self.instance.is_staff = True
         super().save(*args, **kwargs)

@@ -99,7 +99,7 @@ def show_form(request):
 def add(request):
     if not request.user.has_perm("accounts.add_user"):
         raise PermissionDenied
-    form = EditStaffForm(request.POST or None)
+    form = EditStaffForm(True, request.POST or None)
     if form.is_valid():
         form.save()
         messages.success(request, f"That user has been added")
@@ -110,13 +110,13 @@ def add(request):
 @staff_member_required
 def edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
+    perm = request.user.has_perm("accounts.change_user")
     if user.is_staff:
-        if request.user.has_perm("accounts.change_user"):
-            form = EditStaffForm(request.POST or None, instance=user)
-        else:
+        if not perm:
             raise PermissionDenied
+        form = EditStaffForm(True, request.POST or None, instance=user)
     else:
-        form = EditUserForm(request.POST or None, instance=user)
+        form = EditUserForm(perm, request.POST or None, instance=user)
     if form.is_valid():
         form.save()
         if request.GET.get("case"):
