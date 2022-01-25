@@ -577,7 +577,7 @@ class ReportingWizard(CaseWizard):
         point = self.request.POST.get("where-map-point")
         radius = self.request.POST.get("where-map-radius")
         for key in self.request.POST:
-            m = re.match("tile_(\d+)\.(\d+)\.([xy])", key)
+            m = re.match(r"tile_(\d+)\.(\d+)\.([xy])", key)
             if m:
                 x, y, d = m.groups()
                 coords[d] = int(self.request.POST[key])
