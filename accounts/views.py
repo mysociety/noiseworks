@@ -2,6 +2,7 @@ import base64
 from math import ceil
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
@@ -108,6 +109,7 @@ def edit(request, user_id):
         form.save()
         if request.GET.get("case"):
             return redirect("case-view", request.GET.get("case"))
+        messages.success(request, "That user has been edited")
         return redirect("accounts:list")
     return render(request, "accounts/edit.html", {"form": form})
 

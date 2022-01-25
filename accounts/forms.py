@@ -99,7 +99,28 @@ class CodeForm(GDSForm, forms.Form):
         self.user = user
 
 
-class EditUserForm(GDSForm, forms.ModelForm):
+class UserForm(GDSForm, forms.ModelForm):
+    def clean_email(self):
+        return self.cleaned_data["email"].lower()
+
+    def clean(self):
+        email = self.cleaned_data.get("email")
+        phone = self.cleaned_data.get("phone")
+        email_verified = self.cleaned_data["email_verified"]
+        phone_verified = self.cleaned_data["phone_verified"]
+        if email and email_verified:
+            user = User.objects.filter(email=email, email_verified=True)
+            user = user.exclude(pk=self.instance.pk)
+            if user.exists():
+                self.add_error("email", "A user with this email address already exists")
+        if phone and phone_verified:
+            user = User.objects.filter(phone=phone, phone_verified=True)
+            user = user.exclude(pk=self.instance.pk)
+            if user.exists():
+                self.add_error("phone", "A user with this phone number already exists")
+
+
+class EditUserForm(UserForm):
     best_time = forms.MultipleChoiceField(
         choices=User.BEST_TIME_CHOICES,
         widget=forms.CheckboxSelectMultiple,
@@ -133,7 +154,7 @@ def get_wards():
     return list(wards.items())
 
 
-class EditStaffForm(GDSForm, forms.ModelForm):
+class EditStaffForm(UserForm):
     wards = forms.MultipleChoiceField(
         choices=get_wards, widget=forms.CheckboxSelectMultiple, required=False
     )
@@ -149,3 +170,14 @@ class EditStaffForm(GDSForm, forms.ModelForm):
             "phone_verified",
             "wards",
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Staff must always have a name and verified email
+        self.fields["first_name"].required = True
+        self.fields["last_name"].required = True
+        self.fields["email"].required = True
+        self.fields["email_verified"].required = True
+        self.fields["email_verified"].initial = True
+        self.fields["email_verified"].disabled = True
