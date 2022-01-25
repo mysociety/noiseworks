@@ -1,4 +1,5 @@
 import base64
+import uuid
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -181,3 +182,9 @@ class EditStaffForm(UserForm):
         self.fields["email_verified"].required = True
         self.fields["email_verified"].initial = True
         self.fields["email_verified"].disabled = True
+
+    def save(self, *args, **kwargs):
+        if not self.instance.username:
+            self.instance.username = str(uuid.uuid4())
+            self.instance.is_staff = True
+        super().save(*args, **kwargs)

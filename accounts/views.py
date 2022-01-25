@@ -96,6 +96,18 @@ def show_form(request):
 
 
 @staff_member_required
+def add(request):
+    if not request.user.has_perm("accounts.add_user"):
+        raise PermissionDenied
+    form = EditStaffForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"That user has been added")
+        return redirect("accounts:list")
+    return render(request, "accounts/edit.html", {"form": form})
+
+
+@staff_member_required
 def edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if user.is_staff:

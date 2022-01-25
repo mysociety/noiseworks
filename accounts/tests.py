@@ -146,6 +146,31 @@ def test_log_in_by_code(client, non_staff_access):
     assert response.status_code == 302
 
 
+def test_user_adding(client, staff_user):
+    client.force_login(staff_user)
+    response = client.get(f"/a/add")
+    assert response.status_code == 403
+
+    permission = Permission.objects.get(
+        codename="add_user", content_type=ContentType.objects.get_for_model(User)
+    )
+    staff_user.user_permissions.add(permission)
+    client.get(f"/a/add")
+    response = client.post(
+        f"/a/add",
+        {
+            "first_name": "New",
+            "last_name": "User",
+            "email": "foo2@example.org",
+            "wards": ["E05009378", "E05009374"],
+        },
+    )
+    assert response.status_code == 302
+    assert response.url == "/a/list"
+    user = User.objects.get(email="foo2@example.org", email_verified=True)
+    assert user.is_staff
+
+
 def test_basic_user_editing(admin_client, normal_user):
     response = admin_client.get("/a/list")
     response = admin_client.get(f"/a/{normal_user.id}/edit")
