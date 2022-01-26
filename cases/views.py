@@ -802,7 +802,11 @@ class ReportingWizard(CaseWizard):
                 self.request, user, backend="django.contrib.auth.backends.ModelBackend"
             )
 
+        # Include created_by/modified_by below in case only
+        # just logged in above, so middleware won't catch it
         case = Case(
+            created_by=self.request.user,
+            modified_by=self.request.user,
             kind=data["kind"],
             kind_other=data["kind_other"],
             point=data.get("point"),
@@ -815,6 +819,8 @@ class ReportingWizard(CaseWizard):
 
         start, end = compile_dates(data)
         complaint = Complaint(
+            created_by=self.request.user,
+            modified_by=self.request.user,
             case=case,
             complainant=user,
             happening_now=data["happening_now"],

@@ -145,6 +145,8 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
     assert Case.objects.count() == 1
+    case = Case.objects.all()[0]
+    assert case.created_by_id and case.created_by_id == case.modified_by_id
     assert Complaint.objects.count() == 1
     normal_user.refresh_from_db()
     assert normal_user.first_name == "Normal"
@@ -297,6 +299,11 @@ def test_user_case_creation(
     client.get(
         f"/cases/add/address"
     )  # Test fetching this page after submission does not error
+
+    if not logged_in and (email_verified or phone_verified):
+        assert Case.objects.count() == 1
+        case = Case.objects.all()[0]
+        assert case.created_by_id == normal_user.id
 
     assert len(mail.outbox) == 2
     for r in range(2):
