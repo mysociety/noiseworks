@@ -419,7 +419,7 @@ class Case(AbstractModel):
     def all_complaints_reversed(self):
         complaints = self.all_complaints
         complaints = complaints.order_by("-created")
-        return complaints
+        return list(complaints)
 
     @property
     def last_action(self):
@@ -438,6 +438,13 @@ class Case(AbstractModel):
                 return True
         return False
 
+    @cached_property
+    def number_all_complaints(self):
+        return len(self.all_complaints_reversed)
+
+    @cached_property
+    def number_all_complainants(self):
+        return len({c.complainant_id for c in self.all_complaints_reversed})
 
 class Complaint(AbstractModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="complaints")
