@@ -74,12 +74,7 @@ def case_list_staff(request):
     page_number = request.GET.get("page")
     qs = paginator.get_page(page_number)
 
-    merge_map = Action.objects.get_merged_cases(qs)
-    actions_by_case = Action.objects.get_reversed(merge_map)
-
-    # Set the actions for each result to the right ones
-    for case in qs:
-        case.actions_reversed = actions_by_case.get(case.id, [])
+    Case.objects.prefetch_timeline(qs)
 
     return render(
         request,

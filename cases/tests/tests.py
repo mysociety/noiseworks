@@ -158,8 +158,8 @@ def test_action_manager(case_1, case_other_uprn):
         case_1.id: case_1.id,
         case_other_uprn.id: case_1.id,
     }
-    actions = Action.objects.get_reversed(merge_map)
-    assert actions == {case_1.id: [a]}
+    actions = Case.objects.prefetch_timeline([case_1])
+    assert case_1.actions_reversed == [a]
 
 
 def test_complaint_view(admin_client, complaint):

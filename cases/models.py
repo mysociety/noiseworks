@@ -53,6 +53,45 @@ class CaseManager(models.Manager):
             reoccurrences=Count("complaints") - 1
         )
 
+    def prefetch_timeline_part(self, merge_map, qs, id_field):
+        by_case = {}
+        for obj in qs:
+            merged_case_id = merge_map[getattr(obj, id_field)]
+            by_case.setdefault(merged_case_id, []).append(obj)
+        return by_case
+
+    def prefetch_timeline(self, qs):
+        """On a list page, we don't want to be fetching per-case actions,
+        complaints, or histories. We can't use prefetch because a) that doesn't
+        work on history anyway, and b) we've got the added complication of the
+        merged cases to deal with."""
+
+        merge_map = Action.objects.get_merged_cases(qs)
+        case_ids = merge_map.keys()
+
+        actions = Action.objects.filter(case__in=case_ids).order_by("-created")
+        actions_by_case = self.prefetch_timeline_part(merge_map, actions, "case_id")
+
+        complaints = (
+            Complaint.objects.filter(case__in=case_ids)
+            .select_related("complainant")
+            .order_by("-created")
+        )
+        complaints_by_case = self.prefetch_timeline_part(
+            merge_map, complaints, "case_id"
+        )
+
+        histories = HistoricalCase.objects.filter(id__in=case_ids).select_related(
+            "modified_by", "assigned"
+        )
+        histories_by_case = self.prefetch_timeline_part(merge_map, histories, "id")
+
+        # Set the actions for each result to the right ones
+        for case in qs:
+            case.actions_reversed = actions_by_case.get(case.id, [])
+            case.all_complaints_reversed = complaints_by_case.get(case.id, [])
+            case.historical_entries = histories_by_case.get(case.id, [])
+
 
 class Case(AbstractModel):
     KIND_CHOICES = [
@@ -272,6 +311,10 @@ class Case(AbstractModel):
 
         return ModelDelta(changes, changed_fields, old_history, self)
 
+    @cached_property
+    def historical_entries(self):
+        return self.history.select_related("modified_by", "assigned")
+
     def _timeline(self, actions, action_fn, complaints, history_to_show):
         data = []
         for action in actions:
@@ -288,7 +331,7 @@ class Case(AbstractModel):
             }
             data.append(row)
 
-        edits = self.history.select_related("modified_by", "assigned")
+        edits = self.historical_entries
         if len(edits) > 1:
             edit = edits[0]
             for prev in edits[1:]:
@@ -440,17 +483,6 @@ class ActionManager(models.Manager):
         qs = super().get_queryset()
         qs = qs.select_related("created_by", "case", "type", "case_old")
         return qs
-
-    def get_reversed(self, merge_map):
-        """Given a mapping of merged/unmerged case IDs, return a mapping of the
-        actions of those cases."""
-        case_ids = merge_map.keys()
-        actions_reversed = self.filter(case__in=case_ids).order_by("-created")
-        actions_by_case = {}
-        for action in actions_reversed:
-            merged_case_id = merge_map[action.case_id]
-            actions_by_case.setdefault(merged_case_id, []).append(action)
-        return actions_by_case
 
     def get_merged_cases(self, cases):
         """Given a list of Case IDs, returns a dict mapping other Cases that have
