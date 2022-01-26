@@ -4,6 +4,10 @@
 
 <h1>Staff users</h1>
 
+{% if perms.accounts.add_user %}
+    <a href="{% url "accounts:add" %}" class="nw-link--no-visited-state">Add staff user</a>
+{% endif %}
+
 <ul class="nw-list">
 {% for user in users %}
 <li>{% if perms.accounts.change_user %}

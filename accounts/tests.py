@@ -146,10 +146,36 @@ def test_log_in_by_code(client, non_staff_access):
     assert response.status_code == 302
 
 
-def test_basic_user_editing(admin_client, normal_user):
-    response = admin_client.get("/a/list")
-    response = admin_client.get(f"/a/{normal_user.id}/edit")
-    response = admin_client.post(
+def test_user_adding(client, staff_user):
+    client.force_login(staff_user)
+    response = client.get(f"/a/add")
+    assert response.status_code == 403
+
+    permission = Permission.objects.get(
+        codename="add_user", content_type=ContentType.objects.get_for_model(User)
+    )
+    staff_user.user_permissions.add(permission)
+    client.get(f"/a/add")
+    response = client.post(
+        f"/a/add",
+        {
+            "first_name": "New",
+            "last_name": "User",
+            "email": "foo2@example.org",
+            "wards": ["E05009378", "E05009374"],
+        },
+    )
+    assert response.status_code == 302
+    assert response.url == "/a/list"
+    user = User.objects.get(email="foo2@example.org", email_verified=True)
+    assert user.is_staff
+
+
+def test_basic_user_editing(client, staff_user, normal_user):
+    client.force_login(staff_user)
+    response = client.get("/a/list")
+    response = client.get(f"/a/{normal_user.id}/edit")
+    response = client.post(
         f"/a/{normal_user.id}/edit",
         {"best_time": ["weekday", "evening"], "best_method": "email"},
     )
@@ -172,16 +198,57 @@ def test_staff_user_editing(client, staff_user):
     client.get(f"/a/{staff_user.id}/edit")
     response = client.post(
         f"/a/{staff_user.id}/edit",
-        {"wards": ["E05009378", "E05009374"]},
+        {
+            "first_name": "Staff",
+            "last_name": "User",
+            "email": "foo@example.org",
+            "wards": ["E05009378", "E05009374"],
+        },
     )
     assert response.status_code == 302
     assert response.url == "/a/list"
 
 
+def test_staff_user_existing(admin_client, staff_user, normal_user):
+    response = admin_client.post(
+        f"/a/{staff_user.id}/edit",
+        {
+            "first_name": "S",
+            "last_name": "U",
+            "email": normal_user.email,
+            "phone": "07900000000",
+            "phone_verified": "1",
+        },
+    )
+    assertContains(response, "user with this email address already")
+
+
+def test_staff_user_existing_phone(admin_client, staff_user, normal_user):
+    normal_user.phone_verified = True
+    normal_user.phone = "07900000000"
+    normal_user.save()
+    response = admin_client.post(
+        f"/a/{staff_user.id}/edit",
+        {
+            "first_name": "S",
+            "last_name": "U",
+            "email": staff_user.email,
+            "phone": "07900000000",
+            "phone_verified": "1",
+        },
+    )
+    assertContains(response, "user with this phone number already")
+
+
 def test_edit_redirect_back_to_case(admin_client, staff_user):
     response = admin_client.post(
         f"/a/{staff_user.id}/edit?case=123",
-        {"wards": ["E05009378", "E05009374"]},
+        {
+            "first_name": "Staff",
+            "last_name": "User",
+            "email": "foo@example.org",
+            "wards": ["E05009378", "E05009374"],
+        },
     )
     assert response.status_code == 302
     assert response.url == "/cases/123"

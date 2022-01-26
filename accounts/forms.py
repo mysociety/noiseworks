@@ -1,4 +1,5 @@
 import base64
+import uuid
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -99,7 +100,35 @@ class CodeForm(GDSForm, forms.Form):
         self.user = user
 
 
-class EditUserForm(GDSForm, forms.ModelForm):
+class UserForm(GDSForm, forms.ModelForm):
+    is_staff = forms.BooleanField(label="Staff member", initial=True, required=False)
+
+    def __init__(self, can_edit_staff, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not can_edit_staff:
+            del self.fields["is_staff"]
+
+    def clean_email(self):
+        return self.cleaned_data["email"].lower()
+
+    def clean(self):
+        email = self.cleaned_data.get("email")
+        phone = self.cleaned_data.get("phone")
+        email_verified = self.cleaned_data["email_verified"]
+        phone_verified = self.cleaned_data["phone_verified"]
+        if email and email_verified:
+            user = User.objects.filter(email=email, email_verified=True)
+            user = user.exclude(pk=self.instance.pk)
+            if user.exists():
+                self.add_error("email", "A user with this email address already exists")
+        if phone and phone_verified:
+            user = User.objects.filter(phone=phone, phone_verified=True)
+            user = user.exclude(pk=self.instance.pk)
+            if user.exists():
+                self.add_error("phone", "A user with this phone number already exists")
+
+
+class EditUserForm(UserForm):
     best_time = forms.MultipleChoiceField(
         choices=User.BEST_TIME_CHOICES,
         widget=forms.CheckboxSelectMultiple,
@@ -116,6 +145,7 @@ class EditUserForm(GDSForm, forms.ModelForm):
         fields = (
             "first_name",
             "last_name",
+            "is_staff",
             "email",
             "email_verified",
             "phone",
@@ -133,7 +163,7 @@ def get_wards():
     return list(wards.items())
 
 
-class EditStaffForm(GDSForm, forms.ModelForm):
+class EditStaffForm(UserForm):
     wards = forms.MultipleChoiceField(
         choices=get_wards, widget=forms.CheckboxSelectMultiple, required=False
     )
@@ -143,9 +173,28 @@ class EditStaffForm(GDSForm, forms.ModelForm):
         fields = (
             "first_name",
             "last_name",
+            "is_staff",
             "email",
             "email_verified",
             "phone",
             "phone_verified",
             "wards",
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Staff must always have a name and verified email
+        self.fields["first_name"].required = True
+        self.fields["last_name"].required = True
+        self.fields["email"].required = True
+        self.fields["email_verified"].required = True
+        self.fields["email_verified"].initial = True
+        self.fields["email_verified"].disabled = True
+        if not self.instance.pk:
+            self.fields["is_staff"].disabled = True
+
+    def save(self, *args, **kwargs):
+        if not self.instance.username:
+            self.instance.username = str(uuid.uuid4())
+        super().save(*args, **kwargs)

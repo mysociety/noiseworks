@@ -3,7 +3,11 @@
 
 {% block content %}
 
+{% if form.instance.pk %}
 <h1>Edit user</h1>
+{% else %}
+<h1>Add staff user</h1>
+{% endif %}
 
 {% error_summary form %}
 {% crispy form %}

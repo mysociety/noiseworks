@@ -2,6 +2,7 @@ import base64
 from math import ceil
 from django.conf import settings
 from django.contrib.auth import login, logout, get_user_model
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
@@ -95,19 +96,32 @@ def show_form(request):
 
 
 @staff_member_required
+def add(request):
+    if not request.user.has_perm("accounts.add_user"):
+        raise PermissionDenied
+    form = EditStaffForm(True, request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"That user has been added")
+        return redirect("accounts:list")
+    return render(request, "accounts/edit.html", {"form": form})
+
+
+@staff_member_required
 def edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
+    perm = request.user.has_perm("accounts.change_user")
     if user.is_staff:
-        if request.user.has_perm("accounts.change_user"):
-            form = EditStaffForm(request.POST or None, instance=user)
-        else:
+        if not perm:
             raise PermissionDenied
+        form = EditStaffForm(True, request.POST or None, instance=user)
     else:
-        form = EditUserForm(request.POST or None, instance=user)
+        form = EditUserForm(perm, request.POST or None, instance=user)
     if form.is_valid():
         form.save()
         if request.GET.get("case"):
             return redirect("case-view", request.GET.get("case"))
+        messages.success(request, "That user has been edited")
         return redirect("accounts:list")
     return render(request, "accounts/edit.html", {"form": form})
 
