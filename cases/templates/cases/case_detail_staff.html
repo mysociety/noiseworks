@@ -49,6 +49,13 @@
     <dd class="govuk-summary-list__value">{{ case.created }}</dd>
     <dd class="govuk-summary-list__actions"></dd>
   </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Complaints</dt>
+    <dd class="govuk-summary-list__value">{{ case.number_all_complaints }},
+    {% blocktranslate count counter=case.number_all_complainants trimmed %}
+    from {{ counter }} complainant{% plural %}from {{ counter }} complainants
+    {% endblocktranslate %}</dd>
+  </div>
   {% if not case.merged_into %}
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Last action</dt>

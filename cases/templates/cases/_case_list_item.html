@@ -1,9 +1,20 @@
+{% load i18n %}
 <li class="nw-case-list__item">
     {% include "cases/_case_tags.html" with case=case %}
     <a href="{% url 'case-view' case.id %}" class="case-list__title nw-link--no-visited-state">
         {{ case.kind_display }} at {{ case.location_display }}
     </a>
     <dl class="nw-summary-list govuk-summary-list--no-border">
+        <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Complaints</dt>
+            <dd class="govuk-summary-list__value">
+              {% blocktranslate with complaints=case.number_all_complaints count counter=case.number_all_complainants trimmed %}
+                {{ complaints }}, from {{ counter }} complainant
+              {% plural %}
+                {{ complaints }}, from {{ counter }} complainants
+              {% endblocktranslate %}
+            </dd>
+        </div>
         <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Last action</dt>
             <dd class="govuk-summary-list__value">{% if case.last_action %}
