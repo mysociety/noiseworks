@@ -154,7 +154,7 @@ class Case(AbstractModel):
     objects = CaseManager()
 
     class Meta:
-        ordering = ("-id",)
+        ordering = ("-modified", "-id")
 
     @property
     def _history_user(self):
