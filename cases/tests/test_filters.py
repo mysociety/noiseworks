@@ -82,6 +82,13 @@ def test_ward_filter(admin_client, admin_user, case_1):
     assertContains(response, f"/cases/{case_1.id}")
 
 
+def test_ward_group_filter(admin_client, admin_user, case_1):
+    response = admin_client.get("/cases?ward=south")
+    assertNotContains(response, f"/cases/{case_1.id}")
+    response = admin_client.get("/cases?ward=north")
+    assertContains(response, f"/cases/{case_1.id}")
+
+
 def test_search(admin_client, case_1):
     resp = admin_client.get("/cases?search=fireworks&ajax=1")
     assertContains(resp, "Fireworks")

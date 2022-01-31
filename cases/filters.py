@@ -14,6 +14,8 @@ def get_wards():
     wards = cobrand.api.wards()
     wards = {ward["gss"]: ward["name"] for ward in wards}
     wards["outside"] = "Outside Hackney"
+    for group in cobrand.api.ward_groups():
+        wards[group["id"]] = group["name"]
     return wards
 
 
@@ -33,8 +35,9 @@ class CaseFilter(django_filters.FilterSet):
     uprn = django_filters.CharFilter()
     ward = django_filters.MultipleChoiceFilter(
         choices=list(get_wards().items()),
-        label="Area",
+        label="Case location",
         widget=forms.CheckboxSelectMultiple,
+        method="ward_filter",
     )
     created = django_filters.DateRangeFilter(label="Created")
     modified = django_filters.DateRangeFilter(label="Last updated")
@@ -73,6 +76,13 @@ class CaseFilter(django_filters.FilterSet):
             return queryset.filter(assigned=None)
         else:
             return queryset.filter(assigned=value)
+
+    def ward_filter(self, queryset, name, value):
+        for i, v in list(enumerate(value)):
+            for group in cobrand.api.ward_groups():
+                if group["id"] == v:
+                    value[i:i+1] = group["wards"]
+        return queryset.filter(ward__in=value)
 
     def search_filter(self, queryset, name, value):
         queries = Q()
