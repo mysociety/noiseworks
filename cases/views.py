@@ -71,9 +71,12 @@ def case_list_staff(request):
 
     Case.objects.prefetch_timeline(qs)
 
+    template = "cases/case_list_staff.html"
+    if request.GET.get("ajax"):
+        template = "cases/_case_list_staff_list.html"
     return render(
         request,
-        "cases/case_list_staff.html",
+        template,
         {
             "filter": f,
             "qs": qs,

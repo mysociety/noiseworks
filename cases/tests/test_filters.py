@@ -83,7 +83,7 @@ def test_ward_filter(admin_client, admin_user, case_1):
 
 
 def test_search(admin_client, case_1):
-    resp = admin_client.get("/cases?search=fireworks")
+    resp = admin_client.get("/cases?search=fireworks&ajax=1")
     assertContains(resp, "Fireworks")
     resp = admin_client.get(f"/cases?search={case_1.id}")
     assertContains(resp, "Fireworks")

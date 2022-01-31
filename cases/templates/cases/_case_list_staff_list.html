@@ -1,0 +1,23 @@
+{% if qs %}
+  {% include "cases/_pagination.html" %}
+{% endif %}
+
+<ul class="nw-case-list">
+  {% for case in qs %}
+    {% include "cases/_case_list_item.html" %}
+  {% empty %}
+    {% if filter.form.cleaned_data.assigned == "me" %}
+        <li class="nw-case-list__empty">
+            <p>There are no cases assigned to you.</p>
+            <p><a class="nw-link--no-visited-state" href="{% url "cases" %}?assigned=none">Show unassigned cases</a>
+            <p><a class="nw-link--no-visited-state" href="{% url "cases" %}">Show all cases</a>
+        </li>
+    {% else %}
+        <li class="nw-case-list__empty"><p>There are no cases to show.</p></li>
+    {% endif %}
+ {% endfor %}
+</ul>
+
+{% if qs %}
+  {% include "cases/_pagination.html" %}
+{% endif %}

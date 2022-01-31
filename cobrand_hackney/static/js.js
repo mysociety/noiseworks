@@ -72,12 +72,44 @@ show_hide("user_pick-user", "0", ['div_id_user_pick-first_name', 'div_id_user_pi
 show_hide("user", "0", ['div_id_first_name', 'div_id_last_name', 'div_id_email', 'div_id_phone', 'div_id_address']);
 show_hide("address-address_uprn", "missing", ["div_id_address-address_manual"]);
 
-// Creating a new dropdown "Case Locations"
 construct_case_locations_dropdown();
+update_case_listing_on_change();
 
 })();
 
 // ---
+
+// Ajax updating of listing
+
+function filter_update(e) {
+    e.preventDefault();
+    var qs = new URLSearchParams(new FormData(this)).toString();
+    var url = '/cases?ajax=1&' + qs;
+    fetch(url).then(res => {
+        if (!res.ok) {
+            location.href = url;
+        }
+        return res.text();
+    }).then(text => {
+        document.querySelector('.js-case-list').innerHTML = text;
+    }).catch(err => {
+        location.href = url;
+    });
+}
+
+function update_case_listing_on_change() {
+    var form = document.querySelector('.case-filters form');
+    if (!form) {
+        return;
+    }
+    if (('fetch' in window) && ('FormData' in window) && ('URLSearchParams' in window)) {
+        form.addEventListener('change', filter_update);
+        form.addEventListener('submit', filter_update);
+        document.querySelector('.case-filters input[type=submit]').style.display = "none";
+    }
+}
+
+// Case locations dropdown
 
 function same_contents(a, b) {
     var checked_values = [];
