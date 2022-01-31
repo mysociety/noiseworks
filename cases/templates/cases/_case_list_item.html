@@ -4,6 +4,7 @@
     <a href="{% url 'case-view' case.id %}" class="case-list__title nw-link--no-visited-state">
         {{ case.kind_display }} at {{ case.location_display }}
     </a>
+  {% if not case.merged_into %}
     <dl class="nw-summary-list govuk-summary-list--no-border">
         <div class="govuk-summary-list__row">
             <dt class="govuk-summary-list__key">Complaints</dt>
@@ -29,4 +30,5 @@
             <dd class="govuk-summary-list__value">{{ case.assigned|default:"No-one" }}</dd>
         </div>
     </dl>
+  {% endif %}
 </li>
