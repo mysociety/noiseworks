@@ -35,6 +35,18 @@ def test_authenticate(client):
     assert urlparse(qs["redirect_uri"][0]).path == "/oauth/verify"
 
 
+def test_oauth_bad_state(client, requests_mock):
+    response = client.get("/oauth/authenticate")
+    qs = parse_qs(urlparse(response.url).query)
+    token = _gen_token(qs["nonce"][0], "example.org")
+    requests_mock.post("https://i.b/token", json=token)
+    # If you opened the link in a different browser, it would be the client
+    # state that differed, but this tests the same thing
+    response = client.get("/oauth/verify", {"state": "different", "code": "foo"})
+    assert response.status_code == 403
+    assert b"error logging you in" in response.content
+
+
 def test_oauth_bad_domain(client, requests_mock):
     response = client.get("/oauth/authenticate")
     qs = parse_qs(urlparse(response.url).query)

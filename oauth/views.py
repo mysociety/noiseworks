@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model, login
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from authlib.integrations.base_client import MismatchingStateError
 from authlib.integrations.django_client import OAuth
 
 CONF_URL = "https://accounts.google.com/.well-known/openid-configuration"
@@ -26,7 +27,11 @@ def authenticate(request):
 
 def verify(request):
     client = oauth.google
-    token = client.authorize_access_token(request)
+    try:
+        token = client.authorize_access_token(request)
+    except MismatchingStateError:
+        return render(request, "oauth/error.html", status=403)
+
     userinfo = token["userinfo"]
     if (
         userinfo["aud"] != client.client_id

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Error</h1>
+
+<p>There was an error logging you in – for security reasons, please make sure
+you are using the same browser where you clicked the staff sign-in link.</p>
+
+<aside class="nw-staff-signin">
+    <a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a>
+</aside>
+
+{% endblock %}
