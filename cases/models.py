@@ -71,6 +71,7 @@ class CaseManager(models.Manager):
 
         actions = Action.objects.filter(case__in=case_ids).order_by("-created")
         actions_by_case = self.prefetch_timeline_part(merge_map, actions, "case_id")
+        merged_intos = Case.objects.get_merged_into_cases(qs)
 
         complaints = (
             Complaint.objects.filter(case__in=case_ids)
@@ -91,6 +92,31 @@ class CaseManager(models.Manager):
             case.actions_reversed = actions_by_case.get(case.id, [])
             case.all_complaints_reversed = complaints_by_case.get(case.id, [])
             case.historical_entries = histories_by_case.get(case.id, [])
+            case.merged_into_list = merged_intos.get(case.id)
+
+    def get_merged_into_cases(self, cases):
+        """Given a list of Case IDs, returns a dict mapping those Cases into
+        ones they have been merged into."""
+        case_ids = map(lambda x: str(x.id), cases)
+        case_ids = ",".join(case_ids)
+        if not case_ids:
+            return {}
+        query = Action.objects.raw(
+            """WITH RECURSIVE cte AS (
+                SELECT s.id,s.created,s.case_old_id,s.case_id FROM cases_action s WHERE s.case_old_id IN (%s)
+                UNION
+                SELECT s.id,s.created,cte.case_old_id,s.case_id FROM cte JOIN cases_action s ON cte.case_id = s.case_old_id
+            )
+            SELECT * FROM cte """
+            % case_ids,
+        )
+
+        merge_map = {c.id: [] for c in cases}
+        for action in query:
+            merge_map[action.case_old_id].append(
+                {"id": action.case_id, "at": action.created}
+            )
+        return merge_map
 
 
 class Case(AbstractModel):
@@ -237,20 +263,8 @@ class Case(AbstractModel):
     @cached_property
     def merged_into_list(self) -> list:
         """Return a list of the IDs of the Cases that this has been merged into, if any."""
-        query = Action.objects.raw(
-            """WITH RECURSIVE cte AS (
-                SELECT id,created,case_old_id,case_id FROM cases_action WHERE case_old_id = %s
-                UNION
-                SELECT s.id,s.created,s.case_old_id,s.case_id FROM cte JOIN cases_action s ON cte.case_id = s.case_old_id
-            )
-            SELECT * FROM cte """,
-            [self.id],
-        )
-
-        merged = []
-        for action in query:
-            merged.append({"id": action.case_id, "at": action.created})
-        return merged
+        merged = Case.objects.get_merged_into_cases([self])
+        return merged[self.id]
 
     @cached_property
     def merged_into(self):
