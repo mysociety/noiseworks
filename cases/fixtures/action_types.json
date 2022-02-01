@@ -24,5 +24,6 @@
     {"model": "cases.actiontype", "pk": 23, "fields": {"name": "Visit", "common": false, "visibility": "staff"}},
     {"model": "cases.actiontype", "pk": 24, "fields": {"name": "Email (other)", "common": false, "visibility": "staff"}},
     {"model": "cases.actiontype", "pk": 25, "fields": {"name": "Telephone call (other)", "common": false, "visibility": "staff"}},
-    {"model": "cases.actiontype", "pk": 26, "fields": {"name": "ASB Team note", "common": false, "visibility": "staff"}}
+    {"model": "cases.actiontype", "pk": 26, "fields": {"name": "ASB Team note", "common": false, "visibility": "staff"}},
+    {"model": "cases.actiontype", "pk": 27, "fields": {"name": "Internal notes", "common": false, "visibility": "staff"}}
 ]
