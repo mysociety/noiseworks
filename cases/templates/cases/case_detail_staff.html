@@ -263,6 +263,10 @@ var nw = nw || {};
 
 <h2 class="lbh-heading-h2 section-heading">Timeline</h2>
 
+<div class="nw-button-bar govuk-!-margin-top-0">
+    <button id="js-expand-toggle" class="nw-button nw-button--secondary nw-button--small">Expand all</button>
+</div>
+
 <ol class="lbh-timeline">
 <!-- lbh-timeline__event- -action-needed (grey box) -major (black filled) -minor (small filled) -gap-below (dotted line) -->
   {% if not case.merged_into %}

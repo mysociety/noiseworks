@@ -74,6 +74,7 @@ show_hide("address-address_uprn", "missing", ["div_id_address-address_manual"]);
 
 construct_case_locations_dropdown();
 update_case_listing_on_change();
+expand_all_toggle();
 
 })();
 
@@ -222,5 +223,24 @@ function construct_case_locations_dropdown() {
             }
             document.querySelector('input[name="ward"][value="' + inputArea.value + '"]').checked = true;
         }
+    });
+}
+
+function expand_all_toggle() {
+    var toggle = document.querySelector('#js-expand-toggle');
+    toggle && toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        var expand;
+        if (e.target.innerText === "Expand all") {
+            e.target.innerText = "Collapse all";
+            expand = true;
+        } else {
+            e.target.innerText = "Expand all";
+            expand = false;
+        }
+        var details = document.querySelectorAll('details');
+        [].forEach.call(details, function(obj, idx) {
+            obj.open = expand;
+        });
     });
 }
