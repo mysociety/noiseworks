@@ -3,7 +3,12 @@
 
 {% block content %}
 
+<div style="position:relative">
 <h1>Cases</h1>
+<a data-timestamp="{% now "U" %}" id="js-new-updates-link" href="" hidden><span style="position:absolute;top:0;right:0;" class="nw-tag nw-tag--warning">
+    <span id="js-new-updates"></span>
+</span></a>
+</div>
 
 <div class="govuk-grid-row">
     <div class="govuk-grid-column-one-third">

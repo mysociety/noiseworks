@@ -75,6 +75,7 @@ show_hide("address-address_uprn", "missing", ["div_id_address-address_manual"]);
 construct_case_locations_dropdown();
 update_case_listing_on_change();
 expand_all_toggle();
+show_case_list_updated();
 
 })();
 
@@ -243,4 +244,29 @@ function expand_all_toggle() {
             obj.open = expand;
         });
     });
+}
+
+function check_for_updates() {
+    var form = document.querySelector('.case-filters form');
+    var link = document.getElementById('js-new-updates-link');
+    var num = document.getElementById('js-new-updates');
+    var qs = new URLSearchParams(new FormData(form)).toString();
+    var time = link.getAttribute("data-timestamp");
+    var url = '/cases?updates=' + time + '&' + qs;
+    fetch(url).then(res => {
+        return res.text();
+    }).then(text => {
+        num.innerText = text;
+        if (text) {
+            link.hidden = false;
+        } else {
+            link.hidden = true;
+        }
+        setTimeout(check_for_updates, 30000);
+    }).catch(err => {
+    });
+}
+
+function show_case_list_updated() {
+    setTimeout(check_for_updates, 30000);
 }

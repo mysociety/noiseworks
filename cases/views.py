@@ -12,6 +12,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from formtools.wizard.views import NamedUrlSessionWizardView
@@ -70,6 +71,22 @@ def case_list_staff(request):
     qs = paginator.get_page(page_number)
 
     Case.objects.prefetch_timeline(qs)
+
+    if request.GET.get("updates"):
+        updates = 0
+        time = int(request.GET.get("updates"))
+        for case in qs:
+            if case.modified.timestamp() > time:
+                updates += 1
+        if updates == 20:
+            updates = "20+ updates"
+        elif updates == 1:
+            updates = "1 update"
+        elif updates == 0:
+            updates = ""
+        else:
+            updates = f"{updates} updates"
+        return HttpResponse(updates)
 
     template = "cases/case_list_staff.html"
     if request.GET.get("ajax"):
