@@ -436,10 +436,9 @@ class Case(AbstractModel):
         return list(complaints)
 
     @property
-    def last_action(self):
+    def last_update(self):
         for event in self.timeline_staff:
-            if "complaint" not in event:
-                return event["action"]
+            return event
         return None
 
     @property
