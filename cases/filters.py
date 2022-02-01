@@ -56,9 +56,25 @@ class CaseFilter(django_filters.FilterSet):
         self.filters["kind"].label = "Noise type"
         self.filters["where"].label = "Noise location type"
         self.filters["estate"].label = "Hackney Estates property?"
+
+        assignees = (
+            Case.objects.filter(assigned__isnull=False)
+            .values("assigned__first_name", "assigned__last_name", "assigned")
+            .distinct()
+            .order_by("assigned__first_name", "assigned__last_name")
+        )
+        ids = set()
+        for assignee in assignees:
+            id = assignee["assigned"]
+            name = (
+                f"{assignee['assigned__first_name']} {assignee['assigned__last_name']}"
+            )
+            self.filters["assigned"].extra["choices"].append((id, name))
+            ids.add(id)
         try:
             user = User.objects.get(id=data.get("assigned", ""))
-            self.filters["assigned"].extra["choices"].append((user.id, user))
+            if user.id not in ids:
+                self.filters["assigned"].extra["choices"].append((user.id, user))
         except (User.DoesNotExist, ValueError):
             pass
         uprn = data.get("uprn")
