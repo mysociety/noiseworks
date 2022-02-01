@@ -48,9 +48,9 @@ def case_destination(case):
         email = emails["outside"]
     elif case.where == "business":
         email = emails["business"]
-    elif case.estate == "n":
-        email = emails["housing"]
-    else:  # So yes and don't know treated the same
+    elif case.estate == "y":
         email = emails["hackney-housing"]
+    else:  # So no and don't know treated the same
+        email = emails["housing"]
     email = email.split(",")
     return email

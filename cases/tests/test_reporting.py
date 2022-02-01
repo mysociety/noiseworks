@@ -256,7 +256,7 @@ def test_user_case_creation(
     resp = post_step("kind", {"kind": "other", "kind_other": "Other " * 20})
     assertContains(resp, "at most 100 characters")
     post_step("kind", {"kind": "other", "kind_other": "Other"})
-    post_step("where", {"where": "residence", "estate": "n"})
+    post_step("where", {"where": "residence", "estate": "?"})
     post_step("where-location", {"search": "Foobar1"})
 
     # Couple of non-JS requests in here to test that
@@ -306,6 +306,7 @@ def test_user_case_creation(
         assert case.created_by_id == normal_user.id
 
     assert len(mail.outbox) == 2
+    assert len(mail.outbox[0].to) == 1
     for r in range(2):
         email = mail.outbox[r]
         assert "new noise report has been submitted" in email.body
