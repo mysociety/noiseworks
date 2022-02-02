@@ -248,19 +248,18 @@ function expand_all_toggle() {
 
 function check_for_updates() {
     var form = document.querySelector('.case-filters form');
-    var link = document.getElementById('js-new-updates-link');
-    var num = document.getElementById('js-new-updates');
+    var announcement = document.getElementById('js-new-updates-announcement');
     var qs = new URLSearchParams(new FormData(form)).toString();
-    var time = link.getAttribute("data-timestamp");
+    var time = announcement.getAttribute("data-timestamp");
     var url = '/cases?updates=' + time + '&' + qs;
     fetch(url).then(res => {
         return res.text();
     }).then(text => {
-        num.innerText = text;
+        announcement.firstElementChild.innerText = text;
         if (text) {
-            link.hidden = false;
+            announcement.hidden = false;
         } else {
-            link.hidden = true;
+            announcement.hidden = true;
         }
         setTimeout(check_for_updates, 30000);
     }).catch(err => {
