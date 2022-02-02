@@ -1,3 +1,34 @@
+.nw-button {
+    @extend .govuk-button;
+    @extend .lbh-button;
+}
+
+.nw-button--secondary {
+    @extend .govuk-button--secondary;
+    // This is a copy of the SASS for button--secondary
+    // due to https://github.com/sass/libsass/issues/3162
+    &, &:link, &:visited {
+        @include lbh-rem(padding, 13, 22, 11);
+        border: 1px solid lbh-colour("lbh-a01");
+        color: lbh-colour("lbh-a01");
+        background: lbh-colour("lbh-white");
+
+        &:hover {
+            color: lbh-colour("lbh-white");
+            background: lbh-colour("lbh-primary-button");
+        }
+
+        &:disabled,
+        &.lbh-button--disabled,
+        &:hover[disabled],
+        &.lbh-button--disabled:hover {
+            opacity: 1;
+            color: lbh-colour("lbh-grey-1");
+            background: lbh-colour("lbh-secondary-disabled");
+        }
+    }
+}
+
 .nw-button-bar {
     @include govuk-media-query($from: tablet) {
         display: flex;
