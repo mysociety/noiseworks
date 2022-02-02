@@ -37,13 +37,18 @@
 }
 
 .nw-button-bar {
-    @include govuk-media-query($from: tablet) {
-        display: flex;
-        flex-wrap: wrap;
-        margin: 2rem -0.5rem -0.5rem -0.5rem;
+    display: flex;
+    flex-direction: column;
+    margin: 1.5rem -0.5rem -0.5rem -0.5rem;
 
-        & > * {
-            margin: 0.5rem;
-        }
+    & > * {
+        margin: 0.5rem;
+        width: auto;
+    }
+
+    @include govuk-media-query($from: tablet) {
+        flex-wrap: wrap;
+        flex-direction: row;
+        margin-top: 2rem;
     }
 }
