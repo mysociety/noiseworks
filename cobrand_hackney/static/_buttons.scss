@@ -29,6 +29,13 @@
     }
 }
 
+.nw-button--small {
+    &, &:link, &:visited {
+        font-size: 1rem;
+        padding: 0.3rem 0.9em;
+    }
+}
+
 .nw-button-bar {
     @include govuk-media-query($from: tablet) {
         display: flex;
