@@ -58,13 +58,17 @@ class PersonPickForm(GDSForm, forms.Form):
             existing_user = User.objects.check_existing(email, phone)
             if existing_user:
                 ch = self.fields["user"].choices
+                found = False
                 for i, c in enumerate(list(ch)):
                     if c[0] == existing_user.id:
+                        found = True
                         ch.pop(i)
                         ch.insert(
                             0,
                             (c[0], mark_safe(format_html(f"<strong>{c[1]}</strong>"))),
                         )
+                if not found:
+                    ch.insert(0, (existing_user.id, str(existing_user)))
                 raise forms.ValidationError(
                     "There is an existing user with those details (highlighted first below), please pick or change the details you entered"
                 )
