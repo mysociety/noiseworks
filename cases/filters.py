@@ -97,7 +97,7 @@ class CaseFilter(django_filters.FilterSet):
         for i, v in list(enumerate(value)):
             for group in cobrand.api.ward_groups():
                 if group["id"] == v:
-                    value[i:i+1] = group["wards"]
+                    value[i : i + 1] = group["wards"]
         return queryset.filter(ward__in=value)
 
     def search_filter(self, queryset, name, value):

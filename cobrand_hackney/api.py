@@ -249,7 +249,7 @@ def _distanceToLine(pt, start, end):
         along = 0
     else:
         along = ((dx * (pt.x - start[0])) + (dy * (pt.y - start[1]))) / (
-            dx ** 2 + dy ** 2
+            dx**2 + dy**2
         )
     along = max(0, min(1, along))
     fx = start[0] + along * dx

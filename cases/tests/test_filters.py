@@ -67,7 +67,9 @@ def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     assertContains(response, f"/cases/{case_1.id}")
 
 
-def test_assigned_filter_not_assigned_anything(admin_client, admin_user, case_1, case_location):
+def test_assigned_filter_not_assigned_anything(
+    admin_client, admin_user, case_1, case_location
+):
     response = admin_client.get(f"/cases?assigned={case_1.created_by.id}")
     assertNotContains(response, f"/cases/{case_1.id}")
 
