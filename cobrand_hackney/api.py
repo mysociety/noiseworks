@@ -78,6 +78,44 @@ def _addresses_api(params):
     return {"addresses": addresses}
 
 
+def ward_groups():
+    return (
+        {
+            "id": "north",
+            "name": "North",
+            "wards": [
+                "E05009367",
+                "E05009368",
+                "E05009369",
+                "E05009373",
+                "E05009380",
+                "E05009382",
+                "E05009383",
+                "E05009384",
+                "E05009385",
+                "E05009387",
+            ],
+        },
+        {
+            "id": "south",
+            "name": "South",
+            "wards": [
+                "E05009370",
+                "E05009371",
+                "E05009372",
+                "E05009374",
+                "E05009375",
+                "E05009376",
+                "E05009377",
+                "E05009378",
+                "E05009379",
+                "E05009381",
+                "E05009386",
+            ],
+        },
+    )
+
+
 def wards():
     return (
         {"id": 144390, "gss": "E05009367", "name": "Brownswood"},
@@ -211,7 +249,7 @@ def _distanceToLine(pt, start, end):
         along = 0
     else:
         along = ((dx * (pt.x - start[0])) + (dy * (pt.y - start[1]))) / (
-            dx ** 2 + dy ** 2
+            dx**2 + dy**2
         )
     along = max(0, min(1, along))
     fx = start[0] + along * dx

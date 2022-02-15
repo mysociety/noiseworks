@@ -10,6 +10,7 @@ def param_replace(context, **kwargs):
     parameters, only with the specified parameters added or changed.
     """
     d = context["request"].GET.copy()
+    d.pop("ajax", None)
     for k, v in kwargs.items():
         if v == "":
             d.pop(k, None)

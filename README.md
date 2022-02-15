@@ -61,7 +61,7 @@ image was last built, you’ll need to rebuild the image:
 
 2. Ensure you have a `MAPIT_API_KEY` in your `.env` file.
 
-3. Run `./manage.py loaddata action_types`
+3. Run `./manage.py loaddata action_types_hackney`
 
 4. Run `./manage.py add_random_cases --uprns UPRN_FILE --number 100 --commit`
 

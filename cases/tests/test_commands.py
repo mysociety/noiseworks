@@ -9,7 +9,7 @@ from cases.management.commands.export_data import client
 
 @pytest.fixture
 def call_params(db, capsys, monkeypatch):
-    call_command("loaddata", "action_types")
+    call_command("loaddata", "action_types_hackney")
     uprns = "1\n2\n3\n4"
     monkeypatch.setattr("builtins.open", lambda x: mock_open(read_data=uprns)())
     return {"uprns": "uprns.csv", "fixed": True}

@@ -22,5 +22,7 @@
 }
 
 .nw-link--no-visited-state {
-    @extend .lbh-link--no-visited-state;
+    &:visited {
+        color: lbh-colour("lbh-link") !important;
+    }
 }

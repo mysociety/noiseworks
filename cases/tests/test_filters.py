@@ -67,6 +67,13 @@ def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     assertContains(response, f"/cases/{case_1.id}")
 
 
+def test_assigned_filter_not_assigned_anything(
+    admin_client, admin_user, case_1, case_location
+):
+    response = admin_client.get(f"/cases?assigned={case_1.created_by.id}")
+    assertNotContains(response, f"/cases/{case_1.id}")
+
+
 def test_ward_filter(admin_client, admin_user, case_1):
     admin_user.wards = ["E05009374"]
     admin_user.save()
@@ -82,8 +89,15 @@ def test_ward_filter(admin_client, admin_user, case_1):
     assertContains(response, f"/cases/{case_1.id}")
 
 
+def test_ward_group_filter(admin_client, admin_user, case_1):
+    response = admin_client.get("/cases?ward=south")
+    assertNotContains(response, f"/cases/{case_1.id}")
+    response = admin_client.get("/cases?ward=north")
+    assertContains(response, f"/cases/{case_1.id}")
+
+
 def test_search(admin_client, case_1):
-    resp = admin_client.get("/cases?search=fireworks")
+    resp = admin_client.get("/cases?search=fireworks&ajax=1")
     assertContains(resp, "Fireworks")
     resp = admin_client.get(f"/cases?search={case_1.id}")
     assertContains(resp, "Fireworks")

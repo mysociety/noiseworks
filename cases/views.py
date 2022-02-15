@@ -12,8 +12,9 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from formtools.wizard.views import NamedUrlSessionWizardView
 from noiseworks import cobrand
 from noiseworks.decorators import staff_member_required
@@ -71,9 +72,26 @@ def case_list_staff(request):
 
     Case.objects.prefetch_timeline(qs)
 
+    if request.GET.get("updates"):
+        updates = 0
+        time = int(request.GET.get("updates"))
+        for case in qs:
+            if case.modified.timestamp() > time:
+                updates += 1
+        if updates == 20:
+            updates = "20+ updates"
+        elif updates == 0:
+            updates = ""
+        else:
+            updates = translation.ngettext(f"{updates} update", f"{updates} updates", updates)
+        return HttpResponse(updates)
+
+    template = "cases/case_list_staff.html"
+    if request.GET.get("ajax"):
+        template = "cases/_case_list_staff_list.html"
     return render(
         request,
-        "cases/case_list_staff.html",
+        template,
         {
             "filter": f,
             "qs": qs,

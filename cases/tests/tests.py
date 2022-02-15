@@ -172,10 +172,25 @@ def test_complaint_bad_case(admin_client, case_other_uprn, complaint):
     assert response.status_code == 302
 
 
+def test_list_update(admin_client):
+    field = Case._meta.get_field("modified")
+    field.auto_now = False
+    c1 = Case.objects.create(modified="2022-02-02T02:02:02Z")
+    c2 = Case.objects.create(modified="2022-02-02T22:22:22Z")
+    response = admin_client.get(f"/cases?updates=1643889600")
+    assert response.content == b""
+    response = admin_client.get(f"/cases?updates=1643803200")
+    assert response.content == b"1 update"
+
+
 def test_param_replace():
     request = HttpRequest()
     request.GET.update({"param": "value", "page": 10, "delete": "yes"})
     context = Context({"request": request})
     template = Template("{% load page_filter %}{% param_replace page=123 delete='' %}")
+    rendered_template = template.render(context)
+    assert rendered_template == "param=value&amp;page=123"
+
+    request.GET.update({"ajax": 1})
     rendered_template = template.render(context)
     assert rendered_template == "param=value&amp;page=123"

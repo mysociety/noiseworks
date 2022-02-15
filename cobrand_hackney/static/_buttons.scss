@@ -1,11 +1,54 @@
-.nw-button-bar {
-    @include govuk-media-query($from: tablet) {
-        display: flex;
-        flex-wrap: wrap;
-        margin: 2rem -0.5rem -0.5rem -0.5rem;
+.nw-button {
+    @extend .govuk-button;
+    @extend .lbh-button;
+}
 
-        & > * {
-            margin: 0.5rem;
+.nw-button--secondary {
+    @extend .govuk-button--secondary;
+    // This is a copy of the SASS for button--secondary
+    // due to https://github.com/sass/libsass/issues/3162
+    &, &:link, &:visited {
+        @include lbh-rem(padding, 13, 22, 11);
+        border: 1px solid lbh-colour("lbh-a01");
+        color: lbh-colour("lbh-a01");
+        background: lbh-colour("lbh-white");
+
+        &:hover {
+            color: lbh-colour("lbh-white");
+            background: lbh-colour("lbh-primary-button");
         }
+
+        &:disabled,
+        &.lbh-button--disabled,
+        &:hover[disabled],
+        &.lbh-button--disabled:hover {
+            opacity: 1;
+            color: lbh-colour("lbh-grey-1");
+            background: lbh-colour("lbh-secondary-disabled");
+        }
+    }
+}
+
+.nw-button--small {
+    &, &:link, &:visited {
+        font-size: 1rem;
+        padding: 0.3rem 0.9em;
+    }
+}
+
+.nw-button-bar {
+    display: flex;
+    flex-direction: column;
+    margin: 1.5rem -0.5rem -0.5rem -0.5rem;
+
+    & > * {
+        margin: 0.5rem;
+        width: auto;
+    }
+
+    @include govuk-media-query($from: tablet) {
+        flex-wrap: wrap;
+        flex-direction: row;
+        margin-top: 2rem;
     }
 }

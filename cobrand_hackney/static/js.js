@@ -72,12 +72,46 @@ show_hide("user_pick-user", "0", ['div_id_user_pick-first_name', 'div_id_user_pi
 show_hide("user", "0", ['div_id_first_name', 'div_id_last_name', 'div_id_email', 'div_id_phone', 'div_id_address']);
 show_hide("address-address_uprn", "missing", ["div_id_address-address_manual"]);
 
-// Creating a new dropdown "Case Locations"
 construct_case_locations_dropdown();
+update_case_listing_on_change();
+expand_all_toggle();
+show_case_list_updated();
 
 })();
 
 // ---
+
+// Ajax updating of listing
+
+function filter_update(e) {
+    e.preventDefault();
+    var qs = new URLSearchParams(new FormData(this)).toString();
+    var url = '/cases?ajax=1&' + qs;
+    fetch(url).then(res => {
+        if (!res.ok) {
+            location.href = url;
+        }
+        return res.text();
+    }).then(text => {
+        document.querySelector('.js-case-list').innerHTML = text;
+    }).catch(err => {
+        location.href = url;
+    });
+}
+
+function update_case_listing_on_change() {
+    var form = document.querySelector('.case-filters form');
+    if (!form) {
+        return;
+    }
+    if (('fetch' in window) && ('FormData' in window) && ('URLSearchParams' in window)) {
+        form.addEventListener('change', filter_update);
+        form.addEventListener('submit', filter_update);
+        document.querySelector('.case-filters input[type=submit]').style.display = "none";
+    }
+}
+
+// Case locations dropdown
 
 function same_contents(a, b) {
     var checked_values = [];
@@ -119,7 +153,19 @@ function construct_case_locations_dropdown() {
     var caseLocationDiv = document.createElement('div');
     caseLocationDiv.className = 'govuk-form-group lbh-form-group';
     caseLocationDiv.id = 'div_id_case_location';
-    caseLocationDiv.innerHTML = '<label for="id_case_location" class="govuk-label lbh-label">Case location</label>' + '<select class="govuk-select lbh-select" id="id_case_location"> <option value="all_areas" selected>All wards</option>' + my_cases_option + '<option value="selected_areas">Selected wards</option> <option value="outside_hackney">Outside Hackney</option> </select> ';
+
+    var extra_options = [];
+    var extra_options_text = '';
+    for (var i = 0; i < inputs.length; i++) {
+        var val = inputs[i].value;
+        if (!val.match(/[EWSN]\d{8}/)) {
+            var label = document.querySelector('label[for=' + inputs[i].id + ']');
+            extra_options_text += '<option value="' + val + '">' + label.innerText + '</option>';
+            extra_options.push(val);
+        }
+    }
+
+    caseLocationDiv.innerHTML = '<label for="id_case_location" class="govuk-label lbh-label">Case location</label>' + '<select class="govuk-select lbh-select" id="id_case_location"> <option value="all_areas" selected>All wards</option>' + my_cases_option + '<option value="selected_areas">Selected wards</option>' + extra_options_text + ' </select> ';
 
     // Defining the div that contains all the ward checkboxes
     var area = document.getElementById("div_id_ward");
@@ -130,20 +176,25 @@ function construct_case_locations_dropdown() {
 
     // Defining the rest of the variables
     var inputArea = document.getElementById("id_case_location");
-    var outsideHackney = document.querySelector('input[name="ward"][value="outside"]');
     var myAreasCheckboxChecked = document.querySelectorAll('.govuk-checkboxes__input:checked');
     var myAreasCheckbox = document.querySelectorAll('.govuk-checkboxes__input');
     area.style.display = "none";
 
     // Whenever there is at least one checkbox checked the filter will select by default "selected areas"
     // and will display all the checkboxes.
-    if (outsideHackney.checked == true && myAreasCheckboxChecked.length == 1) {
-        inputArea.value = 'outside_hackney';
-    } else if (myAreasCheckboxChecked.length == myAreasCheckbox.length || myAreasCheckboxChecked.length == 0 ) {
+    var found = false;
+    for (var i=0; i<extra_options.length; i++) {
+        if (document.querySelector('input[name="ward"][value="' + extra_options[i] + '"]').checked == true && myAreasCheckboxChecked.length == 1) {
+            inputArea.value = extra_options[i];
+            found = true;
+        }
+    }
+
+    if (myAreasCheckboxChecked.length == myAreasCheckbox.length || myAreasCheckboxChecked.length == 0 ) {
         inputArea.value = 'all_areas';
     } else if (myAreasCheckboxChecked.length == nw.user_wards.length && same_contents(myAreasCheckboxChecked, nw.user_wards)) {
         inputArea.value = 'my_areas';
-    } else {
+    } else if (!found) {
         inputArea.value = 'selected_areas';
         area.style.display = "block";
     }
@@ -155,12 +206,6 @@ function construct_case_locations_dropdown() {
             for (var i = 0; i < inputs.length; i++) {
                 inputs[i].checked = false;
             }
-        } else if (inputArea.value =="outside_hackney") {
-            // Outside hackney
-            for (var i = 0; i < inputs.length; i++) {
-                inputs[i].checked = false;
-            }
-            outsideHackney.checked = true;
         } else if (inputArea.value == 'selected_areas') {
             // selected areas. The checkboxes will become unchecked
             for (var i = 0; i < inputs.length; i++) {
@@ -172,6 +217,55 @@ function construct_case_locations_dropdown() {
                 var my_area = nw.user_wards.indexOf(inputs[i].value) > -1;
                 inputs[i].checked = my_area;
             }
+        } else {
+            // Special e.g. outside, north/south
+            for (var i = 0; i < inputs.length; i++) {
+                inputs[i].checked = false;
+            }
+            document.querySelector('input[name="ward"][value="' + inputArea.value + '"]').checked = true;
         }
     });
+}
+
+function expand_all_toggle() {
+    var toggle = document.querySelector('#js-expand-toggle');
+    toggle && toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        var expand;
+        if (e.target.innerText === "Expand all") {
+            e.target.innerText = "Collapse all";
+            expand = true;
+        } else {
+            e.target.innerText = "Expand all";
+            expand = false;
+        }
+        var details = document.querySelectorAll('details');
+        [].forEach.call(details, function(obj, idx) {
+            obj.open = expand;
+        });
+    });
+}
+
+function check_for_updates() {
+    var form = document.querySelector('.case-filters form');
+    var announcement = document.getElementById('js-new-updates-announcement');
+    var qs = new URLSearchParams(new FormData(form)).toString();
+    var time = announcement.getAttribute("data-timestamp");
+    var url = '/cases?updates=' + time + '&' + qs;
+    fetch(url).then(res => {
+        return res.text();
+    }).then(text => {
+        announcement.firstElementChild.innerText = text;
+        if (text) {
+            announcement.hidden = false;
+        } else {
+            announcement.hidden = true;
+        }
+        setTimeout(check_for_updates, 30000);
+    }).catch(err => {
+    });
+}
+
+function show_case_list_updated() {
+    setTimeout(check_for_updates, 30000);
 }
