@@ -82,7 +82,7 @@ def test_random_command_no_mapit(requests_mock, mock_things, db, call_params):
 
 def test_random_command(mock_things, db, call_params):
     # Calling without commit does still save some things to the database at present
-    call_command("add_random_cases", number=11, **call_params)
+    call_command("add_random_cases", number=12, **call_params)
 
 
 def test_random_command_commit(mock_things, db, call_params):

@@ -131,6 +131,7 @@ class Case(AbstractModel):
         ("music-pub", "Music from pub"),
         ("music-club", "Music from club/bar"),
         ("music-other", "Music - other"),
+        ("festival", "Noise caused by Religious Festivals"),
         ("roadworks", "Noise from roadworks"),
         ("road", "Noise on the road"),
         ("plant-machinery", "Plant noise - machinery"),
