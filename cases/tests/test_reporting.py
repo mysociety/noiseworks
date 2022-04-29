@@ -153,6 +153,22 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     admin_client.get(f"/cases/add/summary")
 
 
+def test_staff_case_creation_existing_user(admin_client, normal_user, mocks):
+    post_step = partial(_post_step, admin_client)
+    admin_client.get(f"/cases/add/begin")
+    post_step("user_search", {"search": "Something with no results"})
+    params = {
+        "search": "Something with no results",
+        "user": "0",
+        "first_name": "Normal",
+        "last_name": "User",
+        "email": "normal@example.org",
+    }
+    post_step("user_pick", params)
+    resp = post_step("user_pick", dict(params, user=normal_user.id), follow=True)
+    assertNotContains(resp, 'Select a valid choice.')
+
+
 def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user, mocks):
     """Picks new user, map based source"""
     post_step = partial(_post_step, admin_client)

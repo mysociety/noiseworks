@@ -38,6 +38,14 @@ class PersonPickForm(GDSForm, forms.Form):
             choices = list(map(lambda x: (x.id, str(x)), choices))
         else:
             choices = []
+
+        data = kwargs.get('data', {}) or {}
+        email = data.get('user_pick-email')
+        phone = data.get('user_pick-phone')
+        existing_user = User.objects.check_existing(email, phone)
+        if existing_user:
+            choices.insert(0, (existing_user.id, str(existing_user)))
+
         choices.append((0, "None, details below"))
         self.fields["user"].choices = choices
         if len(choices) == 1:
