@@ -41,7 +41,9 @@ def case_1(db, staff_user, normal_user):
 
 @pytest.fixture
 def case_location(db):
-    return Case.objects.create(kind="diy", point=Point(470267, 122766), radius=100)
+    return Case.objects.create(
+        kind="diy", point=Point(470267, 122766), radius=100, location_cache="Location"
+    )
 
 
 def test_list(admin_client, case_1):
