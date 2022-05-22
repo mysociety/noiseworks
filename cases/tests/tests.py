@@ -1,7 +1,9 @@
 import datetime
+import re
 from unittest.mock import patch
 import pytest
 from pytest_django.asserts import assertContains, assertNotContains
+from django.contrib.gis.geos import Point
 from django.template import Context, Template
 from django.http import HttpRequest
 from django.utils.timezone import make_aware
@@ -183,3 +185,11 @@ def test_param_replace():
     request.GET.update({"ajax": 1})
     rendered_template = template.render(context)
     assert rendered_template == "param=value&amp;page=123"
+
+
+def test_wfs_server_down(requests_mock):
+    requests_mock.get(re.compile("point/27700"), json={})
+    requests_mock.get(re.compile("greenspaces/ows"), text="Error")
+    requests_mock.get(re.compile("transport/ows"), text="Error")
+    case = Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
+    assert case.location_display == "800m around (470267,122766)"

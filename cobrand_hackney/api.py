@@ -1,3 +1,4 @@
+import json
 import math
 import sys
 import requests
@@ -156,7 +157,10 @@ def in_a_park(pt):
             "filter": filter,
         },
     )
-    data = r.json()
+    try:
+        data = r.json()
+    except json.JSONDecodeError:
+        return False
     name = False
     if data["features"]:
         name = data["features"][0]["properties"]
@@ -179,7 +183,10 @@ def nearest_roads(pt):
             "filter": filter,
         },
     )
-    data = r.json()
+    try:
+        data = r.json()
+    except json.JSONDecodeError:
+        return ""
     data = _sorted_by_distance(pt, data["features"])
     data = data[:2]
     data = map(lambda x: x["properties"]["name"].title() or "Unknown road", data)

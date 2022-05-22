@@ -1,7 +1,14 @@
 import re
+from django.contrib.gis.geos import Point
 import pytest
 from pytest_django.asserts import assertContains
-from .api import address_for_uprn, addresses_for_postcode, addresses_for_string
+from .api import (
+    address_for_uprn,
+    addresses_for_postcode,
+    addresses_for_string,
+    in_a_park,
+    nearest_roads,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -81,3 +88,11 @@ def test_addresses_api_uprn(requests_mock, make_api_result):
 def test_addresses_api_street(requests_mock, make_api_result):
     requests_mock.get(re.compile(r"street=test\+street"), json=make_api_result())
     assert len(addresses_for_string("test street")) == 1
+
+
+def test_wfs_server_down(requests_mock):
+    requests_mock.get(re.compile("greenspaces/ows"), text="Error")
+    requests_mock.get(re.compile("transport/ows"), text="Error")
+    pt = Point(1, 2)
+    in_a_park(pt)
+    nearest_roads(pt)
