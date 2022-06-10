@@ -64,6 +64,16 @@ def test_addresses_api(requests_mock, make_api_result):
     assert len(addresses_for_postcode("E81DY")) == 1
 
 
+def test_addresses_api_error(requests_mock):
+    requests_mock.get(re.compile("uprn=1234"), text="Error")
+    assert address_for_uprn("1234") == {
+        "string": "",
+        "ward": "",
+    }
+    requests_mock.get(re.compile("postcode=1234"), text="Error")
+    assert "error" in addresses_for_postcode("1234")
+
+
 def test_addresses_api_uprn_blank(requests_mock):
     requests_mock.get(
         re.compile("uprn=1234"),

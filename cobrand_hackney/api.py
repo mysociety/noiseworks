@@ -27,7 +27,10 @@ def construct_address(address, include_postcode=False):
 
 def address_for_uprn(uprn):
     r = session.get(api["url"], params={"uprn": uprn, "format": "detailed"})
-    data = r.json()
+    try:
+        data = r.json()
+    except json.JSONDecodeError:
+        return {"string": "", "ward": ""}
     addresses = data["data"]["address"]
     if not addresses:
         return {"string": "", "ward": ""}
@@ -55,6 +58,12 @@ def _addresses_api(params):
     while page <= pages:
         params["page"] = page
         r = session.get(api["url"], params=params)
+        try:
+            data = r.json()
+        except json.JSONDecodeError:
+            return {
+                "error": "Sorry, the postcode lookup service is currently not working, please try again later."
+            }
         data = r.json()
         if "data" not in data:
             return {"error": "Sorry, did not recognise that postcode"}
