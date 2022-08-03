@@ -81,6 +81,7 @@ def action_types(db):
         ActionType.objects.create(name="Noise witnessed"),
         ActionType.objects.create(name="Abatement Notice “Section 80” served"),
         ActionType.objects.create(name="Case closed"),
+        ActionType.objects.create(name="Case reopened"),
     ]
 
 
@@ -134,6 +135,18 @@ def test_log_case_closure(admin_client, case_1, action_types):
     )
     case_1.refresh_from_db()
     assert case_1.closed == True
+
+
+def test_log_case_reopening(admin_client, case_1, action_types):
+    case_1.closed = True
+    case_1.save()
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        {"notes": "Some notes", "type": action_types[4].id},
+        follow=True,
+    )
+    case_1.refresh_from_db()
+    assert case_1.closed == False
 
 
 def test_log_form(case_1):
