@@ -11,6 +11,12 @@
     <a style="{{ button_style }}" href="{{ url }}">See case #{{ case.id }} details</a>
   </p>
 
+{% if case.closed %}
+    <p style="{{ p_style }}">
+        This has reopened the report.
+    </p>
+{% endif %}
+
   <h2 style="{{ h2_style }}">Reoccurrence details</h2>
   <p style="{{ p_style }}">
   Noise started: {{ complaint.start }}

@@ -2,6 +2,8 @@ Hi,
 
 A new noise reoccurrence has been submitted.
 
+{% if case.closed %}This has reopened the report.{% endif %}
+
 See full case details: {{ url }}
 
 Reoccurrence details:

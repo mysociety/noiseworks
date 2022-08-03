@@ -540,6 +540,10 @@ class RecurrenceWizard(LoginRequiredMixin, CaseWizard):
         )
         complaint.save()
         send_emails(self.request, complaint, "reoccurrence")
+        # Reopen a case if it was closed - do this after email so email can know if it was closed
+        if self.object.closed:
+            self.object.closed = False
+            self.object.save()
         return render(
             self.request,
             "cases/complaint_add_done.html",

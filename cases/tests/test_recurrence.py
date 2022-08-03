@@ -103,8 +103,13 @@ def test_add_complaint_now_existing_user(admin_client, case_1, normal_user, staf
     post_step("summary", {"summary-true_statement": 1}, follow=True)
 
 
-def _test_add_complaint_not_now_new_user(admin_client, case_1, normal_user, user_data):
+def _test_add_complaint_not_now_new_user(
+    admin_client, case_1, normal_user, user_data, state
+):
     post_step = partial(_post_step, admin_client, case_1)
+
+    case_1.closed = state
+    case_1.save()
 
     admin_client.get(f"/cases/{case_1.id}/complaint/add")
 
@@ -154,12 +159,19 @@ def _test_add_complaint_not_now_new_user(admin_client, case_1, normal_user, user
 
     post_step("summary", {"summary-true_statement": 1}, follow=True)
 
+    case_1.refresh_from_db()
+    assert case_1.closed == False
+
 
 def test_add_complaint_not_now_new_user_email(
     admin_client, case_1, normal_user, staff_dest
 ):
     _test_add_complaint_not_now_new_user(
-        admin_client, case_1, normal_user, {"user_pick-email": "norman@example.org"}
+        admin_client,
+        case_1,
+        normal_user,
+        {"user_pick-email": "norman@example.org"},
+        False,
     )
 
 
@@ -167,7 +179,7 @@ def test_add_complaint_not_now_new_user_phone(
     admin_client, case_1, normal_user, staff_dest
 ):
     _test_add_complaint_not_now_new_user(
-        admin_client, case_1, normal_user, {"user_pick-phone": "07900000000"}
+        admin_client, case_1, normal_user, {"user_pick-phone": "07900000000"}, True
     )
 
 
