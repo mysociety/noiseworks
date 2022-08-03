@@ -1,5 +1,8 @@
 <div class="nw-tags">
     <span class="nw-tag nw-tag--id">{{ case.id }}</span>
+  {% if case.closed %}
+    <span class="nw-tag nw-tag--closed">Closed</span>
+  {% endif %}
   {% if case.merged_into %}
     <a href="{% url 'case-view' case.merged_into %}"><span class="nw-tag nw-tag--merged">Merged into {{ case.merged_into }}</span></a>
   {% endif %}

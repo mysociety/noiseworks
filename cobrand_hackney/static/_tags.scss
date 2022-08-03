@@ -28,6 +28,10 @@
     @extend .lbh-tag--red;
 }
 
+.nw-tag--closed {
+    @extend .lbh-tag--grey;
+}
+
 .nw-case-list .nw-tag {
     font-size: 14px;
     font-size: 0.875rem;
