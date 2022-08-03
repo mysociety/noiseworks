@@ -147,3 +147,12 @@ def test_search_merged_case(admin_client):
 def test_user_ward_js_array(admin_client):
     resp = admin_client.get(f"/cases")
     assertContains(resp, "nw.user_wards = []")
+
+
+def test_closed_cases(admin_client, case_1):
+    case_1.closed = True
+    case_1.save()
+    response = admin_client.get("/cases")
+    assertNotContains(response, f"/cases/{case_1.id}")
+    response = admin_client.get("/cases?closed=on")
+    assertContains(response, f"/cases/{case_1.id}")

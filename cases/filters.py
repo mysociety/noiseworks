@@ -41,6 +41,9 @@ class CaseFilter(django_filters.FilterSet):
     )
     created = django_filters.DateRangeFilter(label="Created")
     modified = django_filters.DateRangeFilter(label="Last updated")
+    closed = django_filters.Filter(
+        label="Include closed cases", widget=forms.CheckboxInput, method="closed_filter"
+    )
 
     class Meta:
         model = Case
@@ -80,6 +83,12 @@ class CaseFilter(django_filters.FilterSet):
         uprn = data.get("uprn")
         if not uprn:
             self.filters["uprn"].extra["widget"] = forms.HiddenInput
+
+    def closed_filter(self, queryset, name, value):
+        """If ticked, want to return both"""
+        if value:
+            return queryset
+        return queryset.filter(closed=False)
 
     def assigned_filter(self, queryset, name, value):
         if value == "me":
