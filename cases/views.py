@@ -271,6 +271,12 @@ def log_action(request, pk):
     form = forms.ActionForm(request.POST or None)
     if form.is_valid():
         form.save(case=case)
+        typ, _ = ActionType.objects.get_or_create(
+            name="Case closed", defaults={"visibility": "staff"}
+        )
+        if form.cleaned_data["type"] == typ:
+            case.closed = True
+            case.save()
         return redirect(case)
     return render(
         request,

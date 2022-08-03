@@ -80,6 +80,7 @@ def action_types(db):
         ActionType.objects.create(name="Letter sent", common=True),
         ActionType.objects.create(name="Noise witnessed"),
         ActionType.objects.create(name="Abatement Notice “Section 80” served"),
+        ActionType.objects.create(name="Case closed"),
     ]
 
 
@@ -123,6 +124,16 @@ def test_log_view(admin_client, case_1, action_types):
     )
     response = admin_client.get(f"/cases?assigned=others")
     assertContains(response, "Letter sent")
+
+
+def test_log_case_closure(admin_client, case_1, action_types):
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        {"notes": "Some notes", "type": action_types[3].id},
+        follow=True,
+    )
+    case_1.refresh_from_db()
+    assert case_1.closed == True
 
 
 def test_log_form(case_1):
