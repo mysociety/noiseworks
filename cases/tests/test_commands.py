@@ -104,3 +104,25 @@ def test_export_data_s3_command(case, db, s3_stub):
         s3_stub.add_response("upload_part", service_response={"ETag": "ETag"})
         s3_stub.add_response("complete_multipart_upload", service_response={})
     call_command("export_data", s3=True, verbosity=2)
+
+
+def test_close_cases_command_bad_input(case):
+    with pytest.raises(CommandError) as excinfo:
+        call_command("close_cases")
+    assert "Please specify a number of days" == str(excinfo.value)
+
+
+def test_close_cases_command(call_params, case):
+    case2 = Case.objects.create(
+        kind="diy", ward="E05009373", created="2022-01-01T13:00:00"
+    )
+    case.created = "2021-01-01T12:00:00Z"
+    case.save()
+    case2.created = "2021-01-01T12:00:00Z"
+    case2.save()
+    call_command("close_cases", days=28, verbosity=0)
+    case.refresh_from_db()
+    assert case.closed == False
+    call_command("close_cases", days=28, commit=True)
+    case.refresh_from_db()
+    assert case.closed == True
