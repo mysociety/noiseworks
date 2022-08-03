@@ -166,6 +166,9 @@ class Case(AbstractModel):
         ("?", "Don’t know"),
     ]
 
+    # State
+    closed = models.BooleanField(default=False)
+
     # Type
     kind = models.CharField("Type", max_length=15, choices=KIND_CHOICES)
     kind_other = models.CharField("Other type", max_length=100, blank=True)
