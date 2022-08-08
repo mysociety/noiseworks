@@ -310,22 +310,6 @@ class Case(AbstractModel):
             "time": edit.history_date,
         }
 
-    def diff_against(us, self, old_history):
-        """Copy of simple history's function from their master with a tweak for editable fields only."""
-        fields = {f.name for f in old_history.instance_type._meta.fields if f.editable}
-        changes = []
-        changed_fields = []
-        old_values = model_to_dict(old_history, fields=fields)
-        current_values = model_to_dict(self, fields=fields)
-        for field in fields:
-            old_value = old_values[field]
-            current_value = current_values[field]
-            if old_value != current_value:
-                changes.append(ModelChange(field, old_value, current_value))
-                changed_fields.append(field)
-
-        return ModelDelta(changes, changed_fields, old_history, self)
-
     @cached_property
     def historical_entries(self):
         return self.history.select_related("modified_by", "assigned")
@@ -350,7 +334,7 @@ class Case(AbstractModel):
         if len(edits) > 1:
             edit = edits[0]
             for prev in edits[1:]:
-                diff = self.diff_against(edit, prev)
+                diff = edit.diff_against(prev)
                 changes = []
                 for d in diff.changes:
                     if d.field == "assigned":
