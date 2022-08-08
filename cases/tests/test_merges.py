@@ -110,12 +110,16 @@ def test_merging_case_stopping(admin_client, case, same_case):
     )
 
 
-def test_merging_cases(admin_client, case, same_case, action_types):
+def test_merging_cases(admin_client, same_case, case, action_types):
     response = admin_client.post(f"/cases/{case.id}/merge")
     response = admin_client.post(
         f"/cases/{same_case.id}/merge", {"dupe": 1}, follow=True
     )
     assertContains(response, "has been merged into")
+
+    # Check showing list of cases and last update is not 'editing'
+    response = admin_client.get(f"/cases")
+    assertNotContains(response, 'edited case details')
 
     a = Action.objects.create(
         case=same_case, notes="Internal note", type=action_types[1]

@@ -85,6 +85,7 @@ class CaseManager(models.Manager):
         histories = HistoricalCase.objects.filter(id__in=case_ids).select_related(
             "modified_by", "assigned"
         )
+        self.attach_diffs(histories)
         histories_by_case = self.prefetch_timeline_part(merge_map, histories, "id")
 
         # Set the actions for each result to the right ones
@@ -93,6 +94,18 @@ class CaseManager(models.Manager):
             case.all_complaints_reversed = complaints_by_case.get(case.id, [])
             case.historical_entries = histories_by_case.get(case.id, [])
             case.merged_into_list = merged_intos.get(case.id)
+
+    @staticmethod
+    def attach_diffs(histories):
+        histories_by_case = {}
+        for history in histories:
+            histories_by_case.setdefault(history.id, []).append(history)
+        for case_id, edits in histories_by_case.items():
+            edit = edits[0]
+            edit._cached_diff = None
+            for prev in edits[1:]:
+                prev._cached_diff = edit.diff_against(prev)
+                edit = prev
 
     def get_merged_into_cases(self, cases):
         """Given a list of Case IDs, returns a dict mapping those Cases into
@@ -312,7 +325,9 @@ class Case(AbstractModel):
 
     @cached_property
     def historical_entries(self):
-        return self.history.select_related("modified_by", "assigned")
+        histories = self.history.select_related("modified_by", "assigned")
+        Case.objects.attach_diffs(histories)
+        return histories
 
     def _timeline(self, actions, action_fn, complaints, history_to_show):
         data = []
@@ -334,7 +349,9 @@ class Case(AbstractModel):
         if len(edits) > 1:
             edit = edits[0]
             for prev in edits[1:]:
-                diff = edit.diff_against(prev)
+                diff = prev._cached_diff  # Must always be available by here
+                if not diff:
+                    continue
                 changes = []
                 for d in diff.changes:
                     if d.field == "assigned":
