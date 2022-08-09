@@ -1,4 +1,5 @@
 import datetime
+import uuid
 import random
 import re
 from django.conf import settings
@@ -767,7 +768,11 @@ class ReportingWizard(CaseWizard):
             user = picker.save()
             user = User.objects.get(id=user)
         else:
-            if self.request.user.is_authenticated:
+            # Make sure these emails always create new unverified users.
+            staff_only = settings.COBRAND_SETTINGS["staff_only_domains_re"]
+            if staff_only and re.search(staff_only, data["email"]):
+                user = User.objects.create_user()
+            elif self.request.user.is_authenticated:
                 user = self.request.user
             else:
                 user = User.objects.check_existing(data["email"])

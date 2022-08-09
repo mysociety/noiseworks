@@ -346,3 +346,49 @@ def test_error_conditions(admin_client, mocks):
     assert re.search(r"L.LatLng\(, \)", str(form))
 
     admin_client.get("/cases/add/user_pick")
+
+
+def test_incorrect_staff_case_creation(client, mocks, settings):
+    settings.NON_STAFF_ACCESS = True
+    settings.COBRAND_SETTINGS["staff_only_domains_re"] = "@ooh.example.org"
+    em = "test@ooh.example.org"
+    user = User.objects.create(
+        username=em,
+        email=em,
+        email_verified=True,
+        phone="+447911111111",
+    )
+
+    client.force_login(user)
+    post_step = partial(_post_step, client)
+    client.get(f"/cases/add/begin")
+    post_step(
+        "about",
+        {
+            "first_name": "Normal",
+            "last_name": "User",
+            "email": em,
+            "phone": "+447900000000",
+        },
+    )
+    post_step("best_time", {"best_time": "weekday", "best_method": "email"})
+    post_step("postcode", {"postcode": "E8 3DY"})
+    post_step("address", {"address_uprn": "10008315925"})
+    post_step("kind", {"kind": "other", "kind_other": "Other"})
+    post_step("where", {"where": "residence", "estate": "?"})
+    post_step("where-location", {"search": "Foobar1"})
+    post_step("where-map", {"point": "POINT (-0.05 51)", "radius": 180, "zoom": 16})
+    post_step("isitnow", {"happening_now": "1"})
+    post_step("isnow", {"start_date": "today", "start_time": "9pm"})
+    post_step("rooms", {"rooms": "Room"})
+    post_step("describe", {"description": "Desc"})
+    post_step("effect", {"effect": "Effect"})
+    resp = post_step("summary", {"true_statement": 1}, follow=True)
+    assertContains(resp, "Thank you for reporting")
+
+    assert Complaint.objects.count() == 1
+    complaint = Complaint.objects.all()[0]
+    assert complaint.created_by_id == user.id
+    assert complaint.complainant.id != user.id
+    assert str(complaint.complainant.phone) == "+447900000000"
+    assert complaint.complainant.first_name == "Normal"

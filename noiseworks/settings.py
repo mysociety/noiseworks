@@ -249,6 +249,7 @@ COBRAND_SETTINGS = {
         "BUCKET_NAME": env.str("EXPORT_BUCKET_NAME", None),
     },
     "staff_destination": env.json("STAFF_DESTINATION", {}),
+    "staff_only_domains_re": env.str("STAFF_ONLY_DOMAINS", ""),
 }
 
 # Sending messages
