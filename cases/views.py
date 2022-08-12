@@ -770,11 +770,10 @@ class ReportingWizard(CaseWizard):
             if self.request.user.is_authenticated:
                 user = self.request.user
             else:
-                user = User.objects.check_existing(data["email"], data["phone"])
+                user = User.objects.check_existing(data["email"])
                 if not user:
                     user = User.objects.create_user(
                         email=data["email"],
-                        phone=data["phone"],
                     )
 
             user.first_name = data["first_name"]

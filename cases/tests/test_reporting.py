@@ -319,7 +319,10 @@ def test_user_case_creation(
     if not logged_in and (email_verified or phone_verified):
         assert Case.objects.count() == 1
         case = Case.objects.all()[0]
-        assert case.created_by_id == normal_user.id
+        if email_verified:
+            assert case.created_by_id == normal_user.id
+        else:
+            assert case.created_by_id != normal_user.id
 
     assert len(mail.outbox) == 2
     assert len(mail.outbox[0].to) == 1
