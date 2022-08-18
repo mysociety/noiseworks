@@ -34,8 +34,8 @@ class Command(BaseCommand):
         for case in cases:
             with transaction.atomic():
                 case.closed = True
+                # Creating the action will save the case via a signal
                 Action.objects.create(case=case, type=type, notes=notes)
-                case.save()
                 if not options["commit"]:
                     transaction.set_rollback(True)
                 if options["verbosity"]:
