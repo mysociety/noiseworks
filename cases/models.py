@@ -43,7 +43,7 @@ class AbstractModel(models.Model):
 
 class CaseManager(models.Manager):
     def unmerged(self):
-        q = Q(action__isnull=True) | Q(action__case_old_id__isnull=True)
+        q = Q(merge_action__isnull=True)
         qs = self.filter(q).select_related("assigned")
         return qs
 
@@ -548,7 +548,13 @@ class Action(AbstractModel):
     notes = models.TextField(blank=True)
 
     # Merge
-    case_old = models.ForeignKey(Case, blank=True, null=True, on_delete=models.PROTECT)
+    case_old = models.ForeignKey(
+        Case,
+        blank=True,
+        null=True,
+        on_delete=models.PROTECT,
+        related_name="merge_action",
+    )
 
     objects = ActionManager.from_queryset(ActionQuerySet)()
 
