@@ -1,4 +1,6 @@
-<a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="nw-link--no-visited-state">{{ action.created_by }}</a>
+{% if action.created_by %}
+    <a href="{% url "cases" %}?assigned={{ action.created_by.id }}" class="nw-link--no-visited-state">{{ action.created_by }}</a>
+{% endif %}
 
 {% if action.type == "assigned" and action.old and action.new %}
     <span class="case-info">reassigned case #{{ case.id }} from</span>
@@ -19,5 +21,8 @@
         case #{{ action.case_id }}
     </span>
 {% elif action.type %}
-    <span class="case-info">– {{ action.type.name }}, case #{{ action.case_id }}</span>
+    <span class="case-info">
+        {% if action.created_by %}– {% endif %}
+        {{ action.type.name }}, case #{{ action.case_id }}
+    </span>
 {% endif %}
