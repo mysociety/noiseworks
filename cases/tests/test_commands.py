@@ -7,7 +7,7 @@ from django.core.management import CommandError, call_command
 
 from cases.management.commands.export_data import client
 
-from ..models import Case
+from ..models import Action, Case
 
 
 @pytest.fixture
@@ -116,16 +116,20 @@ def test_close_cases_command_bad_input(case):
 
 
 def test_close_cases_command(call_params, case):
-    case2 = Case.objects.create(
-        kind="diy", ward="E05009373", created="2022-01-01T13:00:00"
-    )
-    case.created = "2021-01-01T12:00:00Z"
-    case.save()
-    case2.created = "2021-01-01T12:00:00Z"
-    case2.save()
+    case2 = Case.objects.create(kind="diy", ward="E05009373")
+    case3 = Case.objects.create(kind="diy", ward="E05009373")
+    case4 = Case.objects.create(kind="diy", ward="E05009373")
+    Action.objects.create(case_old=case3, case=case4)
+    for c in (case, case2, case3, case4):
+        c.created = "2021-01-01T12:00:00Z"
+        c.save()
     call_command("close_cases", days=28, verbosity=0)
     case.refresh_from_db()
     assert not case.closed
     call_command("close_cases", days=28, commit=True)
     case.refresh_from_db()
     assert case.closed
+    case3.refresh_from_db()
+    assert not case3.closed
+    case4.refresh_from_db()
+    assert not case4.closed
