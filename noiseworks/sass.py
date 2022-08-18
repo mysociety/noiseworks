@@ -1,5 +1,6 @@
-import mimetypes
 import base64
+import mimetypes
+
 from django.contrib.staticfiles import finders
 
 

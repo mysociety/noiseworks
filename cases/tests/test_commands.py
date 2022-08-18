@@ -1,10 +1,13 @@
 import re
 from unittest.mock import mock_open
-from django.core.management import call_command, CommandError
+
 import pytest
 from botocore.stub import Stubber
-from ..models import Case
+from django.core.management import CommandError, call_command
+
 from cases.management.commands.export_data import client
+
+from ..models import Case
 
 
 @pytest.fixture
@@ -122,7 +125,7 @@ def test_close_cases_command(call_params, case):
     case2.save()
     call_command("close_cases", days=28, verbosity=0)
     case.refresh_from_db()
-    assert case.closed == False
+    assert not case.closed
     call_command("close_cases", days=28, commit=True)
     case.refresh_from_db()
-    assert case.closed == True
+    assert case.closed

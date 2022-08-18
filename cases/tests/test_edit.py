@@ -1,8 +1,9 @@
 import re
-from unittest.mock import patch
+
 import pytest
-from pytest_django.asserts import assertContains
 from django.contrib.gis.geos import Point
+from pytest_django.asserts import assertContains
+
 from ..models import Case
 
 pytestmark = pytest.mark.django_db

@@ -1,10 +1,13 @@
 import re
-from django.contrib.gis import forms
+
 from crispy_forms_gds.choices import Choice
+from django.contrib.gis import forms
 from phonenumber_field.formfields import PhoneNumberField
-from noiseworks.forms import GDSForm
-from noiseworks import cobrand
+
 from accounts.models import User
+from noiseworks import cobrand
+from noiseworks.forms import GDSForm
+
 from ..models import Case
 from ..widgets import MapWidget
 
@@ -265,7 +268,7 @@ class WhereMapForm(StepForm):
         radius = self.data.get("where-map-radius") or self.initial.get("radius")
         try:
             self.fields["point"].widget.zoom = int(zoom)
-        except:
+        except (TypeError, ValueError):
             pass
         self.fields["point"].widget.radius = radius
         self.helper.radios_small = True

@@ -1,7 +1,9 @@
 import csv
+
 from django.core.management.base import BaseCommand, CommandError
-from noiseworks import cobrand
+
 from accounts.models import User
+from noiseworks import cobrand
 
 
 def ward_name_to_id(ward):
@@ -9,7 +11,7 @@ def ward_name_to_id(ward):
     wards = {ward["name"]: ward["gss"] for ward in wards}
     try:
         return wards[ward]
-    except:
+    except KeyError:
         raise CommandError(f"Could not find ward {ward}")
 
 
@@ -57,7 +59,7 @@ class Command(BaseCommand):
             wards = []
         self.stdout.write(f"User {first} {last}, {email}, {wards}")
         if self.commit:
-            user = User.objects.create_user(
+            User.objects.create_user(
                 first_name=first,
                 last_name=last,
                 email=email,

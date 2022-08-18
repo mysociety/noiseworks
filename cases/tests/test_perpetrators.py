@@ -1,6 +1,8 @@
 import pytest
 from pytest_django.asserts import assertContains
+
 from accounts.models import User
+
 from ..models import Case
 
 pytestmark = pytest.mark.django_db

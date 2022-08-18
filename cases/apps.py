@@ -6,4 +6,4 @@ class CasesConfig(AppConfig):
     name = "cases"
 
     def ready(self):
-        from . import signals
+        from . import signals  # noqa: F401

@@ -1,9 +1,10 @@
 import json
 import math
 import sys
+
 import requests
-from requests_cache import CachedSession
 from django.conf import settings
+from requests_cache import CachedSession
 
 api = settings.COBRAND_SETTINGS["address_api"]
 if "pytest" in sys.modules:

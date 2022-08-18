@@ -1,10 +1,13 @@
 import re
+
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
 from django.core import mail
+from pytest_django.asserts import assertContains, assertNotContains
+
 from accounts.models import User
-from ..models import Case, Action
+
 from ..forms import ReassignForm
+from ..models import Action, Case
 
 pytestmark = pytest.mark.django_db
 

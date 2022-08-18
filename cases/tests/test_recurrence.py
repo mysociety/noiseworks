@@ -1,9 +1,12 @@
 import datetime
 from functools import partial
+
 import pytest
 from django.core import mail
 from pytest_django.asserts import assertContains
+
 from accounts.models import User
+
 from ..models import Case, Complaint
 
 pytestmark = pytest.mark.django_db
@@ -160,7 +163,7 @@ def _test_add_complaint_not_now_new_user(
     post_step("summary", {"summary-true_statement": 1}, follow=True)
 
     case_1.refresh_from_db()
-    assert case_1.closed == False
+    assert not case_1.closed
 
 
 def test_add_complaint_not_now_new_user_email(

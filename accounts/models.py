@@ -1,10 +1,13 @@
 import uuid
-from django.contrib.auth.models import AbstractUser, UserManager as BaseManager
+
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import UserManager as BaseManager
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.functional import cached_property
 from phonenumber_field.modelfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
+
 from noiseworks import cobrand
 
 

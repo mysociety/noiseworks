@@ -1,5 +1,6 @@
 from django.urls import path
 from django.views.generic import TemplateView
+
 from . import views
 
 reporting_wizard = views.ReportingWizard.as_view(url_name="case-add-step")

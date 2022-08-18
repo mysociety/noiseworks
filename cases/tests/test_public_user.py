@@ -1,9 +1,12 @@
 import datetime
+
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
 from django.utils.timezone import make_aware
+from pytest_django.asserts import assertContains, assertNotContains
+
 from accounts.models import User
-from ..models import Case, Complaint, ActionType, Action
+
+from ..models import Action, ActionType, Case, Complaint
 
 pytestmark = pytest.mark.django_db
 

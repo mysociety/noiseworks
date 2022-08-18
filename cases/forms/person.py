@@ -1,10 +1,12 @@
 from django import forms
 from django.db.models import Q
 from django.utils.html import format_html, mark_safe
-from accounts.models import User
-from ..models import Action, ActionType
 from phonenumber_field.formfields import PhoneNumberField
+
+from accounts.models import User
 from noiseworks.forms import GDSForm
+
+from ..models import Action, ActionType
 
 
 class PersonPickForm(GDSForm, forms.Form):
@@ -32,8 +34,8 @@ class PersonPickForm(GDSForm, forms.Form):
                 | Q(phone__icontains=search)
             )
             if " " in search:
-                f, l = search.split(maxsplit=1)
-                queries |= Q(first_name__icontains=f) & Q(last_name__icontains=l)
+                first, last = search.split(maxsplit=1)
+                queries |= Q(first_name__icontains=first) & Q(last_name__icontains=last)
             choices = User.objects.filter(queries)
             choices = list(map(lambda x: (x.id, str(x)), choices))
         else:
@@ -93,7 +95,7 @@ class PersonPickForm(GDSForm, forms.Form):
 
     def save(self):
         user = self.cleaned_data.pop("user")
-        search = self.cleaned_data.pop("search")
+        self.cleaned_data.pop("search")
         if not user:
             user = User.objects.create_user(**self.cleaned_data)
             return user.id

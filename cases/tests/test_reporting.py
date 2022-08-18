@@ -1,13 +1,16 @@
 import datetime
-from functools import partial
 import re
+from functools import partial
+
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
-from django.core import mail
 from django.contrib.gis.geos import Point
+from django.core import mail
+from pytest_django.asserts import assertContains, assertNotContains
+
 from accounts.models import User
-from ..models import Case, Complaint
+
 from ..forms import WhereMapForm
+from ..models import Case, Complaint
 
 pytestmark = pytest.mark.django_db
 
@@ -111,7 +114,7 @@ def _post_step(client, step, data, **kwargs):
     data.update(as_is)
     return client.post(
         f"/cases/add/{step}",
-        {f"reporting_wizard-current_step": step, **data},
+        {"reporting_wizard-current_step": step, **data},
         **kwargs,
     )
 
@@ -119,7 +122,7 @@ def _post_step(client, step, data, **kwargs):
 def test_staff_case_creation(admin_client, normal_user, mocks):
     """Picks existing user, UPRN based source"""
     post_step = partial(_post_step, admin_client)
-    admin_client.get(f"/cases/add/begin")
+    admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Normal"})
     post_step("user_pick", {"search": "Normal", "user": normal_user.id})
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
@@ -150,12 +153,12 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     assert Complaint.objects.count() == 1
     normal_user.refresh_from_db()
     assert normal_user.first_name == "Normal"
-    admin_client.get(f"/cases/add/summary")
+    admin_client.get("/cases/add/summary")
 
 
 def test_staff_case_creation_existing_user(admin_client, normal_user, mocks):
     post_step = partial(_post_step, admin_client)
-    admin_client.get(f"/cases/add/begin")
+    admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Something with no results"})
     params = {
         "search": "Something with no results",
@@ -172,7 +175,7 @@ def test_staff_case_creation_existing_user(admin_client, normal_user, mocks):
 def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user, mocks):
     """Picks new user, map based source"""
     post_step = partial(_post_step, admin_client)
-    admin_client.get(f"/cases/add/begin")
+    admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Different"})
     post_step(
         "user_pick",
@@ -224,7 +227,7 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user,
 
 def test_non_staff_user_case_creation(client, settings):
     settings.NON_STAFF_ACCESS = False
-    resp = client.get(f"/cases/add/begin")
+    resp = client.get("/cases/add/begin")
     assert resp.status_code == 302
 
 
@@ -252,7 +255,7 @@ def test_user_case_creation(
     normal_user.save()
 
     post_step = partial(_post_step, client)
-    client.get(f"/cases/add/begin")
+    client.get("/cases/add/begin")
     resp = post_step(
         "about",
         {
@@ -313,7 +316,7 @@ def test_user_case_creation(
         resp = post_step("confirmation", {"code": str(code).zfill(6)}, follow=True)
     assertContains(resp, "Thank you for reporting")
     client.get(
-        f"/cases/add/address"
+        "/cases/add/address"
     )  # Test fetching this page after submission does not error
 
     if not logged_in and (email_verified or phone_verified):
@@ -361,7 +364,7 @@ def test_incorrect_staff_case_creation(client, mocks, settings):
 
     client.force_login(user)
     post_step = partial(_post_step, client)
-    client.get(f"/cases/add/begin")
+    client.get("/cases/add/begin")
     post_step(
         "about",
         {

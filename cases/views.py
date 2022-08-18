@@ -1,29 +1,30 @@
 import datetime
-import uuid
 import random
 import re
+
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from formtools.wizard.views import NamedUrlSessionWizardView
+
+from accounts.models import User
 from noiseworks import cobrand
 from noiseworks.decorators import staff_member_required
-from noiseworks.message import send_sms, send_email
+from noiseworks.message import send_email, send_sms
+
+from . import forms, map_utils
 from .filters import CaseFilter
-from .models import Case, Complaint, Action, ActionType
-from . import forms
-from accounts.models import User
-from . import map_utils
+from .models import Action, ActionType, Case, Complaint
 
 
 def home(request):

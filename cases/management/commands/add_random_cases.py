@@ -1,13 +1,15 @@
-from datetime import timedelta
 import random
+from datetime import timedelta
+
 import requests
-from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 from django.contrib.gis.geos import Point
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
-from cases.models import Case, Complaint, Action, ActionType
-from noiseworks import cobrand
+
 from accounts.models import User
+from cases.models import Action, ActionType, Case, Complaint
+from noiseworks import cobrand
 
 
 class Command(BaseCommand):
@@ -63,7 +65,7 @@ class Command(BaseCommand):
                 # Location
                 case.point, case.ward = self._pick_location()
                 case.radius = self._pick_radius()
-                display = case.location_display
+                case.location_display
             else:
                 self._pick_uprn(case)
 
@@ -146,7 +148,7 @@ class Command(BaseCommand):
     def _pick_uprn(self, case):
         while True:
             case.uprn = random.choice(self.uprns)
-            display = case.update_location_cache()
+            case.update_location_cache()
             if case.location_cache:
                 break
 
@@ -228,11 +230,11 @@ class Command(BaseCommand):
     def set_up_staff_users(self):
         user = self.create(
             User,
-            username=f"auto-staff-outside@noiseworks",
+            username="auto-staff-outside@noiseworks",
             defaults={
-                "email": f"auto-staff-outside@noiseworks",
+                "email": "auto-staff-outside@noiseworks",
                 "first_name": "Staff User",
-                "last_name": f"Outside",
+                "last_name": "Outside",
                 "email_verified": 1,
                 "is_staff": True,
             },
@@ -285,7 +287,7 @@ class Command(BaseCommand):
     def _pick_user_uprn(self, user):
         while True:
             user.uprn = random.choice(self.uprns)
-            display = user.update_address()
+            user.update_address()
             if user.address:
                 break
 

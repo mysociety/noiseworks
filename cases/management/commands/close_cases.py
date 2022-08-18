@@ -1,9 +1,11 @@
 import datetime
+
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
-from cases.models import Case, Action, ActionType
+
+from cases.models import Action, ActionType, Case
 
 
 class Command(BaseCommand):

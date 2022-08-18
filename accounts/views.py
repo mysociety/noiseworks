@@ -1,17 +1,20 @@
 import base64
 from math import ceil
+
 from django.conf import settings
-from django.contrib.auth import login, logout, get_user_model
 from django.contrib import messages
+from django.contrib.auth import get_user_model, login, logout
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from sesame.tokens import create_token
 from sesame.utils import get_user
+
 from noiseworks.base32 import bytes_to_base32
 from noiseworks.decorators import staff_member_required
-from noiseworks.message import send_sms, send_email
-from .forms import SignInForm, CodeForm, EditUserForm, EditStaffForm
+from noiseworks.message import send_email, send_sms
+
+from .forms import CodeForm, EditStaffForm, EditUserForm, SignInForm
 
 User = get_user_model()
 
@@ -102,7 +105,7 @@ def add(request):
     form = EditStaffForm(True, request.POST or None)
     if form.is_valid():
         form.save()
-        messages.success(request, f"That user has been added")
+        messages.success(request, "That user has been added")
         return redirect("accounts:list")
     return render(request, "accounts/edit.html", {"form": form})
 

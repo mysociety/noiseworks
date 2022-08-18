@@ -1,15 +1,16 @@
 import re
-import uuid
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
+
 import pytest
-from pytest_django.asserts import assertContains
-from django.core import mail
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.core.management import call_command, CommandError
+from django.core import mail
+from django.core.management import CommandError, call_command
+from pytest_django.asserts import assertContains
 from sesame.tokens import create_token
-from .models import User
+
 from .forms import CodeForm
+from .models import User
 
 pytestmark = pytest.mark.django_db
 
@@ -67,7 +68,7 @@ def test_create_phone_user():
 
 
 def test_bad_token(client):
-    client.get(f"/a/badtoken")
+    client.get("/a/badtoken")
     # And a token that is valid but for a user that does not exist
     user = User(id=1, email="foo@example.org")
     token = create_token(user)
@@ -148,16 +149,16 @@ def test_log_in_by_code(client, non_staff_access):
 
 def test_user_adding(client, staff_user):
     client.force_login(staff_user)
-    response = client.get(f"/a/add")
+    response = client.get("/a/add")
     assert response.status_code == 403
 
     permission = Permission.objects.get(
         codename="add_user", content_type=ContentType.objects.get_for_model(User)
     )
     staff_user.user_permissions.add(permission)
-    client.get(f"/a/add")
+    client.get("/a/add")
     response = client.post(
-        f"/a/add",
+        "/a/add",
         {
             "first_name": "New",
             "last_name": "User",
@@ -314,8 +315,6 @@ def test_add_staff_command(db, capsys, monkeypatch):
     user = User.objects.get(email="test3@example.org")
     assert user.wards == ["E05009372", "E05009386"]
 
-    staff = "Name,Email,Wards\nTest Test,test2@example.org\nTest Test,test4@example.org,North"
-    mapping = "Name,Ward\nNorth,Hackney Central\nNorth,Stoke Newington"
     call_command(
         "add_staff_users",
         csv_file="goodmap.csv",

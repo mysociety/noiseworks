@@ -1,6 +1,8 @@
-from noiseworks.sass import inline_image_html
 from email.utils import make_msgid
+
 from django.conf import settings
+
+from noiseworks.sass import inline_image_html
 
 
 def override_colours():

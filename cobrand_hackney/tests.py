@@ -1,7 +1,9 @@
 import re
-from django.contrib.gis.geos import Point
+
 import pytest
+from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains
+
 from .api import (
     address_for_uprn,
     addresses_for_postcode,

@@ -1,13 +1,16 @@
 import re
+
+import django_filters
 from django import forms
 from django.db.models import Q
-import django_filters
 from phonenumber_field.phonenumber import to_python
-from .models import Case
-from .forms import FilterForm
-from .widgets import SearchWidget
-from noiseworks import cobrand
+
 from accounts.models import User
+from noiseworks import cobrand
+
+from .forms import FilterForm
+from .models import Case
+from .widgets import SearchWidget
 
 
 def get_wards():
@@ -53,7 +56,6 @@ class CaseFilter(django_filters.FilterSet):
     def __init__(self, data, *args, **kwargs):
         data = data.copy()
         user = kwargs["request"].user
-        submitted = data.get("kind") is not None
         super().__init__(data, *args, **kwargs)
         self.filters.move_to_end("search", last=False)
         self.filters["kind"].label = "Noise type"
@@ -145,13 +147,13 @@ class CaseFilter(django_filters.FilterSet):
         )
 
         if " " in value:
-            f, l = value.split(maxsplit=1)
+            first, last = value.split(maxsplit=1)
             queries |= (
-                Q(complaints__complainant__first_name__icontains=f)
-                & Q(complaints__complainant__last_name__icontains=l)
+                Q(complaints__complainant__first_name__icontains=first)
+                & Q(complaints__complainant__last_name__icontains=last)
             ) | (
-                Q(perpetrators__first_name__icontains=f)
-                & Q(perpetrators__last_name__icontains=l)
+                Q(perpetrators__first_name__icontains=first)
+                & Q(perpetrators__last_name__icontains=last)
             )
 
         # Actions with matching notes

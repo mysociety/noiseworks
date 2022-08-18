@@ -1,8 +1,10 @@
 from email.mime.image import MIMEImage
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from notifications_python_client.notifications import NotificationsAPIClient
+
 from noiseworks import cobrand
 
 

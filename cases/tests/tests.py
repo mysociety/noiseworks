@@ -1,15 +1,18 @@
 import datetime
 import re
 from unittest.mock import patch
+
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
 from django.contrib.gis.geos import Point
-from django.template import Context, Template
 from django.http import HttpRequest
+from django.template import Context, Template
 from django.utils.timezone import make_aware
+from pytest_django.asserts import assertContains
+
 from accounts.models import User
-from ..models import Case, Complaint, ActionType, Action
+
 from ..forms import ActionForm
+from ..models import Action, ActionType, Case, Complaint
 
 pytestmark = pytest.mark.django_db
 
@@ -101,7 +104,7 @@ def test_case_uprn(admin_client, case_other_uprn):
     response = admin_client.get(f"/cases/{case_other_uprn.id}")
     assertContains(response, "Wombat")
     assertContains(response, "Flat 4, 2 Example Road")
-    response = admin_client.get(f"/cases?uprn=10001")
+    response = admin_client.get("/cases?uprn=10001")
     assertContains(response, "Flat 4, 2 Example Road")
 
 
@@ -123,30 +126,30 @@ def test_log_view(admin_client, case_1, action_types):
         {"notes": "Some notes", "type": action_types[0].id},
         follow=True,
     )
-    response = admin_client.get(f"/cases?assigned=others")
+    response = admin_client.get("/cases?assigned=others")
     assertContains(response, "Letter sent")
 
 
 def test_log_case_closure(admin_client, case_1, action_types):
-    response = admin_client.post(
+    admin_client.post(
         f"/cases/{case_1.id}/log",
         {"notes": "Some notes", "type": action_types[3].id},
         follow=True,
     )
     case_1.refresh_from_db()
-    assert case_1.closed == True
+    assert case_1.closed
 
 
 def test_log_case_reopening(admin_client, case_1, action_types):
     case_1.closed = True
     case_1.save()
-    response = admin_client.post(
+    admin_client.post(
         f"/cases/{case_1.id}/log",
         {"notes": "Some notes", "type": action_types[4].id},
         follow=True,
     )
     case_1.refresh_from_db()
-    assert case_1.closed == False
+    assert not case_1.closed
 
 
 def test_log_form(case_1):
@@ -167,10 +170,10 @@ def test_action_output(
 
 def test_case_had_abatement(admin_client, case_1, action_types):
     assert not case_1.had_abatement_notice
-    response = admin_client.post(
+    admin_client.post(
         f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[2].id}
     )
-    response = admin_client.post(
+    admin_client.post(
         f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[1].id}
     )
     case_1 = Case.objects.get(id=case_1.id)  # Refresh to get rid of cached properties
@@ -184,7 +187,7 @@ def test_action_manager(case_1, case_other_uprn):
         case_1.id: case_1.id,
         case_other_uprn.id: case_1.id,
     }
-    actions = Case.objects.prefetch_timeline([case_1])
+    Case.objects.prefetch_timeline([case_1])
     assert case_1.actions_reversed == [a]
 
 

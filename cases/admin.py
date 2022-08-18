@@ -1,8 +1,8 @@
 from django.contrib import admin
-from django.contrib.gis.db import models
 from django.contrib.gis import forms
-from .models import Case, Complaint, Action, ActionType
+from django.contrib.gis.db import models
 
+from .models import Action, ActionType, Case, Complaint
 
 admin.site.register(Complaint)
 

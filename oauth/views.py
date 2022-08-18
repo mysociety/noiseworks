@@ -1,9 +1,9 @@
-from django.contrib.auth import get_user_model, login
-from django.core.exceptions import PermissionDenied
-from django.shortcuts import render, redirect
-from django.urls import reverse
 from authlib.integrations.base_client import MismatchingStateError
 from authlib.integrations.django_client import OAuth
+from django.contrib.auth import get_user_model, login
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect, render
+from django.urls import reverse
 
 CONF_URL = "https://accounts.google.com/.well-known/openid-configuration"
 oauth = OAuth()

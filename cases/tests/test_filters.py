@@ -1,8 +1,9 @@
-import re
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
 from django.contrib.gis.geos import Point
+from pytest_django.asserts import assertContains, assertNotContains
+
 from accounts.models import User
+
 from ..models import Case, Complaint
 
 pytestmark = pytest.mark.django_db
@@ -114,7 +115,7 @@ def test_search_phone(admin_client, case_1):
     Complaint.objects.create(
         case=case_1, complainant=case_1.created_by, happening_now=True
     )
-    resp = admin_client.get(f"/cases?search=07900000000")
+    resp = admin_client.get("/cases?search=07900000000")
     assertContains(resp, "Fireworks")
 
 
@@ -122,7 +123,7 @@ def test_search_name(admin_client, case_1):
     Complaint.objects.create(
         case=case_1, complainant=case_1.created_by, happening_now=True
     )
-    resp = admin_client.get(f"/cases?search=Normal+User")
+    resp = admin_client.get("/cases?search=Normal+User")
     assertContains(resp, "Fireworks")
 
 
@@ -145,7 +146,7 @@ def test_search_merged_case(admin_client):
 
 
 def test_user_ward_js_array(admin_client):
-    resp = admin_client.get(f"/cases")
+    resp = admin_client.get("/cases")
     assertContains(resp, "nw.user_wards = []")
 
 

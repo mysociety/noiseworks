@@ -1,15 +1,18 @@
 import base64
 import uuid
+
+import phonenumbers
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-import phonenumbers
 from phonenumber_field.phonenumber import PhoneNumber, to_python
 from sesame.utils import get_user
-from noiseworks.base32 import base32_to_bytes, bytes_to_base32
-from noiseworks.forms import GDSForm
+
 from noiseworks import cobrand
+from noiseworks.base32 import base32_to_bytes
+from noiseworks.forms import GDSForm
+
 from .models import User
 
 
@@ -33,7 +36,6 @@ class SignInForm(GDSForm, forms.Form):
 
     def clean_username(self):
         username = self.cleaned_data["username"].lower()
-        any_valid = False
 
         phone_number = to_python(username)
         if phone_number.is_valid() and settings.NOTIFY_API_KEY:

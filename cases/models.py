@@ -1,17 +1,16 @@
+import requests
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
-from django.db.models import Q, Count
-from django.forms.models import model_to_dict
-from django.contrib.postgres.fields import ArrayField
+from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import format_html, mark_safe
 from django.utils.functional import cached_property
-import requests
-from simple_history.models import HistoricalRecords, ModelChange, ModelDelta
-from noiseworks import cobrand
+from django.utils.html import format_html, mark_safe
+from simple_history.models import HistoricalRecords
+
 from accounts.models import User
+from noiseworks import cobrand
 
 
 def ward_name_to_id(ward):
@@ -82,9 +81,9 @@ class CaseManager(models.Manager):
             merge_map, complaints, "case_id"
         )
 
-        histories = HistoricalCase.objects.filter(id__in=case_ids).select_related(
-            "modified_by", "assigned"
-        )
+        histories = HistoricalCase.objects.filter(  # noqa: F821
+            id__in=case_ids
+        ).select_related("modified_by", "assigned")
         self.attach_diffs(histories)
         histories_by_case = self.prefetch_timeline_part(merge_map, histories, "id")
 

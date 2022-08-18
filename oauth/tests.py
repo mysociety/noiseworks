@@ -1,9 +1,10 @@
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
+
 import pytest
 from authlib.jose import jwk
 from authlib.oidc.core.grants.util import generate_id_token
-import requests
 from django.contrib.auth import get_user_model
+
 from oauth.views import oauth
 
 # Replace the oauth value in views.py (XXX Do this a better way?)

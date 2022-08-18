@@ -1,11 +1,14 @@
 import re
+
+from crispy_forms_gds.choices import Choice
 from django import forms
 from django.core.exceptions import ValidationError
+
 from accounts.models import User
-from ..models import Case, Action, ActionType
-from crispy_forms_gds.choices import Choice
 from noiseworks import cobrand
 from noiseworks.forms import GDSForm
+
+from ..models import Action, ActionType, Case
 
 
 class ReassignForm(GDSForm, forms.ModelForm):

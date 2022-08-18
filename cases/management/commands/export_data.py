@@ -1,12 +1,14 @@
 import csv
 import logging
 from pathlib import Path
+
 import boto3
-from smart_open import open
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
-from cases.models import Case, Complaint, Action, HistoricalCase
+from smart_open import open
+
 from accounts.models import User
+from cases.models import Action, Case, Complaint, HistoricalCase
 
 Case_perpetrators = Case.perpetrators.through
 

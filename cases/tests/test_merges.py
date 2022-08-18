@@ -1,8 +1,8 @@
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
 from django.contrib.gis.geos import Point
-from accounts.models import User
-from ..models import Case, ActionType, Action
+from pytest_django.asserts import assertContains, assertNotContains
+
+from ..models import Action, ActionType, Case
 
 pytestmark = pytest.mark.django_db
 
@@ -118,12 +118,10 @@ def test_merging_cases(admin_client, same_case, case, action_types):
     assertContains(response, "has been merged into")
 
     # Check showing list of cases and last update is not 'editing'
-    response = admin_client.get(f"/cases")
-    assertNotContains(response, 'edited case details')
+    response = admin_client.get("/cases")
+    assertNotContains(response, "edited case details")
 
-    a = Action.objects.create(
-        case=same_case, notes="Internal note", type=action_types[1]
-    )
+    Action.objects.create(case=same_case, notes="Internal note", type=action_types[1])
 
     response = admin_client.get(f"/cases/{case.id}")
     assertContains(response, "This case has been merged into")

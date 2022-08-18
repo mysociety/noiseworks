@@ -1,8 +1,9 @@
 import pytest
-from pytest_django.asserts import assertContains
 from django.conf import settings
 from django.http import HttpRequest
 from django.utils.module_loading import import_string
+from pytest_django.asserts import assertContains
+
 from accounts.models import User
 
 
