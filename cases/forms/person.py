@@ -119,7 +119,6 @@ class PerpetratorPickForm(PersonPickForm):
     def save(self, case):
         user_id = super().save()
         case.perpetrators.add(user_id)
-        case.save()
         typ, _ = ActionType.objects.get_or_create(
             name="Edit case", defaults={"visibility": "internal"}
         )
