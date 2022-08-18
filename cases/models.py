@@ -362,6 +362,8 @@ class Case(AbstractModel):
                                 edit, prev, history_to_show
                             )
                         )
+                    elif d.field == "closed":
+                        continue
                     else:
                         changes.append(d)
 
