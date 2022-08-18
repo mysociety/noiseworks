@@ -83,7 +83,7 @@ class CaseManager(models.Manager):
 
         histories = HistoricalCase.objects.filter(  # noqa: F821
             id__in=case_ids
-        ).select_related("modified_by", "assigned")
+        ).select_related("history_user", "assigned")
         self.attach_diffs(histories)
         histories_by_case = self.prefetch_timeline_part(merge_map, histories, "id")
 
@@ -192,7 +192,7 @@ class Case(AbstractModel):
     )
     followers = models.ManyToManyField(User, related_name="cases_following")
 
-    history = HistoricalRecords()
+    history = HistoricalRecords(excluded_fields=["modified", "modified_by"])
     objects = CaseManager()
 
     class Meta:
@@ -295,7 +295,7 @@ class Case(AbstractModel):
                 "action": {
                     "type": "assigned",
                     "created": edit.history_date,
-                    "created_by": edit.modified_by,
+                    "created_by": edit.history_user,
                     "old": prev.assigned,
                     "new": edit.assigned,
                 },
@@ -311,7 +311,7 @@ class Case(AbstractModel):
         return {
             "action": {
                 "created": edit.history_date,
-                "created_by": edit.modified_by,
+                "created_by": edit.history_user,
                 "type": "edit",
                 "notes": mark_safe(
                     "<br>".join(
@@ -327,7 +327,7 @@ class Case(AbstractModel):
 
     @cached_property
     def historical_entries(self):
-        histories = self.history.select_related("modified_by", "assigned")
+        histories = self.history.select_related("history_user", "assigned")
         Case.objects.attach_diffs(histories)
         return histories
 
