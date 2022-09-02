@@ -10,4 +10,3 @@ script/bootstrap
 
 (cd cobrand_hackney && npm install)
 poetry install --no-root
-poetry run python manage.py migrate
