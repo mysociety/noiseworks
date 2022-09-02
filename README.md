@@ -10,9 +10,11 @@ This repository houses a Django project, running against a PostgreSQL database.
 
 In summary, with more details below:
 
-1. Install poetry
+1. Install poetry, postgres and postgis
 2. `script/setup` to install dependencies
-3. `poetry run script/server` to run a server
+3. Create a noiseworks db e.g. `createdb noiseworks`
+4. Update the `DATABASE_URL` in `.env` to point to this e.g. `DATABASE_URL='postgis://USERNAME@localhost/noiseworks'`
+5. `poetry run script/server` to run a server
 
 #### Code dependencies
 
@@ -60,6 +62,8 @@ image was last built, you’ll need to rebuild the image:
 1. Get hold of a text file of UPRNs, one UPRN per line.
 
 2. Ensure you have a `MAPIT_API_KEY` in your `.env` file.
+
+3. Ensure you have `ADDRESS_API_URL` and an `ADDRESS_API_KEY` in your `.env` file.
 
 3. Run `./manage.py loaddata action_types_hackney`
 
