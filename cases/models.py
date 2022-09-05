@@ -68,7 +68,7 @@ class CaseManager(models.Manager):
         merge_map = Action.objects.get_merged_cases(qs)
         case_ids = merge_map.keys()
 
-        actions = Action.objects.filter(case__in=case_ids).order_by("-created")
+        actions = Action.objects.filter(case__in=case_ids).order_by("-time")
         actions_by_case = self.prefetch_timeline_part(merge_map, actions, "case_id")
         merged_intos = Case.objects.get_merged_into_cases(qs)
 
