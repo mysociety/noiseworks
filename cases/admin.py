@@ -14,7 +14,7 @@ class CaseAdmin(admin.ModelAdmin):
 
 @admin.register(Action)
 class ActionAdmin(admin.ModelAdmin):
-    list_display = ("type", "case", "created")
+    list_display = ("type", "case", "time", "created")
 
 
 @admin.register(ActionType)
