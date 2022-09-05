@@ -335,7 +335,7 @@ class Case(AbstractModel):
         data = []
         for action in actions:
             row = {
-                "time": action.created,
+                "time": action.time,
                 "summary": action_fn(action),
                 "action": action,
             }
