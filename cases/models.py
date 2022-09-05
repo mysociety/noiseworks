@@ -68,7 +68,9 @@ class CaseManager(models.Manager):
         merge_map = Action.objects.get_merged_cases(qs)
         case_ids = merge_map.keys()
 
-        actions = Action.objects.filter(case__in=case_ids).order_by("-created")
+        # Note that if case A is merged into case B, case A's actions_by_case
+        # will not include case B's actions from after the merge.
+        actions = Action.objects.filter(case__in=case_ids).order_by("-time")
         actions_by_case = self.prefetch_timeline_part(merge_map, actions, "case_id")
         merged_intos = Case.objects.get_merged_into_cases(qs)
 
@@ -125,8 +127,13 @@ class CaseManager(models.Manager):
 
         merge_map = {c.id: [] for c in cases}
         for action in query:
+            # Even though merging actions should not have an edited 'time', we need to
+            # use 'time' rather than 'created' for the merged 'at'.
+            # This is because in other action queries we use 'time' and we should be consistent,
+            # especially as there is a small delta between the values of 'time' and 'created' for
+            # a newly created action.
             merge_map[action.case_old_id].append(
-                {"id": action.case_id, "at": action.created}
+                {"id": action.case_id, "at": action.time}
             )
         return merge_map
 
@@ -335,7 +342,7 @@ class Case(AbstractModel):
         data = []
         for action in actions:
             row = {
-                "time": action.created,
+                "time": action.time,
                 "summary": action_fn(action),
                 "action": action,
             }
@@ -404,10 +411,17 @@ class Case(AbstractModel):
     def actions_reversed(self):
         actions = self.action_merge_map
         query = Q(case__in=actions.keys())
+
+        # If case A is merged into case B, case B's actions
+        # after the merge are included in case A's action_reversed.
+        # Note that since this is determined by the time field, an
+        # action _added_ to case B after the merge but _recorded_ to have
+        # happened before the merge will not be displayed.
         for merged in self.merged_into_list:
-            query |= Q(created__gte=merged["at"], case=merged["id"])
+            query |= Q(time__gte=merged["at"], case=merged["id"])
+
         actions = Action.objects.filter(query)
-        actions = actions.order_by("-created")
+        actions = actions.order_by("-time")
         return actions
 
     @cached_property

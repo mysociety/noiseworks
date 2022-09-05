@@ -5,7 +5,7 @@
     <span class="case-info">submitted a
     <a href="{% url "complaint" case.id case.last_update.complaint.id %}">complaint</a></span>
   {% else %}
-    {{ case.last_update.action.created }} –
+    {{ case.last_update.action.time }} –
     {% include "cases/_case_action_summary.html" with action=case.last_update.action %}
   {% endif %}
 {% else %}
