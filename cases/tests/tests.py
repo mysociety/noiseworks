@@ -6,7 +6,7 @@ import pytest
 from django.contrib.gis.geos import Point
 from django.http import HttpRequest
 from django.template import Context, Template
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, now
 from pytest_django.asserts import assertContains
 
 from accounts.models import User
@@ -178,6 +178,14 @@ def test_case_had_abatement(admin_client, case_1, action_types):
     )
     case_1 = Case.objects.get(id=case_1.id)  # Refresh to get rid of cached properties
     assert case_1.had_abatement_notice
+
+
+def test_case_manager_prefetch_timeline_sorts_by_action_time(case_1):
+    a1 = Action.objects.create(case=case_1)
+    the_past = now() - datetime.timedelta(days=1)
+    a2 = Action.objects.create(case=case_1, time=the_past)
+    Case.objects.prefetch_timeline([case_1])
+    assert case_1.actions_reversed == [a1, a2]
 
 
 def test_action_manager(case_1, case_other_uprn):
