@@ -2,6 +2,7 @@ import re
 
 from crispy_forms_gds.choices import Choice
 from django import forms
+from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 
 from accounts.models import User
@@ -107,13 +108,18 @@ class ActionForm(GDSForm, forms.ModelForm):
 
     class Meta:
         model = Action
-        fields = ["type", "notes"]
+        fields = ["type", "notes", "time"]
 
     type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
     notes = forms.CharField(
         widget=forms.Textarea,
         label="Internal notes",
         help_text="You can upload documents by adding a link or links to shared documents",
+    )
+    time = forms.DateTimeField(
+        initial=now,
+        required=False,
+        label="Time action was taken",
     )
 
     def __init__(self, *args, **kwargs):
