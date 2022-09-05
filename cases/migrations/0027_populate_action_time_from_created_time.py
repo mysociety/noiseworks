@@ -8,16 +8,13 @@ def forwards_func(apps, schema_editor):
     Action = apps.get_model('cases', 'Action')
     Action.objects.update(time=F('created'))
 
-def reverse_func(apps, schema_editor):
-    # We shouldn't need to undo this change.
-    pass
-
 class Migration(migrations.Migration):
 
     dependencies = [
         ('cases', '0026_action_time'),
     ]
 
+    # No reverse function; we shouldn't need to undo this change.
     operations = [
-            migrations.RunPython(forwards_func, reverse_func)
+            migrations.RunPython(forwards_func)
     ]
