@@ -546,6 +546,7 @@ class Action(AbstractModel):
         related_name="actions",
     )
     notes = models.TextField(blank=True)
+    time = models.DateTimeField(default=timezone.now)
 
     # Merge
     case_old = models.ForeignKey(
