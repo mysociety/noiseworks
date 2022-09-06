@@ -1,0 +1,76 @@
+-- Actual query from web app when viewing a merged case's timeline.
+EXPLAIN
+SELECT "cases_action"."id",
+       "cases_action"."created",
+       "cases_action"."created_by_id",
+       "cases_action"."modified",
+       "cases_action"."modified_by_id",
+       "cases_action"."case_id",
+       "cases_action"."type_id",
+       "cases_action"."notes",
+       "cases_action"."time",
+       "cases_action"."case_old_id",
+       "accounts_user"."id",
+       "accounts_user"."password",
+       "accounts_user"."last_login",
+       "accounts_user"."is_superuser",
+       "accounts_user"."username",
+       "accounts_user"."first_name",
+       "accounts_user"."last_name",
+       "accounts_user"."email",
+       "accounts_user"."is_staff",
+       "accounts_user"."is_active",
+       "accounts_user"."date_joined",
+       "accounts_user"."phone",
+       "accounts_user"."email_verified",
+       "accounts_user"."phone_verified",
+       "accounts_user"."uprn",
+       "accounts_user"."address",
+       "accounts_user"."best_time",
+       "accounts_user"."best_method",
+       "accounts_user"."wards",
+       "cases_case"."id",
+       "cases_case"."created",
+       "cases_case"."created_by_id",
+       "cases_case"."modified",
+       "cases_case"."modified_by_id",
+       "cases_case"."closed",
+       "cases_case"."kind",
+       "cases_case"."kind_other",
+       "cases_case"."point"::bytea, "cases_case"."radius",
+       "cases_case"."uprn",
+       "cases_case"."location_cache",
+       "cases_case"."ward",
+       "cases_case"."where",
+       "cases_case"."estate",
+       "cases_case"."assigned_id",
+       "cases_actiontype"."id",
+       "cases_actiontype"."name",
+       "cases_actiontype"."common",
+       "cases_actiontype"."visibility",
+       T5."id",
+       T5."created",
+       T5."created_by_id",
+       T5."modified",
+       T5."modified_by_id",
+       T5."closed",
+       T5."kind",
+       T5."kind_other",
+       T5."point"::bytea, T5."radius",
+       T5."uprn",
+       T5."location_cache",
+       T5."ward",
+       T5."where",
+       T5."estate",
+       T5."assigned_id"
+  FROM "cases_action"
+ INNER JOIN "cases_case"
+    ON ("cases_action"."case_id" = "cases_case"."id")
+  LEFT OUTER JOIN "accounts_user"
+    ON ("cases_action"."created_by_id" = "accounts_user"."id")
+  LEFT OUTER JOIN "cases_actiontype"
+    ON ("cases_action"."type_id" = "cases_actiontype"."id")
+  LEFT OUTER JOIN "cases_case" T5
+    ON ("cases_action"."case_old_id" = T5."id")
+ WHERE ("cases_action"."case_id" IN (100) OR ("cases_action"."case_id" = 99 AND "cases_action"."time" >= '2022-09-05T10:46:09.392696+00:00'::timestamptz))
+ ORDER BY "cases_action"."time" DESC;

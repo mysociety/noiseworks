@@ -1,0 +1,23 @@
+ Sort  (cost=28.47..28.48 rows=1 width=870)
+   Sort Key: cases_action."time" DESC
+   ->  Nested Loop Left Join  (cost=15.75..28.46 rows=1 width=870)
+         ->  Hash Right Join  (cost=15.60..19.99 rows=1 width=605)
+               Hash Cond: (t5.id = cases_action.case_old_id)
+               ->  Seq Scan on cases_case t5  (cost=0.00..4.00 rows=100 width=145)
+               ->  Hash  (cost=15.59..15.59 rows=1 width=460)
+                     ->  Hash Join  (cost=11.21..15.59 rows=1 width=460)
+                           Hash Cond: (cases_case.id = cases_action.case_id)
+                           ->  Seq Scan on cases_case  (cost=0.00..4.00 rows=100 width=145)
+                           ->  Hash  (cost=11.19..11.19 rows=1 width=315)
+                                 ->  Merge Right Join  (cost=9.21..11.19 rows=1 width=315)
+                                       Merge Cond: (accounts_user.id = cases_action.created_by_id)
+                                       ->  Index Scan using accounts_user_pkey on accounts_user  (cost=0.14..15.72 rows=105 width=205)
+                                       ->  Sort  (cost=9.07..9.08 rows=1 width=110)
+                                             Sort Key: cases_action.created_by_id
+                                             ->  Seq Scan on cases_action  (cost=0.00..9.06 rows=1 width=110)
+                                                   Filter: ((case_id = 100) OR ((case_id = 99) AND ("time" >= '2022-09-05 11:46:09.392696+01'::timestamp with time zone)))
+         ->  Index Scan using cases_actiontype_pkey on cases_actiontype  (cost=0.15..8.17 rows=1 width=265)
+               Index Cond: (id = cases_action.type_id)
+(20 rows)
+
+

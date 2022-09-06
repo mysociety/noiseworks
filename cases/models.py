@@ -573,6 +573,9 @@ class Action(AbstractModel):
 
     objects = ActionManager.from_queryset(ActionQuerySet)()
 
+    class Meta:
+        indexes = [models.Index(fields=["time"])]
+
     def __str__(self):
         if self.case_old:
             return f"{self.created_by} merged case {self.case_old_id} into case {self.case_id}"
