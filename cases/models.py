@@ -407,7 +407,7 @@ class Case(AbstractModel):
         for merged in self.merged_into_list:
             query |= Q(created__gte=merged["at"], case=merged["id"])
         actions = Action.objects.filter(query)
-        actions = actions.order_by("-created")
+        actions = actions.order_by("-time")
         return actions
 
     @cached_property

@@ -180,6 +180,13 @@ def test_case_had_abatement(admin_client, case_1, action_types):
     assert case_1.had_abatement_notice
 
 
+def test_case_actions_reversed_is_sorted_by_time(admin_client, case_1, action_types):
+    a1 = Action.objects.create(case=case_1)
+    the_past = now() - datetime.timedelta(days=1)
+    a2 = Action.objects.create(case=case_1, time=the_past)
+    case_1.actions_reversed == [a1, a2]
+
+
 def test_case_manager_prefetch_timeline_sorts_actions_by_time(case_1):
     a1 = Action.objects.create(case=case_1)
     the_past = now() - datetime.timedelta(days=1)
