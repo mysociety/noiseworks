@@ -81,9 +81,10 @@ client, fixtures, request mocking, settings override, and so on.
 
 ### Using the shell
 
-You can get autocomplete, vi-mode and other features if you use 
-[ptpython](https://github.com/prompt-toolkit/ptpython) as your shell
-via `./manage.py shell -i ptpython`.
+By default, `./manage.py shell` is configured to use [ptpython](https://github.com/prompt-toolkit/ptpython).
+This provides autocomplete, vi-mode and a bunch of other useful features.
+
+Run `./manage.py shell -i python` to just use the normal python shell.
 
 ### Contributing
 
