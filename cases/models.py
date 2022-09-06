@@ -127,9 +127,11 @@ class CaseManager(models.Manager):
 
         merge_map = {c.id: [] for c in cases}
         for action in query:
-            # Use 'time' rather than 'created' for 'at' as even though
-            # they should be the same for merge actions, there can be a
-            # small delta which can break logic relying on 'time'.
+            # Even though merging actions should not have an edited 'time', we need to
+            # use 'time' rather than 'created' for the merged 'at'.
+            # This is because in other action queries we use 'time' and we should be consistent,
+            # especially as there is a small delta between the values of 'time' and 'created' for
+            # a newly created action.
             merge_map[action.case_old_id].append(
                 {"id": action.case_id, "at": action.time}
             )
