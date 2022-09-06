@@ -79,6 +79,13 @@ If you are running inside Docker you will want to enter a shell in the `web` con
 Tests are written with pytest; the current examples should show uses of test
 client, fixtures, request mocking, settings override, and so on.
 
+### Using the shell
+
+By default, `./manage.py shell` is configured to use [ptpython](https://github.com/prompt-toolkit/ptpython).
+This provides autocomplete, vi-mode and a bunch of other useful features.
+
+Run `./manage.py shell -i python` to just use the normal python shell.
+
 ### Contributing
 
 * `black` is run for code tidying: `poetry run black .`
