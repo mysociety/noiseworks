@@ -412,9 +412,9 @@ class Case(AbstractModel):
 
         # If case A is merged into case B, case B's actions
         # after the merge are included in case A's action_reversed.
-        # Note that this uses the time field so if a new action is
-        # added to case B after the time of the merge, it won't
-        # appear in case A's action_reversed.
+        # Note that since this is determined by the time field, an
+        # action _added_ to case B after the merge but _recorded_ to have
+        # happened before the merge will not be displayed.
         for merged in self.merged_into_list:
             query |= Q(time__gte=merged["at"], case=merged["id"])
 
