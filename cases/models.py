@@ -128,8 +128,11 @@ class CaseManager(models.Manager):
 
         merge_map = {c.id: [] for c in cases}
         for action in query:
+            # Use 'time' rather than 'created' for 'at' as even though
+            # they should be the same for merge actions, there can be a
+            # small delta which can break logic relying on 'time'.
             merge_map[action.case_old_id].append(
-                {"id": action.case_id, "at": action.created}
+                {"id": action.case_id, "at": action.time}
             )
         return merge_map
 
@@ -407,8 +410,15 @@ class Case(AbstractModel):
     def actions_reversed(self):
         actions = self.action_merge_map
         query = Q(case__in=actions.keys())
+
+        # If case A is merged into case B, case B's actions
+        # after the merge are included in case A's action_reversed.
+        # Note that this uses the time field so if a new action is
+        # added to case B after the time of the merge, it won't
+        # appear in case A's action_reversed.
         for merged in self.merged_into_list:
-            query |= Q(created__gte=merged["at"], case=merged["id"])
+            query |= Q(time__gte=merged["at"], case=merged["id"])
+
         actions = Action.objects.filter(query)
         actions = actions.order_by("-time")
         return actions

@@ -1,3 +1,4 @@
+import datetime
 import pytest
 from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains, assertNotContains
@@ -23,7 +24,7 @@ def same_case(db):
 
 
 @pytest.fixture
-def already_merged_case(db):
+def merged_case_setup(db):
     c1 = Case.objects.create(
         kind="diy",
         ward="E05009373",
@@ -36,8 +37,14 @@ def already_merged_case(db):
         location_cache="Merged case",
         point=Point(470267, 122766),
     )
-    Action.objects.create(case=c1, case_old=c2)
-    return c2
+    action = Action.objects.create(case=c1, case_old=c2)
+    return (c1, c2, action)
+
+
+@pytest.fixture
+def already_merged_case(db, merged_case_setup):
+    _, c, _ = merged_case_setup
+    return c
 
 
 @pytest.fixture
@@ -126,3 +133,21 @@ def test_merging_cases(admin_client, same_case, case, action_types):
     response = admin_client.get(f"/cases/{case.id}")
     assertContains(response, "This case has been merged into")
     assertContains(response, "Noise witnessed")
+
+
+def test_case_actions_reversed_only_inclues_actions_from_mergee_after_merge_time(
+    merged_case_setup,
+):
+    """
+    If case A is merged into case B, we expect case A's actions_reversed to only inlcude
+    case B actions that have a time after the time of the merge action, regardless of when
+    these actions are created.
+    """
+    into, merged, merging_action = merged_case_setup
+    before_the_merge = merging_action.time - datetime.timedelta(days=1)
+    action_created_for_past_event = Action.objects.create(
+        case=into, time=before_the_merge
+    )
+    merged_actions = merged.actions_reversed
+    assert len(merged_actions) == 1
+    assert action_created_for_past_event not in merged_actions
