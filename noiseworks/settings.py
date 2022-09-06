@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "django.contrib.gis",
     "compressor",
+    "core",
     "debug_toolbar",
     "simple_history",
     "crispy_forms",
