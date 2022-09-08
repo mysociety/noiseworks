@@ -4,11 +4,10 @@ import datetime
 from crispy_forms_gds.fields import DateInputField
 from django import forms
 
+from noiseworks.forms import GDSForm
 from noiseworks.forms import StepForm
 
-
-class TimeWidget(forms.TextInput):
-    pass
+from .widgets import TimeWidget
 
 
 def coerce_to_date(d):

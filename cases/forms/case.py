@@ -1,8 +1,11 @@
+from datetime import datetime
 import re
 
 from crispy_forms_gds.choices import Choice
+from crispy_forms_gds.fields import DateInputField
 from crispy_forms_gds.layout import Fieldset, Layout, HTML
 from django import forms
+from django.utils.timezone import make_aware, now
 from django.core.exceptions import ValidationError
 
 from accounts.models import User
@@ -10,6 +13,7 @@ from noiseworks import cobrand
 from noiseworks.forms import GDSForm
 
 from ..models import Action, ActionType, Case
+from .widgets import TimeWidget
 
 
 class ReassignForm(GDSForm, forms.ModelForm):
@@ -120,6 +124,20 @@ class LogActionForm(GDSForm, forms.ModelForm):
 
     type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
     notes = action_notes_field()
+    in_the_past = forms.BooleanField(
+        label="This happened in the past",
+        required=False,
+    )
+    date = DateInputField(
+        label="When did it happen?",
+        required=False,
+    )
+    action_time = forms.TimeField(
+        widget=TimeWidget,
+        label="Time",
+        help_text="For example, 9pm or 2:30am – enter 12am for midnight",
+        required=False,
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -142,6 +160,9 @@ class LogActionForm(GDSForm, forms.ModelForm):
             Fieldset(
                 "type",
                 "notes",
+                "in_the_past",
+                "date",
+                "action_time",
                 HTML('{% include "cases/_action_form_close_prompt.html" %}'),
             )
         )
@@ -151,9 +172,50 @@ class LogActionForm(GDSForm, forms.ModelForm):
         type = ActionType.objects.get(id=type)
         return type
 
+    def clean(self):
+        in_the_past = self.cleaned_data.get("in_the_past", None)
+        _type = self.cleaned_data.get("type", None)
+        date = self.cleaned_data.get("date", None)
+        action_time = self.cleaned_data.get("action_time", None)
+
+        if in_the_past:
+            if _type and _type in [ActionType.case_closed, ActionType.case_reopened]:
+                raise ValidationError(
+                    f"You can’t {'close' if _type==ActionType.case_closed else 'reopen'} a case in the past."
+                )
+
+            if date and action_time:
+                _time = self._get_combined_time(date, action_time)
+                if _time > now():
+                    raise ValidationError(
+                        "The time of the action can’t be in the future."
+                    )
+            else:
+                raise ValidationError(
+                    "A date and time must be specified for actions in the past."
+                )
+
+        return self.cleaned_data
+
     def save(self, case):
         self.instance.case = case
+
+        in_the_past = self.cleaned_data.get("in_the_past", None)
+        date = self.cleaned_data.get("date", None)
+        action_time = self.cleaned_data.get("action_time", None)
+        if in_the_past and date and action_time:
+            self.instance.time = self._get_combined_time(date, action_time)
+        else:
+            self.instance.time = now()
+
         super().save()
+
+    def _get_combined_time(self, date, action_time):
+        combined_unaware = datetime.combine(
+            date,
+            action_time,
+        )
+        return make_aware(combined_unaware)
 
 
 class EditActionForm(GDSForm, forms.ModelForm):

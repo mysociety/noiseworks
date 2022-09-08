@@ -8,7 +8,7 @@ from django.contrib.gis.geos import Point
 from django.http import HttpRequest
 from django.template import Context, Template
 from django.urls import reverse
-from django.utils.timezone import make_aware, now
+from django.utils.timezone import localtime, make_aware, now
 from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
@@ -101,6 +101,18 @@ def action_types(db):
     ]
 
 
+def add_time_to_log_payload(payload, time=None):
+    if not time:
+        time = now()
+    time = localtime(time)
+    date = time.date()
+    payload["date_0"] = date.day
+    payload["date_1"] = date.month
+    payload["date_2"] = date.year
+    payload["action_time"] = time.strftime("%I:%M %p")
+    return payload
+
+
 def test_case_not_found(admin_client):
     response = admin_client.get("/cases/1")
     assertContains(response, "not be found", status_code=404)
@@ -131,34 +143,146 @@ def test_log_view(admin_client, case_1, action_types):
     response = admin_client.get(f"/cases/{case_1.id}/log")
     response = admin_client.post(
         f"/cases/{case_1.id}/log",
-        {"notes": "", "type": action_types[0].id},
+        add_time_to_log_payload({"notes": "", "type": action_types[0].id}),
     )
     assertContains(response, "required")
     response = admin_client.post(
         f"/cases/{case_1.id}/log",
-        {"notes": "Some notes", "type": action_types[0].id},
+        add_time_to_log_payload({"notes": "Some notes", "type": action_types[0].id}),
         follow=True,
     )
     response = admin_client.get("/cases?assigned=others")
     assertContains(response, "Letter sent")
 
 
-def test_log_case_closure(admin_client, case_1, action_types):
+def test_log_past_action(admin_client, case_1, action_types):
+    time = datetime.datetime(year=2000, day=1, month=2, hour=10, minute=20)
+    time = make_aware(time)
     admin_client.post(
         f"/cases/{case_1.id}/log",
-        {"notes": "Some notes", "type": ActionType.case_closed.id},
+        add_time_to_log_payload(
+            {
+                "notes": "Some notes",
+                "type": action_types[0].id,
+                "in_the_past": True,
+            },
+            time=time,
+        ),
+        follow=True,
+    )
+    case_1.refresh_from_db()
+    assert len(case_1.actions_reversed) == 1
+    action = case_1.actions_reversed[0]
+    assert action.time == time
+
+
+def test_log_past_action_does_not_update_case_modified(
+    admin_client, case_1, action_types
+):
+    old_modified = case_1.modified
+    time = old_modified - datetime.timedelta(days=1)
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        add_time_to_log_payload(
+            {
+                "notes": "Some notes",
+                "type": action_types[0].id,
+                "in_the_past": True,
+            },
+            time=time,
+        ),
+        follow=True,
+    )
+    assert response.status_code == 200
+    assert case_1.modified == old_modified
+
+
+def _log_past_action_and_check_for_error(
+    admin_client, case_1, time, _type, expected_error_text
+):
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        add_time_to_log_payload(
+            {
+                "notes": "Some notes",
+                "in_the_past": True,
+                "type": _type,
+            },
+            time=time,
+        ),
+        follow=True,
+    )
+    assertContains(response, expected_error_text)
+
+
+def test_logging_past_action_fails_for_future_time(admin_client, case_1, action_types):
+    error = "The time of the action can’t be in the future."
+    _log_past_action_and_check_for_error(
+        admin_client,
+        case_1,
+        now() + datetime.timedelta(days=1),
+        action_types[0].id,
+        error,
+    )
+    _log_past_action_and_check_for_error(
+        admin_client,
+        case_1,
+        now() + datetime.timedelta(hours=1),
+        action_types[0].id,
+        error,
+    )
+
+
+def test_logging_past_action_fails_for_closing(admin_client, case_1, action_types):
+    error = "You can’t close a case in the past."
+    _log_past_action_and_check_for_error(
+        admin_client, case_1, now(), ActionType.case_closed.id, error
+    )
+
+
+def test_logging_past_action_fails_for_reopening(admin_client, case_1, action_types):
+    error = "You can’t reopen a case in the past."
+    _log_past_action_and_check_for_error(
+        admin_client, case_1, now(), ActionType.case_reopened.id, error
+    )
+
+
+def test_logging_past_action_fails_for_no_specified_time(
+    admin_client, case_1, action_types
+):
+    error = "A date and time must be specified for actions in the past."
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        {
+            "notes": "Some notes",
+            "in_the_past": True,
+            "type": action_types[0].id,
+        },
+        follow=True,
+    )
+    assertContains(response, error)
+
+
+def test_log_case_closure(admin_client, case_1):
+    admin_client.post(
+        f"/cases/{case_1.id}/log",
+        add_time_to_log_payload(
+            {"notes": "Some notes", "type": ActionType.case_closed.id}
+        ),
         follow=True,
     )
     case_1.refresh_from_db()
     assert case_1.closed
 
 
-def test_log_case_reopening(admin_client, case_1, action_types):
+def test_log_case_reopening(admin_client, case_1):
     case_1.closed = True
     case_1.save()
     admin_client.post(
         f"/cases/{case_1.id}/log",
-        {"notes": "Some notes", "type": ActionType.case_reopened.id},
+        add_time_to_log_payload(
+            {"notes": "Some notes", "type": ActionType.case_reopened.id}
+        ),
         follow=True,
     )
     case_1.refresh_from_db()
@@ -279,10 +403,12 @@ def test_action_output(
 def test_case_had_abatement(admin_client, case_1, action_types):
     assert not case_1.had_abatement_notice
     admin_client.post(
-        f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[2].id}
+        f"/cases/{case_1.id}/log",
+        add_time_to_log_payload({"notes": "Some notes", "type": action_types[2].id}),
     )
     admin_client.post(
-        f"/cases/{case_1.id}/log", {"notes": "Some notes", "type": action_types[1].id}
+        f"/cases/{case_1.id}/log",
+        add_time_to_log_payload({"notes": "Some notes", "type": action_types[1].id}),
     )
     case_1 = Case.objects.get(id=case_1.id)  # Refresh to get rid of cached properties
     assert case_1.had_abatement_notice
