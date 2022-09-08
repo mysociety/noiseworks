@@ -412,14 +412,15 @@ def show_confirmation_step(wizard):
 
 
 def compile_dates(data):
+    local_timezone = timezone.localtime(timezone.now()).tzinfo
     start = datetime.datetime.combine(
-        data["start_date"], data["start_time"], tzinfo=timezone.get_current_timezone()
+        data["start_date"], data["start_time"], tzinfo=local_timezone
     )
     if data["happening_now"]:
         end = timezone.now()
     else:
         end = datetime.datetime.combine(
-            data["start_date"], data["end_time"], tzinfo=timezone.get_current_timezone()
+            data["start_date"], data["end_time"], tzinfo=local_timezone
         )
         if end < start:
             end += datetime.timedelta(days=1)
