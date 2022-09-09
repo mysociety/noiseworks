@@ -6,13 +6,14 @@ import pytest
 from django.contrib.gis.geos import Point
 from django.http import HttpRequest
 from django.template import Context, Template
-from django.utils.timezone import make_aware
+from django.utils.timezone import make_aware, get_current_timezone
 from pytest_django.asserts import assertContains
 
 from accounts.models import User
 
 from ..forms import ActionForm
 from ..models import Action, ActionType, Case, Complaint
+from ..views import compile_dates
 
 pytestmark = pytest.mark.django_db
 
@@ -220,3 +221,23 @@ def test_wfs_server_down(requests_mock):
     requests_mock.get(re.compile("transport/ows"), text="Error")
     case = Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
     assert case.location_display == "800m around (470267,122766)"
+
+
+def test_compile_dates_correctly_uses_the_current_timezone():
+    start_date = datetime.date(2000, 1, 9)
+    start_time = datetime.time(10, 23, 46)
+    end_time = datetime.time(14, 32, 54)
+    data = {
+        "start_date": start_date,
+        "start_time": start_time,
+        "end_time": end_time,
+        "happening_now": False,
+    }
+    expected_start_naive = datetime.datetime(2000, 1, 9, 10, 23, 46)
+    expected_start = make_aware(expected_start_naive)
+    expected_end_naive = datetime.datetime(2000, 1, 9, 14, 32, 54)
+    expected_end = make_aware(expected_end_naive)
+
+    start, end = compile_dates(data)
+    assert start == expected_start
+    assert end == expected_end
