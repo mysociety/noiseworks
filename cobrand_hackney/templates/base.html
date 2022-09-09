@@ -25,6 +25,10 @@
         crossorigin=""></script>
     <script src="https://unpkg.com/dom-focus-lock@1.0.4/umd/index.js"></script>
 
+    {% if 'noiseworks.staging.societyworks.org' in request.get_host %}
+         {% include "_ux_tweak_snippet.html" %}
+    {% endif %}
+
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ title }}">
     <meta property="og:site_name" content="{{ site_name }}">
