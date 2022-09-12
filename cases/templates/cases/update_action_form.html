@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+<div>
+    <a href="{% url "action-view" action.id %}" class="nw-back-link">Cancel, back to action</a>
+</div>
+
+<h1 style="margin-top:10px">Edit logged action</h1>
+
+{% error_summary form %}
+{% crispy form %}
+
+{% endblock %}

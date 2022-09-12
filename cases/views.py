@@ -12,6 +12,7 @@ from django.contrib.gis.measure import D
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -269,7 +270,7 @@ def remove_perpetrator(request, pk, perpetrator):
 @staff_member_required
 def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = forms.ActionForm(request.POST or None)
+    form = forms.LogForm(request.POST or None)
     if form.is_valid():
         typ, _ = ActionType.objects.get_or_create(
             name="Case closed", defaults={"visibility": "staff"}
@@ -286,9 +287,51 @@ def log_action(request, pk):
         return redirect(case)
     return render(
         request,
-        "cases/action_form.html",
+        "cases/log_action_form.html",
         {
             "case": case,
+            "form": form,
+        },
+    )
+
+
+@staff_member_required
+def action(request, pk):
+    action = get_object_or_404(Action, pk=pk)
+    return render(
+        request,
+        "cases/action.html",
+        {
+            "action": action,
+            "case": action.case,
+        },
+    )
+
+
+@staff_member_required
+def update_action_field(request, pk, field_name):
+    # TODO: Restrict to only the person who logged the action, and superusers.
+    # TODO: Enforce time controlaction_.
+
+    action = get_object_or_404(Action, pk=pk)
+
+    field_to_form_cls = {"internal-notes": forms.UpdateInternalNotesForm}
+    form_cls = field_to_form_cls.get(field_name, None)
+    if not form_cls:
+        raise Http404()
+
+    form = form_cls(request.POST or None, instance=action)
+
+    if form.is_valid():
+        form.save()
+        return redirect(action)
+
+    return render(
+        request,
+        "cases/update_action_form.html",
+        {
+            "action": action,
+            "case": action.case,
             "form": form,
         },
     )

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div>
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">Back to case</a>
+</div>
+
+<div>
+    <h1 class="govuk-heading-l">Logged Action</h1>
+</div>
+
+{% comment %}TODO: Fix alignment of change link.{% endcomment %}
+<dl class="nw-summary-list">
+  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
+    <dt class="govuk-summary-list__key">Case</dt>
+    <dt class="govuk-summary-list__value">
+        <a class="nw-link--no-visited-state" href="{% url "case-view" case.id %}">
+            Case #{{case.id}}
+	</a>
+    </dt>
+  </div>
+  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
+    <dt class="govuk-summary-list__key">Type</dt>
+    <dt class="govuk-summary-list__value">{{action.type}}</dt>
+  </div>
+  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
+    <dt class="govuk-summary-list__key">Time of action</dt>
+    <dt class="govuk-summary-list__value">{{action.time}}</dt>
+  </div>
+  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
+    <dt class="govuk-summary-list__key">Time logged</dt>
+    <dt class="govuk-summary-list__value">{{action.created}}</dt>
+  </div>
+  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
+    <dt class="govuk-summary-list__key">Logged by</dt>
+    <dt class="govuk-summary-list__value">{{action.created_by}}</dt>
+  </div>
+  {% if action.notes %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Internal notes</dt>
+        <dd class="govuk-summary-list__value">{{action.notes}}</dd>
+        <dd class="govuk-summary-list__actions">
+            <a class="nw-link--no-visited-state" href="{% url "action-update" action.id "internal-notes" %}">
+                Change<span class="govuk-visually-hidden"> internal notes</span>
+            </a>
+        </dd>
+      </div>
+  {% endif %}
+</dl>
+
+{% endblock %}

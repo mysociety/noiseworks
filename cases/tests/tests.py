@@ -11,7 +11,7 @@ from pytest_django.asserts import assertContains
 
 from accounts.models import User
 
-from ..forms import ActionForm
+from ..forms import LogForm
 from ..models import Action, ActionType, Case, Complaint
 from ..views import compile_dates
 
@@ -154,7 +154,7 @@ def test_log_case_reopening(admin_client, case_1, action_types):
 
 
 def test_log_form(case_1):
-    form = ActionForm(instance=case_1, data={"notes": "hmm"})
+    form = LogForm(instance=case_1, data={"notes": "hmm"})
     assert form.errors["type"] == ["This field is required."]
 
 

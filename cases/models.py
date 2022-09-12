@@ -551,6 +551,9 @@ class ActionManager(models.Manager):
 class Action(AbstractModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="actions")
 
+    def get_absolute_url(self):
+        return reverse("action-view", args=[self.pk])
+
     # User
     type = models.ForeignKey(
         ActionType,
