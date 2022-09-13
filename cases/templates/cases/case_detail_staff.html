@@ -55,6 +55,7 @@
     {% blocktranslate count counter=case.number_all_complainants trimmed %}
     from {{ counter }} complainant{% plural %}from {{ counter }} complainants
     {% endblocktranslate %}</dd>
+    <dd class="govuk-summary-list__actions"></dd>
   </div>
   {% if not case.merged_into %}
   <div class="govuk-summary-list__row">
