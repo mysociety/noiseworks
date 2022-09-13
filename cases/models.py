@@ -1,4 +1,6 @@
+from datetime import timedelta
 import requests
+
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
@@ -551,9 +553,6 @@ class ActionManager(models.Manager):
 class Action(AbstractModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="actions")
 
-    def get_absolute_url(self):
-        return reverse("action-view", args=[self.pk])
-
     # User
     type = models.ForeignKey(
         ActionType,
@@ -575,6 +574,16 @@ class Action(AbstractModel):
     )
 
     objects = ActionManager.from_queryset(ActionQuerySet)()
+
+    def get_absolute_url(self):
+        return reverse("action-view", args=[self.pk])
+
+    def is_editable(self, user):
+        if not user.has_perm("action.change", self):
+            return False
+
+        # TODO: Make max time configurable.
+        return timezone.now() - self.created <= timedelta(minutes=60)
 
     def __str__(self):
         if self.case_old:

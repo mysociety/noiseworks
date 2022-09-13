@@ -304,16 +304,17 @@ def action(request, pk):
         {
             "action": action,
             "case": action.case,
+            "is_editable": action.is_editable(request.user),
         },
     )
 
 
 @staff_member_required
 def update_action_field(request, pk, field_name):
-    # TODO: Restrict to only the person who logged the action, and superusers.
-    # TODO: Enforce time controlaction_.
-
     action = get_object_or_404(Action, pk=pk)
+
+    if not action.is_editable(request.user):
+        raise PermissionDenied
 
     field_to_form_cls = {"internal-notes": forms.UpdateInternalNotesForm}
     form_cls = field_to_form_cls.get(field_name, None)

@@ -29,11 +29,15 @@
       <div class="govuk-summary-list__row">
         <dt class="govuk-summary-list__key">Internal notes</dt>
         <dd class="govuk-summary-list__value">{{action.notes}}</dd>
-	<dd class="govuk-summary-list__actions">
-          <a class="govuk-link--no-visited-state" href="{% url "action-update" action.id "internal-notes" %}">
-            Change<span class="govuk-visually-hidden"> internal notes</span>
-          </a>
-	</dd>
+	{% if is_editable %}
+	  <dd class="govuk-summary-list__actions">
+            <a class="govuk-link--no-visited-state" href="{% url "action-update" action.id "internal-notes" %}">
+              Change<span class="govuk-visually-hidden"> internal notes</span>
+            </a>
+	  </dd>
+	{% else %}
+          <span class="govuk-summary-list__actions"></span>
+	{% endif %}
       </div>
   {% endif %}
   <div class="govuk-summary-list__row">

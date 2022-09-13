@@ -16,6 +16,9 @@ class CaseAdmin(admin.ModelAdmin):
 class ActionAdmin(admin.ModelAdmin):
     list_display = ("type", "case", "time", "created")
 
+    def has_change_permission(self, request, obj):
+        return request.user == obj.created_by
+
 
 @admin.register(ActionType)
 class ActionTypeAdmin(admin.ModelAdmin):
