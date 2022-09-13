@@ -585,10 +585,11 @@ class Action(AbstractModel):
         # TODO: Make time for edits to be allowed configurable.
         change_minutes_allowance = 60
         if timezone.now() - self.created > timedelta(minutes=change_minutes_allowance):
-            return (
-                False,
-                f"Changes can't be made to an action {change_minutes_allowance} minutes after its logged.",
-            )
+            return False, "You don't have the necessary permissions."
+            # return (
+            # False,
+            # f"Changes can't be made to an action {change_minutes_allowance} minutes after its logged.",
+            # )
 
         return True, ""
 

@@ -121,7 +121,7 @@ def case_staff(request, pk):
 
     # TODO: Cleanup timeline entries to avoid relying on 'id' check for whether
     # or not we have a real action.
-    # TODO: Find a better way of exposing the changeability status for actions in 
+    # TODO: Find a better way of exposing the changeability status for actions in
     # the timeline.
     changeable_action_ids = set()
     for entry in timeline:
@@ -332,8 +332,10 @@ def action(request, pk):
 def update_action_field(request, pk, field_name):
     action = get_object_or_404(Action, pk=pk)
 
-    if not request.user.has_perm("action.change", action):
-        raise PermissionDenied
+    can_change, reason_if_not = action.can_change(request.user)
+    if not can_change:
+        print(reason_if_not)
+        raise PermissionDenied(reason_if_not)
 
     field_to_form_cls = {"internal-notes": forms.UpdateInternalNotesForm}
     form_cls = field_to_form_cls.get(field_name, None)
