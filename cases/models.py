@@ -578,12 +578,19 @@ class Action(AbstractModel):
     def get_absolute_url(self):
         return reverse("action-view", args=[self.pk])
 
-    def is_editable(self, user):
-        if not user.has_perm("action.change", self):
-            return False
+    def can_change(self, user):
+        if not user.has_perm("action.change"):
+            return False, "You don't have the necessary permissions."
 
-        # TODO: Make max time configurable.
-        return timezone.now() - self.created <= timedelta(minutes=60)
+        # TODO: Make time for edits to be allowed configurable.
+        change_minutes_allowance = 60
+        if timezone.now() - self.created > timedelta(minutes=change_minutes_allowance):
+            return (
+                False,
+                f"Changes can't be made to an action {change_minutes_allowance} minutes after its logged.",
+            )
+
+        return True, ""
 
     def __str__(self):
         if self.case_old:

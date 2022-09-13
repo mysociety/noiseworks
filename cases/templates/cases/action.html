@@ -7,8 +7,22 @@
 </div>
 
 <div>
-    <h1 class="govuk-heading-l">Logged Action</h1>
+    <h1 class="govuk-heading-l">Logged Action #{{ action.id }}</h1>
 </div>
+
+{% if not can_change %}
+{% comment %}TODO fix spacing in a more robust way.{% endcomment %}
+<div style="margin-bottom: 10px">
+  <section class="nw-page-announcement--info">
+    <h3 class="lbh-page-announcement__title">
+      You can't make changes to this action.
+    </h3>
+    <div class="nw-page-announcement__content">
+      {{reason_if_change_not_allowed}}
+    </div>
+  </section>
+</div>
+{% endif %}
 
 <dl class="nw-summary-list">
   <div class="govuk-summary-list__row">
@@ -25,21 +39,6 @@
     <dd class="govuk-summary-list__value">{{action.type}}</dd>
     <span class="govuk-summary-list__actions"></span>
   </div>
-  {% if action.notes %}
-      <div class="govuk-summary-list__row">
-        <dt class="govuk-summary-list__key">Internal notes</dt>
-        <dd class="govuk-summary-list__value">{{action.notes}}</dd>
-	{% if is_editable %}
-	  <dd class="govuk-summary-list__actions">
-            <a class="govuk-link--no-visited-state" href="{% url "action-update" action.id "internal-notes" %}">
-              Change<span class="govuk-visually-hidden"> internal notes</span>
-            </a>
-	  </dd>
-	{% else %}
-          <span class="govuk-summary-list__actions"></span>
-	{% endif %}
-      </div>
-  {% endif %}
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Time of action</dt>
     <dd class="govuk-summary-list__value">{{action.time}}</dd>
@@ -55,6 +54,21 @@
     <dd class="govuk-summary-list__value">{{action.created_by}}</dd>
     <span class="govuk-summary-list__actions"></span>
   </div>
+  {% if action.notes %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Internal notes</dt>
+        <dd class="govuk-summary-list__value">{{action.notes}}</dd>
+	{% if can_change %}
+	  <dd class="govuk-summary-list__actions">
+            <a class="govuk-link--no-visited-state" href="{% url "action-update" action.id "internal-notes" %}">
+              Change<span class="govuk-visually-hidden"> internal notes</span>
+            </a>
+	  </dd>
+	{% else %}
+          <span class="govuk-summary-list__actions"></span>
+	{% endif %}
+      </div>
+  {% endif %}
 </dl>
 
 {% endblock %}

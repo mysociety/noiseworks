@@ -275,7 +275,7 @@ var nw = nw || {};
         <a href="{% url "case-log-action" case.id %}" class="govuk-button lbh-button">Log an action</a>
     </li>
   {% endif %}
-{% for entry in case.timeline_staff %}
+{% for entry in timeline %}
 <li class="lbh-timeline__event">
   {% if entry.complaint %}
     <span class="citizen">{{ entry.complaint.complainant }}</span>
@@ -294,9 +294,11 @@ var nw = nw || {};
 
     {% else %}
         {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
-	    {% if entry.action.id %}
+            {% comment %}TODO: Cleanup timeline entries to avoid relying on 'id' check for whether{% endcomment %}
+            {% comment %}or not we have a real action.{% endcomment %}
+	    {% if entry.action.id and entry.action.id in changeable_action_ids %}
                 <a class="nw-link--no-visited-state" href="{% url "action-view" entry.action.id %}">
-                    (manage)<span class="govuk-visually-hidden"> action</span>
+                    (edit)<span class="govuk-visually-hidden"> action</span>
                 </a>
 	    {% endif %}
         {% if entry.action.notes %}

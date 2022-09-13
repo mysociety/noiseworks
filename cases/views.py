@@ -117,11 +117,28 @@ def case_staff(request, pk):
     #    return redirect(redirect)
 
     is_follower = case.followers.filter(pk=request.user.id)
+    timeline = case.timeline_staff
+
+    # TODO: Cleanup timeline entries to avoid relying on 'id' check for whether
+    # or not we have a real action.
+    # TODO: Find a better way of exposing the changeability status for actions in 
+    # the timeline.
+    changeable_action_ids = set()
+    for entry in timeline:
+        if "action" in entry and hasattr(entry["action"], "id"):
+            can_change, _ = entry["action"].can_change(request.user)
+            if can_change:
+                changeable_action_ids.add(entry["action"].id)
 
     return render(
         request,
         "cases/case_detail_staff.html",
-        context={"case": case, "is_follower": is_follower},
+        context={
+            "case": case,
+            "is_follower": is_follower,
+            "timeline": timeline,
+            "changeable_action_ids": changeable_action_ids,
+        },
     )
 
 
@@ -298,13 +315,15 @@ def log_action(request, pk):
 @staff_member_required
 def action(request, pk):
     action = get_object_or_404(Action, pk=pk)
+    can_change, reason_if_change_not_allowed = action.can_change(request.user)
     return render(
         request,
         "cases/action.html",
         {
             "action": action,
             "case": action.case,
-            "is_editable": action.is_editable(request.user),
+            "can_change": can_change,
+            "reason_if_change_not_allowed": reason_if_change_not_allowed,
         },
     )
 
@@ -313,7 +332,7 @@ def action(request, pk):
 def update_action_field(request, pk, field_name):
     action = get_object_or_404(Action, pk=pk)
 
-    if not action.is_editable(request.user):
+    if not request.user.has_perm("action.change", action):
         raise PermissionDenied
 
     field_to_form_cls = {"internal-notes": forms.UpdateInternalNotesForm}
