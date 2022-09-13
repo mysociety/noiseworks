@@ -294,10 +294,9 @@ var nw = nw || {};
 
     {% else %}
         {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
-	    {% comment %}TODO make edit link only appear for people with permissions and within time frame{% endcomment %}
 	    {% if entry.action.id %}
                 <a class="nw-link--no-visited-state" href="{% url "action-view" entry.action.id %}">
-                    Edit<span class="govuk-visually-hidden"> action</span>
+                    (manage)<span class="govuk-visually-hidden"> action</span>
                 </a>
 	    {% endif %}
         {% if entry.action.notes %}

@@ -12,41 +12,46 @@
 
 {% comment %}TODO: Fix alignment of change link.{% endcomment %}
 <dl class="nw-summary-list">
-  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
+  <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Case</dt>
-    <dt class="govuk-summary-list__value">
+    <dd class="govuk-summary-list__value">
         <a class="nw-link--no-visited-state" href="{% url "case-view" case.id %}">
-            Case #{{case.id}}
+            #{{case.id}}
 	</a>
-    </dt>
+    </dd>
+    <span class="govuk-summary-list__actions"></span>
   </div>
-  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
+  <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Type</dt>
-    <dt class="govuk-summary-list__value">{{action.type}}</dt>
-  </div>
-  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
-    <dt class="govuk-summary-list__key">Time of action</dt>
-    <dt class="govuk-summary-list__value">{{action.time}}</dt>
-  </div>
-  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
-    <dt class="govuk-summary-list__key">Time logged</dt>
-    <dt class="govuk-summary-list__value">{{action.created}}</dt>
-  </div>
-  <div class="govuk-summary-list__row govuk-summary-list__row--no-actions">
-    <dt class="govuk-summary-list__key">Logged by</dt>
-    <dt class="govuk-summary-list__value">{{action.created_by}}</dt>
+    <dd class="govuk-summary-list__value">{{action.type}}</dd>
+    <span class="govuk-summary-list__actions"></span>
   </div>
   {% if action.notes %}
       <div class="govuk-summary-list__row">
         <dt class="govuk-summary-list__key">Internal notes</dt>
         <dd class="govuk-summary-list__value">{{action.notes}}</dd>
-        <dd class="govuk-summary-list__actions">
-            <a class="nw-link--no-visited-state" href="{% url "action-update" action.id "internal-notes" %}">
-                Change<span class="govuk-visually-hidden"> internal notes</span>
-            </a>
-        </dd>
+	<dd class="govuk-summary-list__actions">
+          <a class="govuk-link--no-visited-state" href="{% url "action-update" action.id "internal-notes" %}">
+            Change<span class="govuk-visually-hidden"> internal notes</span>
+          </a>
+	</dd>
       </div>
   {% endif %}
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Time of action</dt>
+    <dd class="govuk-summary-list__value">{{action.time}}</dd>
+    <span class="govuk-summary-list__actions"></span>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Time logged</dt>
+    <dd class="govuk-summary-list__value">{{action.created}}</dd>
+    <span class="govuk-summary-list__actions"></span>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Logged by</dt>
+    <dd class="govuk-summary-list__value">{{action.created_by}}</dd>
+    <span class="govuk-summary-list__actions"></span>
+  </div>
 </dl>
 
 {% endblock %}
