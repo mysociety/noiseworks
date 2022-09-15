@@ -116,11 +116,16 @@ def case_staff(request, pk):
     #    return redirect(redirect)
 
     is_follower = case.followers.filter(pk=request.user.id)
+    timeline = case.timeline_staff_with_operation_flags(request.user)
 
     return render(
         request,
         "cases/case_detail_staff.html",
-        context={"case": case, "is_follower": is_follower},
+        context={
+            "case": case,
+            "is_follower": is_follower,
+            "timeline": timeline,
+        },
     )
 
 
@@ -258,11 +263,9 @@ def remove_perpetrator(request, pk, perpetrator):
     case = get_object_or_404(Case, pk=pk)
     user = get_object_or_404(User, pk=perpetrator)
     case.perpetrators.remove(user)
-    # TODO Centralise this action creation somewhere?
-    typ, _ = ActionType.objects.get_or_create(
-        name="Edit case", defaults={"visibility": "internal"}
+    Action.objects.create(
+        case=case, type=ActionType.edit_case, notes="Removed perpetrator"
     )
-    Action.objects.create(case=case, type=typ, notes="Removed perpetrator")
     return redirect(case)
 
 
@@ -271,17 +274,6 @@ def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.ActionForm(request.POST or None)
     if form.is_valid():
-        typ, _ = ActionType.objects.get_or_create(
-            name="Case closed", defaults={"visibility": "staff"}
-        )
-        if form.cleaned_data["type"] == typ:
-            case.closed = True
-        typ, _ = ActionType.objects.get_or_create(
-            name="Case reopened", defaults={"visibility": "staff"}
-        )
-        if form.cleaned_data["type"] == typ:
-            case.closed = False
-        # Saving the action will also save the case change
         form.save(case=case)
         return redirect(case)
     return render(
@@ -290,6 +282,34 @@ def log_action(request, pk):
         {
             "case": case,
             "form": form,
+            "form_title": "Log an action",
+        },
+    )
+
+
+@staff_member_required
+def edit_logged_action(request, case_pk, action_pk):
+    case = get_object_or_404(Case, pk=case_pk)
+    action = get_object_or_404(Action, pk=action_pk)
+
+    if not action.can_edit(request.user):
+        raise PermissionDenied
+
+    form = forms.ActionForm(
+        request.POST or None,
+        submit_text="Edit logged action",
+        instance=action,
+    )
+    if form.is_valid():
+        form.save(case=case)
+        return redirect(case)
+    return render(
+        request,
+        "cases/action_form.html",
+        {
+            "case": case,
+            "form": form,
+            "form_title": "Edit a logged action",
         },
     )
 

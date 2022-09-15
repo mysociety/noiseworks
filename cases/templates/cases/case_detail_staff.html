@@ -276,7 +276,7 @@ var nw = nw || {};
         <a href="{% url "case-log-action" case.id %}" class="govuk-button lbh-button">Log an action</a>
     </li>
   {% endif %}
-{% for entry in case.timeline_staff %}
+{% for entry in timeline %}
 <li class="lbh-timeline__event">
   {% if entry.complaint %}
     <span class="citizen">{{ entry.complaint.complainant }}</span>
@@ -295,6 +295,11 @@ var nw = nw || {};
 
     {% else %}
         {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
+	    {% if entry.can_edit_action %}
+                <a class="nw-link--no-visited-state" href="{% url "case-edit-action" entry.action.case.id entry.action.id %}">
+                    (edit)<span class="govuk-visually-hidden"> action</span>
+                </a>
+	    {% endif %}
         {% if entry.action.notes %}
             <details class="govuk-details lbh-details" data-module="govuk-details">
                 <summary class="lbh-body govuk-details__summary">

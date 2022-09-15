@@ -5,7 +5,7 @@ from django.contrib.gis.geos import Point
 from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.functional import cached_property
+from django.utils.functional import cached_property, classproperty
 from django.utils.html import format_html, mark_safe
 from simple_history.models import HistoricalRecords
 
@@ -39,6 +39,22 @@ class AbstractModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class CaseSettingsSingleton(AbstractModel):
+    _singleton = models.BooleanField(default=True, editable=False, unique=True)
+    logged_action_editing_window = models.DurationField()
+
+    class Meta:
+        verbose_name = "Case settings"
+        verbose_name_plural = "Case settings"
+
+    @classmethod
+    def instance(cls):
+        return cls.objects.all()[0]
+
+    def __str__(self):
+        return "Case Settings"
 
 
 class CaseManager(models.Manager):
@@ -218,6 +234,7 @@ class Case(AbstractModel):
 
     def save(self, *args, **kwargs):
         self.update_location_cache()
+        self.update_closed_status()
         return super().save(*args, **kwargs)
 
     def original_entry(self):
@@ -257,6 +274,19 @@ class Case(AbstractModel):
                 else:
                     desc = f"({self.point.x:.0f},{self.point.y:.0f})"
             self.location_cache = f"{self.radius}m around {desc}"
+
+    def update_closed_status(self):
+        # This will not update the case based on newly logged
+        # actions for a case this one has been merged into.
+        for action in self.actions.order_by("-time"):
+            if action.type == ActionType.case_closed:
+                self.closed = True
+                return
+
+            elif action.type == ActionType.case_reopened:
+                break
+
+        self.closed = False
 
     @property
     def kind_display(self):
@@ -338,7 +368,7 @@ class Case(AbstractModel):
         Case.objects.attach_diffs(histories)
         return histories
 
-    def _timeline(self, actions, action_fn, complaints, history_to_show):
+    def _timeline(self, actions, action_fn, complaints, history_to_show, user=None):
         data = []
         for action in actions:
             row = {
@@ -346,6 +376,9 @@ class Case(AbstractModel):
                 "summary": action_fn(action),
                 "action": action,
             }
+            if user:
+                row["can_edit_action"] = action.can_edit(user)
+
             data.append(row)
         for complaint in complaints:
             row = {
@@ -401,6 +434,12 @@ class Case(AbstractModel):
         """Staff timeline shows all actions and complaints on the case and its merged cases"""
         return self._timeline(
             self.actions_reversed, str, self.all_complaints_reversed, "all"
+        )
+
+    def timeline_staff_with_operation_flags(self, staff):
+        """Staff timeline but including flags for what operations the staff member can do"""
+        return self._timeline(
+            self.actions_reversed, str, self.all_complaints_reversed, "all", user=staff
         )
 
     @cached_property
@@ -510,6 +549,27 @@ class ActionType(models.Model):
         max_length=10, choices=VISIBILITY_CHOICES, default="staff"
     )
 
+    @classproperty
+    def case_closed(cls):
+        typ, _ = ActionType.objects.get_or_create(
+            name="Case closed", defaults={"visibility": "staff"}
+        )
+        return typ
+
+    @classproperty
+    def case_reopened(cls):
+        typ, _ = ActionType.objects.get_or_create(
+            name="Case reopened", defaults={"visibility": "staff"}
+        )
+        return typ
+
+    @classproperty
+    def edit_case(cls):
+        typ, _ = ActionType.objects.get_or_create(
+            name="Edit case", defaults={"visibility": "internal"}
+        )
+        return typ
+
     def __str__(self):
         return self.name
 
@@ -572,6 +632,10 @@ class Action(AbstractModel):
     )
 
     objects = ActionManager.from_queryset(ActionQuerySet)()
+
+    def can_edit(self, user):
+        window = CaseSettingsSingleton.instance().logged_action_editing_window
+        return user == self.created_by and timezone.now() - self.created <= window
 
     def __str__(self):
         if self.case_old:

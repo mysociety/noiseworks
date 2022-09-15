@@ -4,7 +4,7 @@ from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
 
-from ..models import Case, Complaint
+from ..models import Action, ActionType, Case, Complaint
 
 pytestmark = pytest.mark.django_db
 
@@ -151,8 +151,8 @@ def test_user_ward_js_array(admin_client):
 
 
 def test_closed_cases(admin_client, case_1):
-    case_1.closed = True
-    case_1.save()
+    action = Action(type=ActionType.case_closed, case=case_1)
+    action.save()
     response = admin_client.get("/cases")
     assertNotContains(response, f"/cases/{case_1.id}")
     response = admin_client.get("/cases?closed=on")
