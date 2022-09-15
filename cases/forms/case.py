@@ -116,7 +116,10 @@ class ActionForm(GDSForm, forms.ModelForm):
         help_text="You can upload documents by adding a link or links to shared documents",
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, submit_text=None, **kwargs):
+        if submit_text:
+            self.submit_text = submit_text
+
         super().__init__(*args, **kwargs)
 
         action_types = ActionType.objects.exclude(visibility="internal").order_by(

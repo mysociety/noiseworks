@@ -1,3 +1,4 @@
+from datetime import timedelta
 import requests
 from django.conf import settings
 from django.contrib.gis.db import models
@@ -39,6 +40,22 @@ class AbstractModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class CaseSettingsSingleton(AbstractModel):
+    _singleton = models.BooleanField(default=True, editable=False, unique=True)
+    logged_action_editing_window = models.DurationField()
+
+    class Meta:
+        verbose_name = "Case settings"
+        verbose_name_plural = "Case settings"
+
+    @classmethod
+    def instance(cls):
+        return cls.objects.all()[0]
+
+    def __str__(self):
+        return "Case Settings"
 
 
 class CaseManager(models.Manager):
@@ -572,6 +589,10 @@ class Action(AbstractModel):
     )
 
     objects = ActionManager.from_queryset(ActionQuerySet)()
+
+    def can_edit(self, user):
+        window = CaseSettingsSingleton.instance().logged_action_editing_window
+        return user == self.created_by and timezone.now() - self.created <= window
 
     def __str__(self):
         if self.case_old:

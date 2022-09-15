@@ -1,4 +1,5 @@
 import datetime
+from http import HTTPStatus
 import re
 from unittest.mock import patch
 
@@ -12,7 +13,7 @@ from pytest_django.asserts import assertContains
 from accounts.models import User
 
 from ..forms import ActionForm
-from ..models import Action, ActionType, Case, Complaint
+from ..models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
 from ..views import compile_dates
 
 pytestmark = pytest.mark.django_db
@@ -46,6 +47,16 @@ def normal_user(db):
 def case_1(db, staff_user_1, normal_user):
     return Case.objects.create(
         kind="diy", assigned=staff_user_1, created_by=normal_user, ward="E05009373"
+    )
+
+
+@pytest.fixture
+def logged_action_1(case_1, staff_user_1, action_types):
+    return Action.objects.create(
+        type=action_types[0],
+        notes="internal notes",
+        case=case_1,
+        created_by=staff_user_1,
     )
 
 
@@ -151,6 +162,63 @@ def test_log_case_reopening(admin_client, case_1, action_types):
     )
     case_1.refresh_from_db()
     assert not case_1.closed
+
+
+def test_edit_logged_action_view(logged_action_1, action_types, client):
+    new_notes = "edited: " + logged_action_1.notes
+
+    # Get the next action type along, circling back if its at the end.
+    new_action_type = action_types[
+        action_types.index(logged_action_1.type) + 1 % len(action_types)
+    ]
+
+    logged_action_1.created = now()
+    client.force_login(logged_action_1.created_by)
+    response = client.post(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit",
+        {
+            "notes": new_notes,
+            "type": new_action_type.id,
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.OK
+    logged_action_1.refresh_from_db()
+    assert logged_action_1.notes == new_notes
+    assert logged_action_1.type == new_action_type
+
+
+def test_edit_logged_action_forbidden_for_staff_who_didnt_log(
+    logged_action_1, staff_user_2, client
+):
+    client.force_login(staff_user_2)
+    response = client.post(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit",
+        {
+            "notes": logged_action_1.notes,
+            "type": logged_action_1.type.id,
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_edit_logged_action_forbidden_after_edit_window(logged_action_1, client):
+    window = CaseSettingsSingleton.instance().logged_action_editing_window
+
+    logged_action_1.created = now() - window
+    logged_action_1.save()
+
+    client.force_login(logged_action_1.created_by)
+    response = client.post(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit",
+        {
+            "notes": logged_action_1.notes,
+            "type": logged_action_1.type.id,
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
 
 
 def test_log_form(case_1):

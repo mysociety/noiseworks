@@ -116,11 +116,30 @@ def case_staff(request, pk):
     #    return redirect(redirect)
 
     is_follower = case.followers.filter(pk=request.user.id)
+    timeline = case.timeline_staff
+
+    # TODO: Cleanup timeline entries to avoid relying on 'id' check for whether
+    # or not we have a real action.
+    # TODO: Find a better way of exposing the changeability status for actions in
+    # the timeline.
+    editable_action_ids = set()
+    for entry in timeline:
+        if (
+            "action" in entry
+            and hasattr(entry["action"], "id")
+            and entry["action"].can_edit(request.user)
+        ):
+            editable_action_ids.add(entry["action"].id)
 
     return render(
         request,
         "cases/case_detail_staff.html",
-        context={"case": case, "is_follower": is_follower},
+        context={
+            "case": case,
+            "is_follower": is_follower,
+            "timeline": timeline,
+            "editable_action_ids": editable_action_ids,
+        },
     )
 
 
@@ -266,23 +285,27 @@ def remove_perpetrator(request, pk, perpetrator):
     return redirect(case)
 
 
+def _save_action_form(form, case):
+    typ, _ = ActionType.objects.get_or_create(
+        name="Case closed", defaults={"visibility": "staff"}
+    )
+    if form.cleaned_data["type"] == typ:
+        case.closed = True
+    typ, _ = ActionType.objects.get_or_create(
+        name="Case reopened", defaults={"visibility": "staff"}
+    )
+    if form.cleaned_data["type"] == typ:
+        case.closed = False
+    # Saving the action will also save the case change
+    form.save(case=case)
+
+
 @staff_member_required
 def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.ActionForm(request.POST or None)
     if form.is_valid():
-        typ, _ = ActionType.objects.get_or_create(
-            name="Case closed", defaults={"visibility": "staff"}
-        )
-        if form.cleaned_data["type"] == typ:
-            case.closed = True
-        typ, _ = ActionType.objects.get_or_create(
-            name="Case reopened", defaults={"visibility": "staff"}
-        )
-        if form.cleaned_data["type"] == typ:
-            case.closed = False
-        # Saving the action will also save the case change
-        form.save(case=case)
+        _save_action_form(form, case)
         return redirect(case)
     return render(
         request,
@@ -290,6 +313,34 @@ def log_action(request, pk):
         {
             "case": case,
             "form": form,
+            "form_title": "Log an action",
+        },
+    )
+
+
+@staff_member_required
+def edit_logged_action(request, case_pk, action_pk):
+    case = get_object_or_404(Case, pk=case_pk)
+    action = get_object_or_404(Action, pk=action_pk)
+
+    if not action.can_edit(request.user):
+        raise PermissionDenied
+
+    form = forms.ActionForm(
+        request.POST or None,
+        submit_text="Edit logged action",
+        instance=action,
+    )
+    if form.is_valid():
+        _save_action_form(form, case)
+        return redirect(case)
+    return render(
+        request,
+        "cases/action_form.html",
+        {
+            "case": case,
+            "form": form,
+            "form_title": "Edit a logged action",
         },
     )
 
