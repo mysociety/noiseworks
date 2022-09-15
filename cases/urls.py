@@ -42,5 +42,10 @@ urlpatterns = [
     path("/<int:pk>/followers", views.followers, name="case-followers"),
     path("/<int:pk>/follower-state", views.follower_state, name="case-follower-state"),
     path("/<int:pk>/log", views.log_action, name="case-log-action"),
+    path(
+        "/<int:case_pk>/log/<int:action_pk>/edit",
+        views.edit_logged_action,
+        name="case-edit-action",
+    ),
     path("/<int:pk>/merge", views.merge, name="case-merge"),
 ]

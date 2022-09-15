@@ -1,4 +1,5 @@
 import datetime
+from http import HTTPStatus
 import re
 from unittest.mock import patch
 
@@ -6,13 +7,14 @@ import pytest
 from django.contrib.gis.geos import Point
 from django.http import HttpRequest
 from django.template import Context, Template
+from django.urls import reverse
 from django.utils.timezone import make_aware, now
-from pytest_django.asserts import assertContains
+from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
 
-from ..forms import ActionForm
-from ..models import Action, ActionType, Case, Complaint
+from ..forms import LogActionForm
+from ..models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
 from ..views import compile_dates
 
 pytestmark = pytest.mark.django_db
@@ -46,6 +48,16 @@ def normal_user(db):
 def case_1(db, staff_user_1, normal_user):
     return Case.objects.create(
         kind="diy", assigned=staff_user_1, created_by=normal_user, ward="E05009373"
+    )
+
+
+@pytest.fixture
+def logged_action_1(case_1, staff_user_1, action_types):
+    return Action.objects.create(
+        type=action_types[0],
+        notes="internal notes",
+        case=case_1,
+        created_by=staff_user_1,
     )
 
 
@@ -84,8 +96,6 @@ def action_types(db):
         ActionType.objects.create(name="Letter sent", common=True),
         ActionType.objects.create(name="Noise witnessed"),
         ActionType.objects.create(name="Abatement Notice “Section 80” served"),
-        ActionType.objects.create(name="Case closed"),
-        ActionType.objects.create(name="Case reopened"),
     ]
 
 
@@ -134,7 +144,7 @@ def test_log_view(admin_client, case_1, action_types):
 def test_log_case_closure(admin_client, case_1, action_types):
     admin_client.post(
         f"/cases/{case_1.id}/log",
-        {"notes": "Some notes", "type": action_types[3].id},
+        {"notes": "Some notes", "type": ActionType.case_closed.id},
         follow=True,
     )
     case_1.refresh_from_db()
@@ -146,7 +156,7 @@ def test_log_case_reopening(admin_client, case_1, action_types):
     case_1.save()
     admin_client.post(
         f"/cases/{case_1.id}/log",
-        {"notes": "Some notes", "type": action_types[4].id},
+        {"notes": "Some notes", "type": ActionType.case_reopened.id},
         follow=True,
     )
     case_1.refresh_from_db()
@@ -154,8 +164,103 @@ def test_log_case_reopening(admin_client, case_1, action_types):
 
 
 def test_log_form(case_1):
-    form = ActionForm(instance=case_1, data={"notes": "hmm"})
+    form = LogActionForm(instance=case_1, data={"notes": "hmm"})
     assert form.errors["type"] == ["This field is required."]
+
+
+def test_edit_logged_action_view(logged_action_1, client):
+    new_notes = "edited: " + logged_action_1.notes
+
+    client.force_login(logged_action_1.created_by)
+
+    response = client.get(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit"
+    )
+    assert response.status_code == HTTPStatus.OK
+
+    logged_action_1.created = now()
+    logged_action_1.save()
+
+    response = client.post(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit",
+        {
+            "notes": new_notes,
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.OK
+    logged_action_1.refresh_from_db()
+    assert logged_action_1.notes == new_notes
+
+
+def test_edit_logged_action_forbidden_for_staff_who_didnt_log(
+    logged_action_1, staff_user_2, client
+):
+    client.force_login(staff_user_2)
+
+    logged_action_1.created = now()
+    logged_action_1.save()
+
+    response = client.post(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit",
+        {
+            "notes": logged_action_1.notes,
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_edit_logged_action_forbidden_after_edit_window(logged_action_1, client):
+    window = CaseSettingsSingleton.instance.logged_action_editing_window
+
+    client.force_login(logged_action_1.created_by)
+
+    logged_action_1.created = now() - window
+    logged_action_1.save()
+
+    response = client.post(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit",
+        {
+            "notes": logged_action_1.notes,
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_edit_link_for_action_in_staff_case_view(
+    logged_action_1, staff_user_1, staff_user_2, client
+):
+    case = logged_action_1.case
+
+    logged_action_1.created = now()
+    logged_action_1.save()
+
+    client.force_login(staff_user_1)
+    logged_action_1.created_by = staff_user_2
+    logged_action_1.save()
+
+    edit_link = 'href="%s"' % reverse(
+        "case-edit-action", args=[case.id, logged_action_1.id]
+    )
+
+    response = client.get(f"/cases/{case.id}")
+    assertNotContains(response, edit_link, status_code=HTTPStatus.OK)
+
+    logged_action_1.created_by = staff_user_1
+    logged_action_1.save()
+
+    response = client.get(f"/cases/{case.id}")
+    assertContains(response, edit_link, status_code=HTTPStatus.OK)
+
+    logged_action_1.created = now() - (
+        CaseSettingsSingleton.instance.logged_action_editing_window
+        + datetime.timedelta(seconds=1)
+    )
+    logged_action_1.save()
+    response = client.get(f"/cases/{case.id}")
+    assertNotContains(response, edit_link, status_code=HTTPStatus.OK)
 
 
 def test_action_output(

@@ -2,9 +2,15 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.db import models
 
-from .models import Action, ActionType, Case, Complaint
+from .models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
 
 admin.site.register(Complaint)
+
+
+@admin.register(CaseSettingsSingleton)
+class CaseSettingsAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Case)

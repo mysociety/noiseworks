@@ -103,7 +103,15 @@ class KindForm(GDSForm, forms.ModelForm):
     )
 
 
-class ActionForm(GDSForm, forms.ModelForm):
+def action_notes_field():
+    return forms.CharField(
+        widget=forms.Textarea,
+        label="Internal notes",
+        help_text="You can upload documents by adding a link or links to shared documents",
+    )
+
+
+class LogActionForm(GDSForm, forms.ModelForm):
     submit_text = "Log action"
 
     class Meta:
@@ -111,11 +119,7 @@ class ActionForm(GDSForm, forms.ModelForm):
         fields = ["type", "notes"]
 
     type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
-    notes = forms.CharField(
-        widget=forms.Textarea,
-        label="Internal notes",
-        help_text="You can upload documents by adding a link or links to shared documents",
-    )
+    notes = action_notes_field()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,6 +154,16 @@ class ActionForm(GDSForm, forms.ModelForm):
     def save(self, case):
         self.instance.case = case
         super().save()
+
+
+class EditActionForm(GDSForm, forms.ModelForm):
+    submit_text = "Edit logged action"
+
+    class Meta:
+        model = Action
+        fields = ["notes"]
+
+    notes = action_notes_field()
 
 
 class LocationForm(GDSForm, forms.ModelForm):

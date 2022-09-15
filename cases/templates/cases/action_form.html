@@ -8,7 +8,7 @@
 </div>
 
 {% include "cases/_case_tags.html" with case=case %}
-<h1 style="margin-top: 0">Log an action</h1>
+<h1 style="margin-top: 0">{{form_title}}</h1>
 
 {% error_summary form %}
 {% crispy form %}
