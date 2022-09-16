@@ -51,7 +51,7 @@ class CaseSettingsSingleton(AbstractModel):
         verbose_name_plural = "Case settings"
 
     @classproperty
-    @lru_cache
+    @lru_cache(maxsize=None)
     def instance(cls):
         return cls.objects.all()[0]
 
