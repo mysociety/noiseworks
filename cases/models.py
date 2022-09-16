@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property, classproperty
 from django.utils.html import format_html, mark_safe
-from functools import cache
+from functools import lru_cache
 from simple_history.models import HistoricalRecords
 
 from accounts.models import User
@@ -51,7 +51,7 @@ class CaseSettingsSingleton(AbstractModel):
         verbose_name_plural = "Case settings"
 
     @classproperty
-    @cache
+    @lru_cache
     def instance(cls):
         return cls.objects.all()[0]
 
