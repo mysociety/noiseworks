@@ -55,9 +55,6 @@ class CaseSettingsSingleton(AbstractModel):
     def instance(cls):
         return cls.objects.all()[0]
 
-    def __str__(self):
-        return "Case Settings"
-
 
 class CaseManager(models.Manager):
     def unmerged(self):
