@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property, classproperty
 from django.utils.html import format_html, mark_safe
+from functools import cache
 from simple_history.models import HistoricalRecords
 
 from accounts.models import User
@@ -49,7 +50,8 @@ class CaseSettingsSingleton(AbstractModel):
         verbose_name = "Case settings"
         verbose_name_plural = "Case settings"
 
-    @classmethod
+    @classproperty
+    @cache
     def instance(cls):
         return cls.objects.all()[0]
 
@@ -634,8 +636,11 @@ class Action(AbstractModel):
     objects = ActionManager.from_queryset(ActionQuerySet)()
 
     def can_edit(self, user):
-        window = CaseSettingsSingleton.instance().logged_action_editing_window
-        return user == self.created_by and timezone.now() - self.created <= window
+        return (
+            user == self.created_by
+            and timezone.now() - self.created
+            <= CaseSettingsSingleton.instance.logged_action_editing_window
+        )
 
     def __str__(self):
         if self.case_old:

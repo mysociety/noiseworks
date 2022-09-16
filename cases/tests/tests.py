@@ -226,7 +226,7 @@ def test_edit_logged_action_forbidden_for_staff_who_didnt_log(
 
 
 def test_edit_logged_action_forbidden_after_edit_window(logged_action_1, client):
-    window = CaseSettingsSingleton.instance().logged_action_editing_window
+    window = CaseSettingsSingleton.instance.logged_action_editing_window
 
     client.force_login(logged_action_1.created_by)
 
@@ -305,7 +305,7 @@ def test_edit_link_for_action_in_staff_case_view(
     assertContains(response, edit_link, status_code=HTTPStatus.OK)
 
     logged_action_1.created = now() - (
-        CaseSettingsSingleton.instance().logged_action_editing_window
+        CaseSettingsSingleton.instance.logged_action_editing_window
         + datetime.timedelta(seconds=1)
     )
     logged_action_1.save()
