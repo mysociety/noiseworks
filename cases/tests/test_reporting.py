@@ -102,7 +102,7 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     post_step = partial(_post_step, admin_client)
     admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Normal"})
-    post_step("user_pick", {"search": "Normal", "user": normal_user.id})
+    post_step("user_pick", {"user": normal_user.id})
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
     post_step("kind", {"kind": "diy"}, follow=True)
     post_step("where", {"where": "business"})
@@ -173,6 +173,7 @@ def test_staff_case_creation_new_user_map(
     post_step = partial(_post_step, admin_client)
     admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Different"})
+    post_step("user_pick", {"postcode": "E1 6GB"})
     post_step(
         "user_pick",
         {
@@ -180,9 +181,10 @@ def test_staff_case_creation_new_user_map(
             "user": "0",
             "first_name": "Different",
             "last_name": "User",
-            "address": "Address",
+            "postcode": "E8 3DY",
         },
     )
+    post_step("user_address", {"address_uprn": "10008315925"})
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
     post_step("kind", {"kind": "diy"})
     post_step("where", {"where": "residence"})
@@ -205,7 +207,7 @@ def test_staff_case_creation_new_user_map(
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
     resp = post_step("effect", {"effect": "Effect"}, follow=True)
-    assertContains(resp, "Different User, Address")
+    assertContains(resp, "Different User, Line 1, Line 2, Line 3, E8 1DY")
     assertContains(resp, "weekday, by email")
     assertContains(resp, "DIY")
     assertContains(resp, "A house, flat, park or street")

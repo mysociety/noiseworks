@@ -15,6 +15,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from formtools.wizard.views import NamedUrlSessionWizardView
 
 from accounts.models import User
@@ -221,44 +222,6 @@ def edit_location(request, pk):
 
 
 @staff_member_required
-def search_perpetrator(request, pk):
-    case = get_object_or_404(Case, pk=pk)
-    form = forms.PersonSearchForm(request.POST or None)
-    if form.is_valid():
-        form = forms.PerpetratorPickForm(
-            initial={"search": form.cleaned_data["search"]}
-        )
-        form.helper.form_action = reverse("case-add-perpetrator", args=[case.id])
-    return render(
-        request,
-        "cases/add-perpetrator.html",
-        {
-            "case": case,
-            "form": form,
-        },
-    )
-
-
-@staff_member_required
-def add_perpetrator(request, pk):
-    case = get_object_or_404(Case, pk=pk)
-    if not request.POST:
-        raise PermissionDenied
-    form = forms.PerpetratorPickForm(request.POST)
-    if form.is_valid():
-        form.save(case=case)
-        return redirect(case)
-    return render(
-        request,
-        "cases/add-perpetrator.html",
-        {
-            "case": case,
-            "form": form,
-        },
-    )
-
-
-@staff_member_required
 def remove_perpetrator(request, pk, perpetrator):
     case = get_object_or_404(Case, pk=pk)
     user = get_object_or_404(User, pk=perpetrator)
@@ -427,6 +390,11 @@ def show_user_form(wizard):
     return user.is_active and user.is_staff
 
 
+def show_user_address_form(wizard):
+    data = wizard.get_cleaned_data_for_step("user_pick") or {}
+    return show_user_form(wizard) and data.get("postcode")
+
+
 def show_about_form(wizard):
     return not show_user_form(wizard)
 
@@ -468,11 +436,49 @@ class CaseWizard(NamedUrlSessionWizardView):
 
         return super().get(*args, **kwargs)
 
+    def person_save(self, data):
+        if data["user"]:
+            return data["user"]
+        user = User.objects.create_user(
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            email=data["email"],
+            phone=data["phone"],
+            address=data.get("address_manual", ""),
+            uprn=data.get("address_uprn", ""),
+        )
+        return user.id
 
-class RecurrenceWizard(LoginRequiredMixin, CaseWizard):
-    template_name = "cases/complaint_add.html"
+    def process_step(self, form):
+        """If a form has given us some extra information to store, store it."""
+        data = super().process_step(form)
+        if hasattr(form, "to_store"):
+            data = data.copy()
+            data.update(form.to_store)
+        return data
+
+
+class PerCaseWizard(CaseWizard):
     context_object_name = "case"
     model = Case
+
+    def get_prefix(self, request, *args, **kwargs):
+        """To make sure we have separate stored wizard data per case per session"""
+        prefix = super().get_prefix(request, *args, **kwargs)
+        prefix = f"{prefix}_{self.object.id}"
+        return prefix
+
+    def get_step_url(self, step):
+        """As we additionally have the case ID in the url"""
+        return reverse(self.url_name, kwargs={"pk": self.object.id, "step": step})
+
+    def get_context_data(self, **kwargs):
+        kwargs["case"] = self.object
+        return super().get_context_data(**kwargs)
+
+
+class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
+    template_name = "cases/complaint_add.html"
     summary_check_page = "isitnow"
 
     def dispatch(self, request, *args, **kwargs):
@@ -487,33 +493,33 @@ class RecurrenceWizard(LoginRequiredMixin, CaseWizard):
 
         return super().dispatch(request, *args, **kwargs)
 
-    def get_prefix(self, request, *args, **kwargs):
-        """To make sure we have separate stored wizard data per case per session"""
-        prefix = super().get_prefix(request, *args, **kwargs)
-        prefix = f"{prefix}_{self.object.id}"
-        return prefix
-
-    def get_step_url(self, step):
-        """As we additionally have the case ID in the url"""
-        return reverse(self.url_name, kwargs={"pk": self.object.id, "step": step})
-
     def get_context_data(self, **kwargs):
-        kwargs["case"] = self.object
         data = kwargs["data"] = self.get_all_cleaned_data()
 
         if data.get("user"):
             user = User.objects.get(id=data["user"])
             kwargs["reporting_user"] = user
         elif data.get("last_name"):
+            user = User(
+                uprn=data.get("address_uprn"), address=data.get("address_manual")
+            )
+            user.update_address_and_estate()
+            address = user.address_display
             kwargs[
                 "reporting_user"
-            ] = f"{data['first_name']} {data['last_name']}, {data['address']}, {data['email']}, {data['phone']}"
+            ] = f"{data['first_name']} {data['last_name']}, {address}, {data['email']}, {data['phone']}"
 
         if self.steps.current == "summary":
             start, end = compile_dates(data)
             kwargs["end_time"] = end
 
         return super().get_context_data(**kwargs)
+
+    def get_form_kwargs(self, step):
+        if step == "user_address":
+            data = self.storage.get_step_data("user_pick") or {}
+            return {"address_choices": data["postcode_results"]}
+        return super().get_form_kwargs(step)
 
     def get_form_initial(self, step):
         """The user pick form needs the search query passed to it"""
@@ -532,6 +538,7 @@ class RecurrenceWizard(LoginRequiredMixin, CaseWizard):
         ("effect", forms.EffectForm),
         ("user_search", forms.RecurrencePersonSearchForm),
         ("user_pick", forms.PersonPickForm),
+        ("user_address", forms.PersonAddressForm),
         ("summary", forms.SummaryForm),
     ]
 
@@ -540,17 +547,18 @@ class RecurrenceWizard(LoginRequiredMixin, CaseWizard):
         "notnow": show_not_happening_now_form,
         "user_search": show_user_form,
         "user_pick": show_user_form,
+        "user_address": show_user_address_form,
     }
 
     def done(self, form_list, form_dict, **kwargs):
+        data = self.get_all_cleaned_data()
+
         # Save a new user if need be
         if "user_pick" in form_dict:
-            picker = form_dict["user_pick"]
-            user = picker.save()
+            user = self.person_save(data)
         else:
             user = self.request.user.id
 
-        data = self.get_all_cleaned_data()
         start, end = compile_dates(data)
         complaint = Complaint(
             case=self.object,
@@ -668,8 +676,9 @@ class ReportingWizard(CaseWizard):
                 user = User.objects.get(id=data["user"])
                 kwargs["reporting_user"] = user
             else:  # Must have name
-                address = data.get("address_manual") or data.get("address")
-                user = User(uprn=data.get("address_uprn"), address=address)
+                user = User(
+                    uprn=data.get("address_uprn"), address=data.get("address_manual")
+                )
                 user.update_address_and_estate()
                 address = user.address_display
                 email = data.get("email") or "No email"
@@ -694,6 +703,9 @@ class ReportingWizard(CaseWizard):
             return {"user": self.request.user.is_authenticated and self.request.user}
         elif step == "address":
             data = self.storage.get_step_data("postcode") or {}
+            return {"address_choices": data["postcode_results"]}
+        elif step == "user_address":
+            data = self.storage.get_step_data("user_pick") or {}
             return {"address_choices": data["postcode_results"]}
         elif step == "confirmation":
             data = self.storage.get_step_data("summary") or {}
@@ -738,11 +750,7 @@ class ReportingWizard(CaseWizard):
             return super().get_form_initial(step)
 
     def process_step(self, form):
-        """If a form has given us some extra information to store, store it."""
         data = super().process_step(form)
-        if hasattr(form, "to_store"):
-            data = data.copy()
-            data.update(form.to_store)
         if self.steps.current == "summary" and not self.request.user.is_authenticated:
             data = data.copy()
             token = str(random.randint(0, 999999)).zfill(6)
@@ -766,6 +774,7 @@ class ReportingWizard(CaseWizard):
     form_list = [
         ("user_search", forms.RecurrencePersonSearchForm),
         ("user_pick", forms.PersonPickForm),
+        ("user_address", forms.PersonAddressForm),
         ("about", forms.AboutYouForm),
         ("best_time", forms.BestTimeForm),
         ("postcode", forms.PostcodeForm),
@@ -789,6 +798,7 @@ class ReportingWizard(CaseWizard):
     condition_dict = {
         "user_search": show_user_form,
         "user_pick": show_user_form,
+        "user_address": show_user_address_form,
         "about": show_about_form,
         "postcode": show_about_form,
         "address": show_about_form,
@@ -803,8 +813,7 @@ class ReportingWizard(CaseWizard):
     def create_data(self, form_dict, data):
         # Save a new user if need be
         if "user_pick" in form_dict:
-            picker = form_dict["user_pick"]
-            user = picker.save()
+            user = self.person_save(data)
             user = User.objects.get(id=user)
         else:
             # Make sure these emails always create new unverified users.
@@ -827,7 +836,7 @@ class ReportingWizard(CaseWizard):
             if not user.phone_verified:
                 user.phone = data["phone"]
             user.uprn = data.get("address_uprn", "")
-            user.address = data.get("address") or data.get("address_manual")
+            user.address = data.get("address_manual")
 
         user.best_time = data["best_time"]
         user.best_method = data["best_method"]
@@ -879,6 +888,50 @@ class ReportingWizard(CaseWizard):
             "cases/add/done.html",
             {"data": data, "case": complaint.case},
         )
+
+
+@method_decorator(staff_member_required, name="dispatch")
+class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
+    template_name = "cases/complaint_add.html"
+    summary_check_page = "user_search"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = get_object_or_404(Case, pk=kwargs["pk"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self, step):
+        if step == "user_address":
+            data = self.storage.get_step_data("user_pick") or {}
+            return {"address_choices": data["postcode_results"]}
+        return super().get_form_kwargs(step)
+
+    def get_form_initial(self, step):
+        """The user pick form needs the search query passed to it"""
+        if step == "user_pick":
+            data = self.get_cleaned_data_for_step("user_search")
+            if data:
+                return {"search": data["search"]}
+        return super().get_form_initial(step)
+
+    form_list = [
+        ("user_search", forms.PerpetratorSearchForm),
+        ("user_pick", forms.PerpetratorPickForm),
+        ("user_address", forms.PerpetratorAddressForm),
+    ]
+
+    condition_dict = {
+        "user_address": show_user_address_form,
+    }
+
+    def done(self, form_list, form_dict, **kwargs):
+        data = self.get_all_cleaned_data()
+        user = self.person_save(data)
+        self.object.perpetrators.add(user)
+        typ, _ = ActionType.objects.get_or_create(
+            name="Edit case", defaults={"visibility": "internal"}
+        )
+        Action.objects.create(case=self.object, type=typ, notes="Added perpetrator")
+        return redirect(self.object)
 
 
 def send_emails(request, complaint, template):

@@ -97,7 +97,7 @@ def test_add_complaint_now_existing_user(admin_client, case_1, normal_user, staf
     post_step("user_search", {"search": "Normal User"})
     resp = post_step(
         "user_pick",
-        {"search": "Normal User", "user": normal_user.id},
+        {"user": normal_user.id},
         follow=True,
     )
     assertContains(resp, f"{yesterday.strftime('%a, %-d %b %Y')}, 9 p.m.")
@@ -144,10 +144,9 @@ def _test_add_complaint_not_now_new_user(
 
     post_step("user_search", {"search": "Normal"})
 
-    resp = post_step("user_pick", {"search": "Normal", "user": 0})
+    resp = post_step("user_pick", {"user": 0})
     assertContains(resp, "Please specify a name")
     params = {
-        "search": "Normal",
         "user": 0,
         "first_name": "Norman",
         "last_name": "Normal",
@@ -155,6 +154,8 @@ def _test_add_complaint_not_now_new_user(
     resp = post_step("user_pick", {**params, "email": normal_user.email}, follow=True)
     assertContains(resp, "There is an existing user")
     resp = post_step("user_pick", {**params, **user_data}, follow=True)
+    if "postcode" in user_data:
+        resp = post_step("user_address", {"address_uprn": "10008315925"}, follow=True)
     assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
     assertContains(resp, "Fri, 12 Nov 2021, 10 p.m.")
     assertContains(resp, "Norman Normal")
@@ -166,10 +167,14 @@ def _test_add_complaint_not_now_new_user(
 
 
 def test_add_complaint_not_now_new_user_email(
-    admin_client, case_1, normal_user, staff_dest
+    admin_client, case_1, normal_user, staff_dest, address_lookup
 ):
     _test_add_complaint_not_now_new_user(
-        admin_client, case_1, normal_user, {"email": "norman@example.org"}, False
+        admin_client,
+        case_1,
+        normal_user,
+        {"email": "norman@example.org", "postcode": "E8 3DY"},
+        False,
     )
 
 

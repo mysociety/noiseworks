@@ -233,7 +233,7 @@ var nw = nw || {};
   {% endfor %}
     <li>
         <div class="nw-person nw-person--empty">
-            <a class="nw-link--no-visited-state" href="{% url 'case-search-perpetrator' case.id %}">
+            <a class="nw-link--no-visited-state" href="{% url 'perpetrator-add' case.id %}">
                 Add another perpetrator
             </a>
         </div>
@@ -243,7 +243,7 @@ var nw = nw || {};
 {% else %}
 
 <p>
-    No perpetrators on this case. <a class="nw-link--no-visited-state" href="{% url "case-search-perpetrator" case.id %}">Add a perpetrator</a>.
+    No perpetrators on this case. <a class="nw-link--no-visited-state" href="{% url "perpetrator-add" case.id %}">Add a perpetrator</a>.
 </p>
 
 {% endif %}

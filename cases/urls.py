@@ -5,6 +5,7 @@ from . import views
 
 reporting_wizard = views.ReportingWizard.as_view(url_name="case-add-step")
 recurrence_wizard = views.RecurrenceWizard.as_view(url_name="complaint-add-step")
+perpetrator_wizard = views.PerpetratorWizard.as_view(url_name="perpetrator-add-step")
 
 
 urlpatterns = [
@@ -25,13 +26,11 @@ urlpatterns = [
     path("/<int:pk>/complaint/<int:complaint>", views.complaint, name="complaint"),
     path("/<int:pk>/edit-kind", views.edit_kind, name="case-edit-kind"),
     path("/<int:pk>/edit-location", views.edit_location, name="case-edit-location"),
+    path("/<int:pk>/perpetrator/add", perpetrator_wizard, name="perpetrator-add"),
     path(
-        "/<int:pk>/search-perpetrator",
-        views.search_perpetrator,
-        name="case-search-perpetrator",
-    ),
-    path(
-        "/<int:pk>/add-perpetrator", views.add_perpetrator, name="case-add-perpetrator"
+        "/<int:pk>/perpetrator/add/<step>",
+        perpetrator_wizard,
+        name="perpetrator-add-step",
     ),
     path(
         "/<int:pk>/remove-perpetrator/<int:perpetrator>",

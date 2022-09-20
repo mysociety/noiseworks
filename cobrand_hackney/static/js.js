@@ -67,9 +67,10 @@ function show_hide(input, value, ids) {
 
 show_hide("kind", "other", ["div_id_kind_other"]);
 show_hide("kind-kind", "other", ["div_id_kind-kind_other"]);
-show_hide("user_pick-user", "0", ['div_id_user_pick-first_name', 'div_id_user_pick-last_name', 'div_id_user_pick-email', 'div_id_user_pick-phone', 'div_id_user_pick-address']);
+show_hide("user_pick-user", "0", ['div_id_user_pick-first_name', 'div_id_user_pick-last_name', 'div_id_user_pick-email', 'div_id_user_pick-phone', 'div_id_user_pick-postcode']);
 show_hide("user", "0", ['div_id_first_name', 'div_id_last_name', 'div_id_email', 'div_id_phone', 'div_id_address']);
 show_hide("address-address_uprn", "missing", ["div_id_address-address_manual"]);
+show_hide("user_address-address_uprn", "missing", ["div_id_user_address-address_manual"]);
 
 construct_case_locations_dropdown();
 update_case_listing_on_change();
