@@ -670,7 +670,7 @@ class ReportingWizard(CaseWizard):
             else:  # Must have name
                 address = data.get("address_manual") or data.get("address")
                 user = User(uprn=data.get("address_uprn"), address=address)
-                user.update_address()
+                user.update_address_and_estate()
                 address = user.address_display
                 email = data.get("email") or "No email"
                 phone = data.get("phone") or "No phone"

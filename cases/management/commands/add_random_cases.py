@@ -287,7 +287,7 @@ class Command(BaseCommand):
     def _pick_user_uprn(self, user):
         while True:
             user.uprn = random.choice(self.uprns)
-            user.update_address()
+            user.update_address_and_estate()
             if user.address:
                 break
 

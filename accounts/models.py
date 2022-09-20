@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import UserManager as BaseManager
+from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.functional import cached_property
@@ -65,12 +66,18 @@ class User(AbstractUser):
         ("weekend", "Weekends"),
         ("evening", "Evenings"),
     ]
+    ESTATE_CHOICES = [
+        ("y", "Yes"),
+        ("n", "No"),
+        ("?", "Don’t know"),
+    ]
 
     phone = PhoneNumberField(blank=True)
     email_verified = models.BooleanField(default=False)
     phone_verified = models.BooleanField(default=False)
     # Complainant things
     uprn = models.CharField(max_length=20, blank=True)
+    estate = models.CharField(max_length=1, choices=ESTATE_CHOICES, blank=True)
     address = models.TextField(blank=True)
     best_time = ArrayField(
         models.CharField(max_length=7, choices=BEST_TIME_CHOICES),
@@ -112,15 +119,20 @@ class User(AbstractUser):
         return name
 
     def save(self, *args, **kwargs):
-        self.update_address()
+        self.update_address_and_estate()
         self.email = self.email.lower()
         return super().save(*args, **kwargs)
 
-    def update_address(self):
-        if not self.address and self.uprn:
+    def update_address_and_estate(self):
+        if self.uprn and not (self.address and self.estate):
             addr = cobrand.api.address_for_uprn(self.uprn)
             if addr["string"]:
-                self.address = addr["string"]
+                if not self.address:
+                    self.address = addr["string"]
+                if not self.estate:
+                    point = Point(addr["longitude"], addr["latitude"], srid=4326)
+                    estate = cobrand.api.in_an_estate(point)
+                    self.estate = "y" if estate else "n"
 
     def get_best_time_display(self):
         best_time = self.best_time or []

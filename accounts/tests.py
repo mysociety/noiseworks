@@ -263,7 +263,9 @@ def test_address_display_uprn():
             "latitude": 51,
             "longitude": -0.1,
         }
-        user = User.objects.create(first_name="Norma", last_name="User", uprn=10001)
+        user = User.objects.create(
+            first_name="Norma", last_name="User", uprn=10001, estate="?"
+        )
         assert user.address_display == "Flat 4, 2 Example Road, E8 2DP"
 
 
@@ -274,11 +276,33 @@ def test_address_display_uprn_no_data():
         assert user.address_display == 10001
 
 
-def test_address_display_address():
+def test_address_display_address(requests_mock):
+    requests_mock.get(re.compile(r"housing/ows"), json={"features": []})
+    requests_mock.get(
+        re.compile(r"uprn=10001"),
+        json={
+            "data": {
+                "address": [
+                    {
+                        "line1": "An address",
+                        "line2": "Hackney",
+                        "line3": "London",
+                        "postcode": "Postcode",
+                        "longitude": -0.0575203934113829,
+                        "latitude": 51.5449668465297,
+                    }
+                ]
+            }
+        },
+    )
     user = User.objects.create(
-        first_name="Norma", last_name="User", address="Other address", uprn=10001
+        first_name="Norma",
+        last_name="User",
+        address="Other address",
+        uprn=10001,
     )
     assert user.address_display == "Other address"
+    assert user.estate == "n"
     assert str(user) == "Norma User, Other address"
 
 
