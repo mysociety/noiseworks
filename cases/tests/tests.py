@@ -70,14 +70,16 @@ def case_other_uprn(db):
             "latitude": 51,
             "longitude": -0.1,
         }
-        yield Case.objects.create(uprn=10001, kind="other", kind_other="Wombat")
+        yield Case.objects.create(
+            uprn=10001, kind="other", kind_other="Wombat", estate="y"
+        )
 
 
 @pytest.fixture
 def case_bad_uprn(db):
     with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {"string": "", "ward": ""}
-        yield Case.objects.create(uprn="bad_uprn", kind="diy")
+        yield Case.objects.create(uprn="bad_uprn", kind="diy", estate="?")
 
 
 @pytest.fixture
@@ -339,6 +341,7 @@ def test_wfs_server_down(requests_mock):
     requests_mock.get(re.compile("point/27700"), json={})
     requests_mock.get(re.compile("greenspaces/ows"), text="Error")
     requests_mock.get(re.compile("transport/ows"), text="Error")
+    requests_mock.get(re.compile("housing/ows"), text="Error")
     case = Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
     assert case.location_display == "800m around (470267,122766)"
 

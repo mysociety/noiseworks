@@ -153,51 +153,49 @@ def wards():
     )
 
 
-def in_a_park(pt):
-    filter = f'<Filter xmlns:gml="http://www.opengis.net/gml"><Intersects><PropertyName>geom</PropertyName><gml:Point srsName="27700"><gml:coordinates>{pt.x},{pt.y}</gml:coordinates></gml:Point></Intersects></Filter>'
+def _wfs_lookup(url, typename, bbox):
     r = requests.get(
-        "https://map2.hackney.gov.uk/geoserver/greenspaces/ows",
+        f"https://map2.hackney.gov.uk/geoserver/{url}/ows",
         params={
             "SERVICE": "WFS",
             "VERSION": "1.1.0",
             "REQUEST": "GetFeature",
-            "typename": "greenspaces:hackney_park",
+            "typename": typename,
             "outputformat": "json",
             "srsname": "urn:ogc:def:crs:EPSG::27700",
-            "filter": filter,
+            "BBOX": bbox,
         },
     )
     try:
-        data = r.json()
+        return r.json()
     except json.JSONDecodeError:
-        return False
+        return {}
+
+
+def _wfs_point_lookup(pt, url, typename):
+    pt.transform(27700)
+    bbox = f"{pt.x},{pt.y},{pt.x},{pt.y},urn:ogc:def:crs:EPSG:27700"
+    data = _wfs_lookup(url, typename, bbox)
     name = False
-    if data["features"]:
+    if data.get("features", []):
         name = data["features"][0]["properties"]
     return name
+
+
+def in_a_park(pt):
+    return _wfs_point_lookup(pt, "greenspaces", "hackney_park")
+
+
+def in_an_estate(pt):
+    return _wfs_point_lookup(pt, "housing", "lbh_estate")
 
 
 def nearest_roads(pt):
     filter = (
         f"<Filter xmlns:gml=\"http://www.opengis.net/gml\"><DWithin><PropertyName>geom</PropertyName><gml:Point><gml:coordinates>{pt.x},{pt.y}</gml:coordinates></gml:Point><Distance units='m'>50</Distance></DWithin></Filter>",
     )
-    r = requests.get(
-        "https://map2.hackney.gov.uk/geoserver/transport/ows",
-        params={
-            "SERVICE": "WFS",
-            "VERSION": "1.1.0",
-            "REQUEST": "GetFeature",
-            "typename": "transport:os_highways_street",
-            "outputformat": "json",
-            "srsname": "urn:ogc:def:crs:EPSG::27700",
-            "filter": filter,
-        },
-    )
-    try:
-        data = r.json()
-    except json.JSONDecodeError:
-        return ""
-    data = _sorted_by_distance(pt, data["features"])
+    data = _wfs_lookup("transport", "os_highways_street", filter)
+    data = _sorted_by_distance(pt, data.get("features", []))
     data = data[:2]
     data = map(lambda x: x["properties"]["name"].title() or "Unknown road", data)
     return " / ".join(data)

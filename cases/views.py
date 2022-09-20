@@ -658,7 +658,6 @@ class ReportingWizard(CaseWizard):
                 radius=data.get("radius"),
                 uprn=data.get("source_uprn"),
                 where=data["where"],
-                estate=data["estate"],
             )
             case.update_location_cache()
 
@@ -850,7 +849,6 @@ class ReportingWizard(CaseWizard):
             radius=data.get("radius"),
             uprn=data.get("source_uprn", ""),
             where=data["where"],
-            estate=data["estate"],
         )
         case.save()
 

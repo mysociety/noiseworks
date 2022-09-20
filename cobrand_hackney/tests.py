@@ -105,6 +105,6 @@ def test_addresses_api_street(requests_mock, make_api_result):
 def test_wfs_server_down(requests_mock):
     requests_mock.get(re.compile("greenspaces/ows"), text="Error")
     requests_mock.get(re.compile("transport/ows"), text="Error")
-    pt = Point(1, 2)
+    pt = Point(1, 2, srid=27700)
     in_a_park(pt)
     nearest_roads(pt)

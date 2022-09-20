@@ -67,6 +67,7 @@ def test_edit_location(requests_mock, admin_client, form_defaults):
             },
         },
     )
+    requests_mock.get(re.compile("housing/ows"), json={"features": []})
     requests_mock.get(
         re.compile("greenspaces/ows"),
         json={
@@ -123,6 +124,7 @@ def test_edit_location_to_uprn(requests_mock, admin_client, form_defaults):
         },
     )
     requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
+    requests_mock.get(re.compile("housing/ows"), json={"features": []})
     # Mock a road
     requests_mock.get(
         re.compile("transport/ows"),

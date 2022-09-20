@@ -1,4 +1,5 @@
 import datetime
+
 import pytest
 from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains, assertNotContains
@@ -15,12 +16,13 @@ def case(db):
         point=Point(470267, 122766),
         uprn="123456",
         location_cache="Flat 4, 2 Example Road, E8 2DP",
+        estate="?",
     )
 
 
 @pytest.fixture
 def same_case(db):
-    return Case.objects.create(kind="diy", location_cache="Identical case")
+    return Case.objects.create(kind="diy", location_cache="Identical case", estate="?")
 
 
 @pytest.fixture
@@ -29,12 +31,14 @@ def merged_case_setup(db):
         kind="diy",
         ward="E05009373",
         location_cache="Combined case",
+        estate="?",
         point=Point(470267, 122766),
     )
     c2 = Case.objects.create(
         kind="diy",
         ward="E05009373",
         location_cache="Merged case",
+        estate="?",
         point=Point(470267, 122766),
     )
     action = Action.objects.create(case=c1, case_old=c2)
@@ -55,16 +59,19 @@ def cases(db):
             point=Point(470267, 122766),
             uprn="123456",
             location_cache="Same UPRN",
+            estate="?",
         ),
         Case.objects.create(
             kind="diy",
             point=Point(470267, 122767),
             location_cache="Within 500m",
+            estate="?",
         ),
         Case.objects.create(
             kind="diy",
             point=Point(470267, 123267),
             location_cache="Too far away",
+            estate="?",
         ),
     ]
 

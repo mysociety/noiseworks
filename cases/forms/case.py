@@ -207,10 +207,12 @@ class LocationForm(GDSForm, forms.ModelForm):
             self.cleaned_data["radius"] = None
             self.cleaned_data["uprn"] = self.cleaned_data["addresses"]
             self.instance.location_cache = ""
+            self.instance.estate = ""
             del self.cleaned_data["addresses"]
         if self.cleaned_data.get("radius"):
             self.cleaned_data["uprn"] = ""
             self.instance.location_cache = ""
+            self.instance.estate = ""
         return self.cleaned_data
 
     def clean_addresses(self):

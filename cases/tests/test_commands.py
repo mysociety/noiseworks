@@ -51,6 +51,7 @@ def mock_things(requests_mock):
     )
     requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
     requests_mock.get(re.compile("transport/ows"), json={"features": []})
+    requests_mock.get(re.compile("housing/ows"), json={"features": []})
 
 
 @pytest.fixture

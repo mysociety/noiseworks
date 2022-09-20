@@ -91,8 +91,9 @@ def mocks(requests_mock, settings):
             },
         },
     )
-    requests_mock.get(re.compile(r"typename=greenspaces"), json={"features": []})
-    requests_mock.get(re.compile(r"typename=transport"), json={"features": []})
+    requests_mock.get(re.compile(r"greenspaces/ows"), json={"features": []})
+    requests_mock.get(re.compile(r"transport/ows"), json={"features": []})
+    requests_mock.get(re.compile(r"housing/ows"), json={"features": []})
 
 
 def test_new_existing_form(admin_client):
@@ -172,8 +173,26 @@ def test_staff_case_creation_existing_user(admin_client, normal_user, mocks):
     assertNotContains(resp, "Select a valid choice.")
 
 
-def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user, mocks):
+def test_staff_case_creation_new_user_map(
+    admin_client, admin_user, normal_user, mocks, requests_mock
+):
     """Picks new user, map based source"""
+    requests_mock.get(
+        re.compile("housing/ows"),
+        json={
+            "features": [
+                {
+                    "type": "Feature",
+                    "id": "lbh_housing.1",
+                    "properties": {
+                        "id": "1",
+                        "estate_name": "ABERSHAM ROAD ESTATE",
+                    },
+                }
+            ]
+        },
+    )
+
     post_step = partial(_post_step, admin_client)
     admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Different"})
@@ -189,9 +208,7 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user,
     )
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
     post_step("kind", {"kind": "diy"})
-    resp = post_step("where", {"where": "residence"})
-    assertContains(resp, "Please pick the type of residence")
-    post_step("where", {"where": "residence", "estate": "y"})
+    post_step("where", {"where": "residence"})
     resp = post_step("where-location", {"search": "Foobar2"}, follow=True)
     assertContains(resp, "Another")
     assertNotContains(resp, "North Pole")
@@ -275,7 +292,7 @@ def test_user_case_creation(
     resp = post_step("kind", {"kind": "other", "kind_other": "Other " * 20})
     assertContains(resp, "at most 100 characters")
     post_step("kind", {"kind": "other", "kind_other": "Other"})
-    post_step("where", {"where": "residence", "estate": "?"})
+    post_step("where", {"where": "residence"})
     post_step("where-location", {"search": "Foobar1"})
 
     # Couple of non-JS requests in here to test that
@@ -378,7 +395,7 @@ def test_incorrect_staff_case_creation(client, mocks, settings):
     post_step("postcode", {"postcode": "E8 3DY"})
     post_step("address", {"address_uprn": "10008315925"})
     post_step("kind", {"kind": "other", "kind_other": "Other"})
-    post_step("where", {"where": "residence", "estate": "?"})
+    post_step("where", {"where": "residence"})
     post_step("where-location", {"search": "Foobar1"})
     post_step("where-map", {"point": "POINT (-0.05 51)", "radius": 180, "zoom": 16})
     post_step("isitnow", {"happening_now": "1"})

@@ -243,7 +243,7 @@ class Case(AbstractModel):
 
     def update_location_cache(self):
         if self.location_cache:
-            return
+            pass
         elif self.uprn:
             addr = cobrand.api.address_for_uprn(self.uprn)
             if addr["string"]:
@@ -272,6 +272,12 @@ class Case(AbstractModel):
                 else:
                     desc = f"({self.point.x:.0f},{self.point.y:.0f})"
             self.location_cache = f"{self.radius}m around {desc}"
+
+        if self.estate:
+            pass
+        elif self.point:
+            estate = cobrand.api.in_an_estate(self.point)
+            self.estate = "y" if estate else "n"
 
     @property
     def kind_display(self):

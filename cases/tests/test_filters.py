@@ -34,6 +34,7 @@ def case_1(db, staff_user, normal_user):
         kind="other",
         kind_other="Fireworks",
         location_cache="123 High Street, Hackney",
+        estate="?",
         assigned=staff_user,
         created_by=normal_user,
         ward="E05009373",
@@ -43,7 +44,11 @@ def case_1(db, staff_user, normal_user):
 @pytest.fixture
 def case_location(db):
     return Case.objects.create(
-        kind="diy", point=Point(470267, 122766), radius=100, location_cache="Location"
+        kind="diy",
+        point=Point(470267, 122766),
+        radius=100,
+        location_cache="Location",
+        estate="?",
     )
 
 
@@ -132,12 +137,14 @@ def test_search_merged_case(admin_client):
         kind="diy",
         ward="E05009373",
         location_cache="Combined case",
+        estate="?",
         point=Point(470267, 122766),
     )
     c2 = Case.objects.create(
         kind="diy",
         ward="E05009373",
         location_cache="Merged case",
+        estate="?",
         point=Point(470267, 122766),
     )
     c1.actions.create(case_old=c2)
