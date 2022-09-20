@@ -189,6 +189,11 @@ def test_edit_logged_action_view(logged_action_1, action_types, client):
 
     client.force_login(logged_action_1.created_by)
 
+    response = client.get(
+        f"/cases/{logged_action_1.case.id}/log/{logged_action_1.id}/edit"
+    )
+    assert response.status_code == HTTPStatus.OK
+
     logged_action_1.created = now()
     logged_action_1.save()
 
