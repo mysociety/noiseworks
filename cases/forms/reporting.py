@@ -6,18 +6,10 @@ from phonenumber_field.formfields import PhoneNumberField
 
 from accounts.models import User
 from noiseworks import cobrand
-from noiseworks.forms import GDSForm
+from noiseworks.forms import GDSForm, StepForm
 
 from ..models import Case
 from ..widgets import MapWidget
-
-
-class StepForm(GDSForm, forms.Form):
-    submit_text = "Next"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper.form_tag = False
 
 
 class ExistingForm(GDSForm, forms.Form):

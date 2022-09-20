@@ -4,15 +4,7 @@ import datetime
 from crispy_forms_gds.fields import DateInputField
 from django import forms
 
-from noiseworks.forms import GDSForm
-
-
-class StepForm(GDSForm, forms.Form):
-    submit_text = "Next"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper.form_tag = False
+from noiseworks.forms import StepForm
 
 
 class TimeWidget(forms.TextInput):

@@ -8,6 +8,7 @@ from django.core.management import CommandError, call_command
 from cases.management.commands.export_data import client
 
 from ..models import Action, Case
+from .conftest import ADDRESS
 
 
 @pytest.fixture
@@ -22,21 +23,7 @@ def call_params(db, capsys, monkeypatch):
 def mock_things(requests_mock):
     requests_mock.get(
         re.compile("uprn=[1-3]"),
-        json={
-            "data": {
-                "address": [
-                    {
-                        "line1": "LINE 1",
-                        "line2": "LINE 2",
-                        "line3": "LINE 3",
-                        "postcode": "E8 1DY",
-                        "ward": "Hackney Central",
-                        "latitude": 51.5449668465297,
-                        "longitude": -0.0575203934113829,
-                    }
-                ]
-            }
-        },
+        json={"data": {"address": [ADDRESS]}},
     )
     requests_mock.get(
         re.compile("uprn=4"),

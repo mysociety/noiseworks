@@ -5,22 +5,9 @@ from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains
 
 from ..models import Case
+from .conftest import ADDRESS
 
 pytestmark = pytest.mark.django_db
-
-ADDRESS = {
-    "line1": "LINE 1",
-    "line2": "LINE 2",
-    "line3": "LINE 3",
-    "line4": "",
-    "town": "LONDON",
-    "postcode": "E8 1DY",
-    "UPRN": 10008315925,
-    "locality": "HACKNEY",
-    "ward": "Hackney Central",
-    "longitude": -0.0575203934113829,
-    "latitude": 51.5449668465297,
-}
 
 
 def test_edit_kind(admin_client):
@@ -105,13 +92,9 @@ def test_edit_location(requests_mock, admin_client, form_defaults):
     assertContains(resp, "could not recognise that postcode")
 
 
-def test_edit_location_to_uprn(requests_mock, admin_client, form_defaults):
-    requests_mock.get(
-        re.compile("postcode=E95RF"), json={"data": {"address": [ADDRESS]}}
-    )
-    requests_mock.get(
-        re.compile("uprn=10008315925"), json={"data": {"address": [ADDRESS]}}
-    )
+def test_edit_location_to_uprn(
+    requests_mock, admin_client, form_defaults, address_lookup
+):
     requests_mock.get(
         re.compile("point/27700"),
         json={
@@ -123,8 +106,6 @@ def test_edit_location_to_uprn(requests_mock, admin_client, form_defaults):
             },
         },
     )
-    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
-    requests_mock.get(re.compile("housing/ows"), json={"features": []})
     # Mock a road
     requests_mock.get(
         re.compile("transport/ows"),
@@ -194,13 +175,13 @@ def test_edit_location_to_uprn(requests_mock, admin_client, form_defaults):
     # Post with a postcode
     resp = admin_client.post(
         f"/cases/{case.id}/edit-location",
-        {**form_defaults, "postcode": "E95RF"},
+        {**form_defaults, "postcode": "E8 3DY"},
     )
     assertContains(resp, 'value="10008315925"')
     # Post with a UPRN
     resp = admin_client.post(
         f"/cases/{case.id}/edit-location",
-        {**form_defaults, "postcode": "E95RF", "addresses": "10008315925"},
+        {**form_defaults, "postcode": "E8 3DY", "addresses": "10008315925"},
     )
     case = Case.objects.get(id=case.id)
     assert case.location_display == "Line 1, Line 2, Line 3, E8 1DY"

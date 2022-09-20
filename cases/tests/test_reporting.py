@@ -14,20 +14,6 @@ from ..models import Case, Complaint
 
 pytestmark = pytest.mark.django_db
 
-ADDRESS = {
-    "line1": "LINE 1",
-    "line2": "LINE 2",
-    "line3": "LINE 3",
-    "line4": "",
-    "town": "LONDON",
-    "postcode": "E8 1DY",
-    "UPRN": 10008315925,
-    "locality": "HACKNEY",
-    "ward": "Hackney Central",
-    "longitude": -0.0575203934113829,
-    "latitude": 51.5449668465297,
-}
-
 POINT = Point(-0.05, 51, srid=4326)
 POINT.transform(27700)
 
@@ -48,7 +34,7 @@ def normal_user(db):
 
 
 @pytest.fixture
-def mocks(requests_mock, settings):
+def mocks(address_lookup, requests_mock, settings):
     settings.COBRAND_SETTINGS["staff_destination"] = {
         "outside": "outside@example.org",
         "business": "business@example.org",
@@ -56,15 +42,9 @@ def mocks(requests_mock, settings):
         "housing": "housing@example.org",
     }
 
-    requests_mock.get(
-        re.compile(r"postcode=E8\+3DY"), json={"data": {"address": [ADDRESS]}}
-    )
     requests_mock.get(re.compile(r"postcode=BAD"), json={"error": "Error goes here"})
     requests_mock.get(re.compile(r"postcode=SW1A\+1AA"), json={"error": "Bad postcode"})
     requests_mock.get(re.compile(r"postcode=E1\+6GB"), json={"data": {"address": []}})
-    requests_mock.get(
-        re.compile(r"uprn=10008315925"), json={"data": {"address": [ADDRESS]}}
-    )
     requests_mock.get(re.compile(r"q=Foobar0"), json=[])
     requests_mock.get(
         re.compile(r"q=Foobar1"),
@@ -91,9 +71,6 @@ def mocks(requests_mock, settings):
             },
         },
     )
-    requests_mock.get(re.compile(r"greenspaces/ows"), json={"features": []})
-    requests_mock.get(re.compile(r"transport/ows"), json={"features": []})
-    requests_mock.get(re.compile(r"housing/ows"), json={"features": []})
 
 
 def test_new_existing_form(admin_client):
