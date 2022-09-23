@@ -270,16 +270,19 @@ def remove_perpetrator(request, pk, perpetrator):
 def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.ActionForm(request.POST or None)
+
+    # TODO: Use via ActionType instead.
+    close_type, _ = ActionType.objects.get_or_create(
+        name="Case closed", defaults={"visibility": "staff"}
+    )
+    reopen_type, _ = ActionType.objects.get_or_create(
+        name="Case reopened", defaults={"visibility": "staff"}
+    )
+
     if form.is_valid():
-        typ, _ = ActionType.objects.get_or_create(
-            name="Case closed", defaults={"visibility": "staff"}
-        )
-        if form.cleaned_data["type"] == typ:
+        if form.cleaned_data["type"] == close_type:
             case.closed = True
-        typ, _ = ActionType.objects.get_or_create(
-            name="Case reopened", defaults={"visibility": "staff"}
-        )
-        if form.cleaned_data["type"] == typ:
+        if form.cleaned_data["type"] == reopen_type:
             case.closed = False
         # Saving the action will also save the case change
         form.save(case=case)
@@ -290,6 +293,7 @@ def log_action(request, pk):
         {
             "case": case,
             "form": form,
+            "close_type_id": close_type.id,
         },
     )
 

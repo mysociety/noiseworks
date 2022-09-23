@@ -1,6 +1,7 @@
 import re
 
 from crispy_forms_gds.choices import Choice
+from crispy_forms_gds.layout import Fieldset, Layout, HTML
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -132,6 +133,14 @@ class ActionForm(GDSForm, forms.ModelForm):
         if common:
             common[-1].divider = "or"
         self.fields["type"].choices = common + other
+
+        self.helper.layout = Layout(
+            Fieldset(
+                "type",
+                "notes",
+                HTML('{% include "cases/_action_form_close_prompt.html" %}'),
+            )
+        )
 
     def clean_type(self):
         type = self.cleaned_data["type"]

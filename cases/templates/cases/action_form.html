@@ -13,4 +13,20 @@
 {% error_summary form %}
 {% crispy form %}
 
+<script>
+(function() {
+    let typeRadioButtons = document.querySelectorAll('input[type="radio"][name="type"]');
+    let closePrompt = document.querySelector('div[name="close-prompt"]');
+    if (!closePrompt || typeRadioButtons.length === 0) {
+        return;
+    }
+    typeRadioButtons.forEach(function(rb) {
+        rb.addEventListener('change', function(_) {
+            let closeChecked = rb.checked && rb.value == {{ close_type_id }};
+            closePrompt.hidden = !closeChecked;
+        });
+    });
+})();
+</script>
+
 {% endblock %}
