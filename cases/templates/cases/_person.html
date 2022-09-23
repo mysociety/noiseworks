@@ -47,7 +47,10 @@
     <p class="nw-text-muted">No email address</p>
   {% endif %}
 
-    <p>{{ person.address_display }}</p>
+    <p>
+        {{ person.address_display }}
+        {% if person.estate == 'y' %} (Hackney Estates) {% endif %}
+    </p>
 
   {% if person.get_best_time_display and person.get_best_method_display %}
     <p>Available
