@@ -1,11 +1,14 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import Action, Complaint
+from .models import Action, Case, Complaint
 
 
 @receiver(post_save, sender=Complaint)
-def update_case_for_complaint(sender, instance, **kwargs):
+def update_case_for_complaint(sender, instance, created, **kwargs):
+    if created:
+        instance.case.last_update_type = Case.LastUpdateTypes.COMPLAINT
+
     # Update the case last modified
     instance.case.save()
 
@@ -16,6 +19,8 @@ def update_case_for_action(sender, instance, **kwargs):
     # modified so don't update it
     if instance.time < instance.case.modified:
         return
+
+    instance.case.last_update_type = Case.LastUpdateTypes.ACTION
 
     # Update the case last modified
     instance.case.save()

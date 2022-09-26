@@ -59,6 +59,11 @@ class CaseFilter(django_filters.FilterSet):
     priority_only = django_filters.Filter(
         label="Priority only", widget=forms.CheckboxInput, method="priority_only_filter"
     )
+    last_update_was_complaint = django_filters.Filter(
+        label="Only show cases where the last update was a complaint",
+        widget=forms.CheckboxInput,
+        method="last_update_was_complaint_filter",
+    )
 
     class Meta:
         model = Case
@@ -121,6 +126,11 @@ class CaseFilter(django_filters.FilterSet):
         elif value == "only":
             return queryset.filter(closed=True)
         return queryset  # pragma: no cover - should not be reachable.
+
+    def last_update_was_complaint_filter(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(last_update_type=Case.LastUpdateTypes.COMPLAINT)
 
     def assigned_filter(self, queryset, name, value):
         if value == "me":

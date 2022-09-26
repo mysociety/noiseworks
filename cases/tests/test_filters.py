@@ -1,10 +1,12 @@
 import pytest
+from datetime import timedelta
 from django.contrib.gis.geos import Point
+from functools import partial
 from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
 
-from ..models import Case, Complaint
+from ..models import Action, ActionType, Case, Complaint
 
 pytestmark = pytest.mark.django_db
 
@@ -63,6 +65,11 @@ def case_location(db):
         location_cache="Location",
         estate="?",
     )
+
+
+@pytest.fixture
+def action_type(db):
+    ActionType.objects.create(name="An action type", common=True),
 
 
 def test_list(admin_client, case_1):
@@ -208,3 +215,60 @@ def test_priority_only_cases(admin_client, case_1, case_2):
     response = admin_client.get("/cases?priority_only=on")
     assertContains(response, f"/cases/{case_1.id}")
     assertNotContains(response, f"/cases/{case_2.id}")
+
+
+def _test_last_update_complaint_filter_includes_case(admin_client, case, expected):
+    response = admin_client.get("/cases?last_update_was_complaint=on")
+    url = f"/cases/{case.id}"
+    if expected:
+        assertContains(response, url)
+    else:
+        assertNotContains(response, url)
+
+
+def test_last_update_was_complaint(admin_client, case_1, action_type):
+    includes_case = partial(
+        _test_last_update_complaint_filter_includes_case, admin_client, case_1
+    )
+    includes_case(False)
+
+    action_1 = Action.objects.create(
+        case=case_1,
+        type=action_type,
+    )
+    includes_case(False)
+
+    complaint_1 = Complaint.objects.create(
+        case=case_1,
+        happening_now=True,
+    )
+    includes_case(True)
+
+    action_1.notes = "Arbitrary update."
+    action_1.save()
+    includes_case(True)
+
+    Action.objects.create(
+        case=case_1,
+        type=action_type,
+    )
+    includes_case(False)
+
+    complaint_1.description = "Arbitrary update."
+    complaint_1.save()
+    includes_case(False)
+
+    Complaint.objects.create(
+        case=case_1,
+        happening_now=True,
+    )
+    includes_case(True)
+
+    action_2 = Action.objects.create(
+        case=case_1, type=action_type, time=case_1.modified - timedelta(minutes=1)
+    )
+    includes_case(True)
+
+    action_2.time = case_1.modified + timedelta(minutes=1)
+    action_2.save()
+    includes_case(False)

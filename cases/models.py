@@ -120,7 +120,9 @@ class CaseManager(models.Manager):
             edit = edits[0]
             edit._cached_diff = None
             for prev in edits[1:]:
-                prev._cached_diff = edit.diff_against(prev)
+                prev._cached_diff = edit.diff_against(
+                    prev, excluded_fields=["last_update_type"]
+                )
                 edit = prev
 
     def get_merged_into_cases(self, cases):
@@ -154,6 +156,10 @@ class CaseManager(models.Manager):
 
 
 class Case(AbstractModel):
+    class LastUpdateTypes(models.TextChoices):
+        ACTION = "AC", "Action"
+        COMPLAINT = "CO", "Complaint"
+
     KIND_CHOICES = [
         ("animal", "Animal noise"),
         ("buskers", "Buskers"),
@@ -218,7 +224,13 @@ class Case(AbstractModel):
     )
     followers = models.ManyToManyField(User, related_name="cases_following")
 
-    history = HistoricalRecords(excluded_fields=["modified", "modified_by"])
+    last_update_type = models.CharField(
+        blank=True, max_length=2, choices=LastUpdateTypes.choices
+    )
+
+    history = HistoricalRecords(
+        excluded_fields=["modified", "modified_by", "last_update_type"]
+    )
     objects = CaseManager()
 
     class Meta:
