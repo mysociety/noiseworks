@@ -14,6 +14,7 @@ In summary, with more details below:
 2. `script/setup` to install dependencies
 3. Create a noiseworks db e.g. `createdb noiseworks`
 4. Update the `DATABASE_URL` in `.env` to point to this e.g. `DATABASE_URL='postgis://USERNAME@localhost/noiseworks'`
+4. Update the `FILE_STORAGE_ROOT_PATH` in `.env` to point to a directory for file storage e.g. `/tmp`
 5. `poetry run script/server` to run a server
 
 #### Code dependencies

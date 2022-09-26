@@ -12,11 +12,13 @@ from django.contrib.gis.measure import D
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.http.response import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from formtools.wizard.views import NamedUrlSessionWizardView
+
 
 from accounts.models import User
 from noiseworks import cobrand
@@ -25,7 +27,7 @@ from noiseworks.message import send_email, send_sms
 
 from . import forms, map_utils
 from .filters import CaseFilter
-from .models import Action, ActionType, Case, Complaint
+from .models import Action, ActionFile, ActionType, Case, Complaint
 
 
 def home(request):
@@ -235,7 +237,7 @@ def remove_perpetrator(request, pk, perpetrator):
 @staff_member_required
 def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    form = forms.LogActionForm(request.POST or None)
+    form = forms.LogActionForm(request.POST or None, request.FILES or None)
     if form.is_valid():
         if form.cleaned_data["type"] == ActionType.case_closed:
             case.closed = True
@@ -243,6 +245,12 @@ def log_action(request, pk):
             case.closed = False
         # Saving the action will also save the case change
         form.save(case=case)
+        for f in request.FILES.getlist("files"):
+            ActionFile.objects.create(
+                action=form.instance,
+                file=f,
+                original_name=f.name,
+            )
         return redirect(case)
     return render(
         request,
@@ -280,6 +288,14 @@ def edit_logged_action(request, case_pk, action_pk):
             "form_title": "Edit a logged action",
         },
     )
+
+
+@staff_member_required
+def action_file(request, case_pk, action_pk, file_pk):
+    get_object_or_404(Case, pk=case_pk)
+    get_object_or_404(Action, pk=action_pk)
+    action_file = get_object_or_404(ActionFile, pk=file_pk).file
+    return FileResponse(action_file)
 
 
 @staff_member_required

@@ -120,6 +120,9 @@ class LogActionForm(GDSForm, forms.ModelForm):
 
     type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
     notes = action_notes_field()
+    files = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={"multiple": True}), required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -142,6 +145,7 @@ class LogActionForm(GDSForm, forms.ModelForm):
             Fieldset(
                 "type",
                 "notes",
+                "files",
                 HTML('{% include "cases/_action_form_close_prompt.html" %}'),
             )
         )

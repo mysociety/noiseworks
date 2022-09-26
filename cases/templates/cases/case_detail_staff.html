@@ -188,7 +188,7 @@ var nw = nw || {};
     /*
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-		maxZoom: 19
+        maxZoom: 19
     }).addTo(map);
     */
     L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -313,7 +313,25 @@ var nw = nw || {};
                 {{ entry.action.notes }}
             </div>
         {% endif %}
-
+        {% if entry.action.files %}
+            {% for file in entry.action.files.all %}
+                <p>
+                    <a class="nw-link--no-visited-state lbh-body-s" href="{% url "action-file" case.id entry.action.id file.id %}">
+                        {{ file.original_name }} ({{file.human_readable_size}})
+                    </a>
+                </p>
+            {% endfor %}
+            <div class="nw-printable-timeline-details" hidden>
+                <ul>
+                    {% for file in entry.action.files.all %}
+                         <li>
+                             {{ file.original_name }} ({{ file.human_readable_size }})
+                             {{ request.scheme }}://{{ request.get_host }}{% url "action-file" case.id entry.action.id file.id %}
+                         </li>
+                    {% endfor %}
+                <ul>
+            </div>
+        {% endif %}
     {% endif %}
     <p class="lbh-body-s govuk-!-margin-top-1">{{ entry.time }}</p>
 </li>

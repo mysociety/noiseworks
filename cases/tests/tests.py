@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpRequest
 from django.template import Context, Template
 from django.urls import reverse
@@ -14,7 +15,14 @@ from pytest_django.asserts import assertContains, assertNotContains
 from accounts.models import User
 
 from ..forms import LogActionForm
-from ..models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
+from ..models import (
+    Action,
+    ActionFile,
+    ActionType,
+    Case,
+    CaseSettingsSingleton,
+    Complaint,
+)
 from ..views import compile_dates
 
 pytestmark = pytest.mark.django_db
@@ -364,3 +372,69 @@ def test_compile_dates_correctly_uses_the_current_timezone():
     start, end = compile_dates(data)
     assert start == expected_start
     assert end == expected_end
+
+
+def test_log_files_happy_path(admin_client, case_1, action_types):
+    uploaded_files = [
+        SimpleUploadedFile(fn, fn.encode(), content_type="text/plain")
+        for fn in ["a_test_file.txt", "another_one.txt"]
+    ]
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        {
+            "notes": "notes",
+            "type": action_types[0].id,
+            "files": uploaded_files,
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.OK
+    action = Action.objects.get(case=case_1)
+    action_files = ActionFile.objects.filter(action=action).all()
+
+    uploaded_file_to_action_file = {}
+    for uploaded_file in uploaded_files:
+        for action_file in action_files:
+            if action_file.original_name == uploaded_file.name:
+                uploaded_file_to_action_file[uploaded_file] = action_file
+
+    for uploaded_file in uploaded_files:
+        if uploaded_file not in uploaded_file_to_action_file.keys():
+            pytest.fail(
+                f"Couldn't find an ActionFile for uploaded file {uploaded_file.name}"
+            )
+
+    case_detail_response = admin_client.get(f"/cases/{case_1.id}")
+    assert response.status_code == HTTPStatus.OK
+
+    for uploaded_file, action_file in uploaded_file_to_action_file.items():
+        action_file_url = action_file.get_absolute_url()
+        assertContains(case_detail_response, 'href="%s"' % action_file_url)
+
+        response = admin_client.get(action_file_url)
+        assert response.status_code == HTTPStatus.OK
+        assert response.getvalue() == uploaded_file.name.encode()
+
+
+def test_non_staff_cant_access_logged_files(
+    admin_client, client, case_1, action_types, normal_user
+):
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        {
+            "notes": "notes",
+            "type": action_types[0].id,
+            "files": [
+                SimpleUploadedFile("test.txt", b"test", content_type="text/plain")
+            ],
+        },
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.OK
+    action = Action.objects.get(case=case_1)
+    action_file = ActionFile.objects.get(action=action)
+
+    client.force_login(normal_user)
+
+    response = client.get(action_file.get_absolute_url())
+    assert response.status_code != HTTPStatus.OK

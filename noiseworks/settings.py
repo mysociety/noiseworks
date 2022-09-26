@@ -266,3 +266,7 @@ MAPIT_API_KEY = env.str("MAPIT_API_KEY", None)
 
 NOTIFY_API_KEY = env.str("NOTIFY_API_KEY", None)
 NOTIFY_TEMPLATE_ID = env.str("NOTIFY_TEMPLATE_ID", None)
+
+# File storage
+
+MEDIA_ROOT = env.str("FILE_STORAGE_ROOT_PATH", None)

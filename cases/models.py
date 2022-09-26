@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property, classproperty
 from django.utils.html import format_html, mark_safe
 from functools import lru_cache
+from humanize import naturalsize
 from simple_history.models import HistoricalRecords
 
 from accounts.models import User
@@ -638,3 +639,18 @@ class Action(AbstractModel):
             return f"{self.created_by}, {self.type.name}, case {self.case_id}"
         else:
             return f"{self.created_by}, case {self.case_id}, unknown action"
+
+
+class ActionFile(AbstractModel):
+    action = models.ForeignKey(Action, on_delete=models.CASCADE, related_name="files")
+    file = models.FileField()
+    original_name = models.CharField(max_length=128)
+
+    @property
+    def human_readable_size(self):
+        return naturalsize(self.file.size)
+
+    def get_absolute_url(self):
+        return reverse(
+            "action-file", args=[self.action.case.pk, self.action.pk, self.pk]
+        )
