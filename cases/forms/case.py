@@ -7,6 +7,7 @@ from crispy_forms_gds.layout import Fieldset, Layout, HTML
 from django import forms
 from django.utils.timezone import make_aware, now
 from django.core.exceptions import ValidationError
+from humanize import naturalsize
 
 from accounts.models import User
 from noiseworks import cobrand
@@ -124,6 +125,7 @@ class LogActionForm(GDSForm, forms.ModelForm):
 
     type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
     notes = action_notes_field()
+
     in_the_past = forms.BooleanField(
         label="This happened in the past",
         required=False,
@@ -139,7 +141,14 @@ class LogActionForm(GDSForm, forms.ModelForm):
         required=False,
     )
 
-    def __init__(self, *args, **kwargs):
+    files = forms.FileField(
+        label="Attachments",
+        widget=forms.ClearableFileInput(attrs={"multiple": True}),
+        required=False,
+    )
+
+    def __init__(self, *args, case=None, **kwargs):
+        self.case = case
         super().__init__(*args, **kwargs)
 
         action_types = ActionType.objects.exclude(visibility="internal").order_by(
@@ -163,6 +172,9 @@ class LogActionForm(GDSForm, forms.ModelForm):
                 "in_the_past",
                 "date",
                 "action_time",
+                "files",
+                HTML('{% include "cases/_action_form_files_too_big_prompt.html" %}'),
+                HTML('{% include "cases/_action_form_cant_upload_prompt.html" %}'),
                 HTML('{% include "cases/_action_form_close_prompt.html" %}'),
             )
         )
@@ -171,6 +183,17 @@ class LogActionForm(GDSForm, forms.ModelForm):
         type = self.cleaned_data["type"]
         type = ActionType.objects.get(id=type)
         return type
+
+    def clean_files(self):
+        files = self.files.getlist("files")
+        upload_size_bytes = sum([f.size for f in files])
+        remaining_bytes = self.case.file_storage_remaining_bytes
+        if upload_size_bytes > remaining_bytes:
+            human_readable_remaining_space = naturalsize(remaining_bytes)
+            raise ValidationError(
+                f"There is only {human_readable_remaining_space} left for attachments on this case. "
+                "You can store files to the Google Drive and link to them in action notes instead."
+            )
 
     def clean(self):
         in_the_past = self.cleaned_data.get("in_the_past", None)
@@ -197,8 +220,8 @@ class LogActionForm(GDSForm, forms.ModelForm):
 
         return self.cleaned_data
 
-    def save(self, case):
-        self.instance.case = case
+    def save(self):
+        self.instance.case = self.case
 
         in_the_past = self.cleaned_data.get("in_the_past", None)
         date = self.cleaned_data.get("date", None)

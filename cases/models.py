@@ -1,4 +1,5 @@
 import requests
+import math
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
@@ -8,6 +9,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property, classproperty
 from django.utils.html import format_html, mark_safe
 from functools import lru_cache
+from humanize import naturalsize
 from simple_history.models import HistoricalRecords
 
 from accounts.models import User
@@ -45,6 +47,7 @@ class AbstractModel(models.Model):
 class CaseSettingsSingleton(AbstractModel):
     _singleton = models.BooleanField(default=True, editable=False, unique=True)
     logged_action_editing_window = models.DurationField()
+    max_file_storage_mb = models.FloatField()
 
     class Meta:
         verbose_name = "Case settings"
@@ -383,6 +386,16 @@ class Case(AbstractModel):
                 "summary": action_fn(action),
                 "action": action,
             }
+            if history_to_show == "all":
+                row["files"] = []
+                for _file in action.files.all():
+                    entry = {
+                        "file": _file,
+                    }
+                    if user:
+                        entry["can_delete"] = _file.can_delete(user)
+                    row["files"].append(entry)
+
             if user:
                 row["can_edit_action"] = action.can_edit(user)
 
@@ -467,6 +480,7 @@ class Case(AbstractModel):
             query |= Q(time__gte=merged["at"], case=merged["id"])
 
         actions = Action.objects.filter(query)
+        actions = actions.prefetch_related("files")
         actions = actions.order_by("-time")
         return actions
 
@@ -524,6 +538,21 @@ class Case(AbstractModel):
     @cached_property
     def number_all_complainants(self):
         return len({c.complainant_id for c in self.all_complaints_reversed})
+
+    @property
+    def file_storage_used_bytes(self):
+        bytes_used = 0
+        for action in self.actions.prefetch_related("files").all():
+            for af in action.files.all():
+                bytes_used += af.file.size
+        return bytes_used
+
+    @property
+    def file_storage_remaining_bytes(self):
+        return math.floor(
+            (CaseSettingsSingleton.instance.max_file_storage_mb * 1000 * 1000)
+            - self.file_storage_used_bytes
+        )
 
 
 class Complaint(AbstractModel):
@@ -654,3 +683,21 @@ class Action(AbstractModel):
             return f"{self.created_by}, {self.type.name}, case {self.case_id}"
         else:
             return f"{self.created_by}, case {self.case_id}, unknown action"
+
+
+class ActionFile(AbstractModel):
+    action = models.ForeignKey(Action, on_delete=models.CASCADE, related_name="files")
+    file = models.FileField()
+    original_name = models.CharField(max_length=128)
+
+    @property
+    def human_readable_size(self):
+        return naturalsize(self.file.size)
+
+    def can_delete(self, user):
+        return user == self.created_by
+
+    def get_absolute_url(self):
+        return reverse(
+            "action-file", args=[self.action.case.pk, self.action.pk, self.pk]
+        )

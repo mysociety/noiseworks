@@ -1,0 +1,10 @@
+{% if not can_upload_files %}
+  <div name="close-prompt">
+    <section class="lbh-page-announcement lbh-page-announcement--info" style="margin-bottom:0">
+        <h4 class="lbh-page-announcement__title">There isn't space for any more attachments on this case.</h4>
+        <div class="lbh-page-announcement__content">
+            You can store files to the Google Drive and link to them in action notes instead.
+        </div>
+    </section>
+  </div>
+{% endif %}

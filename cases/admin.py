@@ -2,7 +2,14 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.db import models
 
-from .models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
+from .models import (
+    Action,
+    ActionFile,
+    ActionType,
+    Case,
+    CaseSettingsSingleton,
+    Complaint,
+)
 
 admin.site.register(Complaint)
 
@@ -27,3 +34,8 @@ class ActionAdmin(admin.ModelAdmin):
 class ActionTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "common")
     list_editable = ("common",)
+
+
+@admin.register(ActionFile)
+class ActionFileAdmin(admin.ModelAdmin):
+    pass

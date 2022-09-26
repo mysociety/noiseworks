@@ -52,5 +52,15 @@ urlpatterns = [
         name="case-edit-action",
     ),
     path("/<int:pk>/merge", views.merge, name="case-merge"),
+    path(
+        "/<int:case_pk>/actions/<int:action_pk>/files/<int:file_pk>",
+        views.action_file,
+        name="action-file",
+    ),
+    path(
+        "/<int:case_pk>/actions/<int:action_pk>/files/<int:file_pk>/delete",
+        views.action_file_delete,
+        name="action-file-delete",
+    ),
     path("/<int:pk>/priority", views.priority, name="case-priority"),
 ]

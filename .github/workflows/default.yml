@@ -59,11 +59,15 @@ jobs:
         createdb noiseworks
         psql -d noiseworks -c 'create extension postgis;'
 
+    - name: Create storage folder
+      run: mkdir storage
+
     - name: Run tests
       env:
         SECRET_KEY: 'secret'
         DATABASE_URL: 'postgis://postgres:password@localhost/noiseworks'
         COBRAND: 'cobrand_hackney'
+        FILE_STORAGE_RELATIVE_PATH: 'storage'
       run: coverage run -m pytest
 
     - name: Upload code coverage

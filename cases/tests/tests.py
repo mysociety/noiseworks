@@ -8,57 +8,21 @@ from django.contrib.gis.geos import Point
 from django.http import HttpRequest
 from django.template import Context, Template
 from django.urls import reverse
-from django.utils.timezone import localtime, make_aware, now
+from django.utils.timezone import make_aware, now
 from pytest_django.asserts import assertContains, assertNotContains
 
-from accounts.models import User
-
+from .conftest import add_time_to_log_payload
 from ..forms import LogActionForm
-from ..models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
+from ..models import (
+    Action,
+    ActionType,
+    Case,
+    CaseSettingsSingleton,
+    Complaint,
+)
 from ..views import compile_dates
 
 pytestmark = pytest.mark.django_db
-
-
-@pytest.fixture
-def staff_user_1(db):
-    return User.objects.create(is_staff=True, username="staffuser1")
-
-
-@pytest.fixture
-def staff_user_2(db):
-    return User.objects.create(is_staff=True, username="staffuser2")
-
-
-@pytest.fixture
-def normal_user(db):
-    return User.objects.create(
-        username="normal@example.org",
-        email="normal@example.org",
-        email_verified=True,
-        phone="+447700900123",
-        first_name="Normal",
-        last_name="User",
-        best_time=["weekends"],
-        best_method="phone",
-    )
-
-
-@pytest.fixture
-def case_1(db, staff_user_1, normal_user):
-    return Case.objects.create(
-        kind="diy", assigned=staff_user_1, created_by=normal_user, ward="E05009373"
-    )
-
-
-@pytest.fixture
-def logged_action_1(case_1, staff_user_1, action_types):
-    return Action.objects.create(
-        type=action_types[0],
-        notes="internal notes",
-        case=case_1,
-        created_by=staff_user_1,
-    )
 
 
 @pytest.fixture
@@ -90,27 +54,6 @@ def complaint(db, case_1, normal_user):
         happening_now=True,
         end=make_aware(datetime.datetime(2021, 11, 9, 14, 29)),
     )
-
-
-@pytest.fixture
-def action_types(db):
-    return [
-        ActionType.objects.create(name="Letter sent", common=True),
-        ActionType.objects.create(name="Noise witnessed"),
-        ActionType.objects.create(name="Abatement Notice “Section 80” served"),
-    ]
-
-
-def add_time_to_log_payload(payload, time=None):
-    if not time:
-        time = now()
-    time = localtime(time)
-    date = time.date()
-    payload["date_0"] = date.day
-    payload["date_1"] = date.month
-    payload["date_2"] = date.year
-    payload["action_time"] = time.strftime("%I:%M %p")
-    return payload
 
 
 def test_case_not_found(admin_client):
@@ -290,7 +233,7 @@ def test_log_case_reopening(admin_client, case_1):
 
 
 def test_log_form(case_1):
-    form = LogActionForm(instance=case_1, data={"notes": "hmm"})
+    form = LogActionForm(case=case_1, data={"notes": "hmm"})
     assert form.errors["type"] == ["This field is required."]
 
 

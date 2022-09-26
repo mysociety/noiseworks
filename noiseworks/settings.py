@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "cases",
     COBRAND,
     "crispy_forms_gds",
+    "django_cleanup.apps.CleanupConfig",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = ("gds",)
@@ -266,3 +267,9 @@ MAPIT_API_KEY = env.str("MAPIT_API_KEY", None)
 
 NOTIFY_API_KEY = env.str("NOTIFY_API_KEY", None)
 NOTIFY_TEMPLATE_ID = env.str("NOTIFY_TEMPLATE_ID", None)
+
+# File storage
+
+file_storage_relative_path = env.str("FILE_STORAGE_RELATIVE_PATH", None)
+if file_storage_relative_path:
+    MEDIA_ROOT = BASE_DIR / file_storage_relative_path

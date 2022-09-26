@@ -1,13 +1,17 @@
 import re
+import tempfile
 from unittest.mock import mock_open
 
 import pytest
 from botocore.stub import Stubber
+from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage
 from django.core.management import CommandError, call_command
+
 
 from cases.management.commands.export_data import client
 
-from ..models import Action, Case
+from ..models import Action, ActionFile, Case
 from .conftest import ADDRESS
 
 
@@ -44,6 +48,27 @@ def mock_things(requests_mock):
 @pytest.fixture
 def case(db):
     return Case.objects.create(kind="diy", ward="E05009373")
+
+
+@pytest.fixture
+def action(db, case):
+    return Action.objects.create(case=case)
+
+
+@pytest.fixture
+def action_file_without_file(db, action):
+    return ActionFile.objects.create(action=action)
+
+
+@pytest.fixture
+def temp_dir_path():
+    with tempfile.TemporaryDirectory() as path:
+        yield path
+
+
+@pytest.fixture
+def use_temp_dir_media_root(temp_dir_path, settings):
+    settings.MEDIA_ROOT = temp_dir_path
 
 
 @pytest.fixture
@@ -121,3 +146,25 @@ def test_close_cases_command(call_params, case):
     assert not case3.closed
     case4.refresh_from_db()
     assert not case4.closed
+
+
+def test_delete_local_orphaned_files_command_bad_input():
+    with pytest.raises(CommandError) as excinfo:
+        call_command("delete_local_orphaned_files")
+    assert "Please specify a path" == str(excinfo.value)
+
+
+def test_delete_local_orphaned_files_command(
+    use_temp_dir_media_root, action_file_without_file, temp_dir_path
+):
+    storage = FileSystemStorage(location=temp_dir_path)
+    storage.save("orphan.txt", ContentFile("content"))
+    action_file_without_file.file.save("not_orphan.txt", ContentFile("content"))
+
+    assert storage.exists("orphan.txt")
+    assert storage.exists("not_orphan.txt")
+
+    call_command("delete_local_orphaned_files", path=temp_dir_path)
+
+    assert not storage.exists("orphan.txt")
+    assert storage.exists("not_orphan.txt")

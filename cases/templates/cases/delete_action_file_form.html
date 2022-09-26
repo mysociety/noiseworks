@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2>Are you sure you want to delete {{ file.original_name }} ({{ file.human_readable_size }})?</h2>
+<form method="post">{% csrf_token %}
+    <input type="submit" class="govuk-button lbh-button" value="Yes, delete it">
+    <a class="nw-link" href="{% url "case-view" case.id %}">
+        <button type="button" class="govuk-button govuk-secondary lbh-button lbh-button--secondary" style="margin-left:10px">No, take me back</button>
+    </a>
+</form>
+
+{% endblock %}

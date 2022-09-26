@@ -20,6 +20,7 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/cobrand_hackney/node_modules/
+      - storage:/${FILE_STORAGE_RELATIVE_PATH}
     ports:
       - "8000:8000"
     depends_on:
@@ -32,6 +33,7 @@ services:
       DATABASE_URL: 'postgis://postgres:password@db/noiseworks'
       COBRAND: cobrand_hackney
       EMAIL_HOST: email.svc
+      FILE_STORAGE_RELATIVE_PATH: storage
   mailhog:
     image: mailhog/mailhog:v1.0.1
     restart: always
@@ -46,3 +48,4 @@ services:
 volumes:
   pgdata:
   node_modules:
+  storage:
