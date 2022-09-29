@@ -44,11 +44,20 @@ class CaseFilter(django_filters.FilterSet):
     )
     created = django_filters.DateRangeFilter(label="Created")
     modified = django_filters.DateRangeFilter(label="Last updated")
+    closed = django_filters.ChoiceFilter(
+        label="Closed cases",
+        # Don't display an option for an empty selection.
+        empty_label=None,
+        choices=[
+            ("none", "Not included"),
+            ("include", "Included"),
+            ("only", "Only"),
+        ],
+        method="closed_filter",
+        initial="none",
+    )
     priority_only = django_filters.Filter(
         label="Priority only", widget=forms.CheckboxInput, method="priority_only_filter"
-    )
-    closed = django_filters.Filter(
-        label="Include closed cases", widget=forms.CheckboxInput, method="closed_filter"
     )
 
     class Meta:
@@ -57,9 +66,19 @@ class CaseFilter(django_filters.FilterSet):
         fields = ["kind", "where", "estate"]
 
     def __init__(self, data, *args, **kwargs):
-        data = data.copy()
+
+        # Allows using initial values as defaults for filters.
+        # See https://django-filter.readthedocs.io/en/stable/guide/tips.html#using-initial-values-as-defaults
+        if data is not None:
+            data = data.copy()
+            for name, f in self.base_filters.items():
+                initial = f.extra.get("initial")
+                if not data.get(name) and initial:
+                    data[name] = initial
+
         user = kwargs["request"].user
         super().__init__(data, *args, **kwargs)
+
         self.filters.move_to_end("search", last=False)
         self.filters["kind"].label = "Noise type"
         self.filters["where"].label = "Noise location type"
@@ -95,10 +114,13 @@ class CaseFilter(django_filters.FilterSet):
         return queryset
 
     def closed_filter(self, queryset, name, value):
-        """If ticked, want to return both"""
-        if value:
+        if value == "none":
+            return queryset.filter(closed=False)
+        elif value == "include":
             return queryset
-        return queryset.filter(closed=False)
+        elif value == "only":
+            return queryset.filter(closed=True)
+        return queryset  # pragma: no cover - should not be reachable.
 
     def assigned_filter(self, queryset, name, value):
         if value == "me":
