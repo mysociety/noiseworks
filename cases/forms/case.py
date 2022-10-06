@@ -1,7 +1,7 @@
 import re
 
 from crispy_forms_gds.choices import Choice
-from crispy_forms_gds.layout import Fieldset, Layout, HTML
+from crispy_forms_gds.layout import Field, Fieldset, Layout, HTML
 from django import forms
 from django.core.exceptions import ValidationError
 
@@ -120,9 +120,6 @@ class LogActionForm(GDSForm, forms.ModelForm):
 
     type = forms.ChoiceField(widget=forms.RadioSelect, required=True)
     notes = action_notes_field()
-    files = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={"multiple": True}), required=False
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -141,11 +138,12 @@ class LogActionForm(GDSForm, forms.ModelForm):
             common[-1].divider = "or"
         self.fields["type"].choices = common + other
 
+        self.helper.form_id = "action-form"
         self.helper.layout = Layout(
             Fieldset(
                 "type",
                 "notes",
-                "files",
+                HTML('<div class="dropzone" id="action-dropzone"></div>'),  # Dropzone for file uploads.
                 HTML('{% include "cases/_action_form_close_prompt.html" %}'),
             )
         )

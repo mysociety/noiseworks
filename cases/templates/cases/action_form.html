@@ -15,6 +15,36 @@
 
 <script>
 (function() {
+    // HACK: Configure Dropzone to work as a field that gets submitted as part of the form
+    // rather as a standalone form.
+    Dropzone.options.actionDropzone = {
+        url: ".",
+        autoProcessQueue: false,  // Don't submit each time a file is added.
+        uploadMultiple: true,
+        addRemoveLinks: true,
+        init: function() {
+            let closure = this;
+
+            let submitButton = document.querySelector('input[type="submit"]');
+            if (!submitButton) {
+                return;
+            }
+
+            // Use dropzones submit rather than the 'normal' submit.
+            submitButton.addEventListener("click", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                closure.processQueue();
+            });
+
+            // Send all the form data along with the dropzone submit.
+            this.on("sendingmultiple", function(data, xhr, formData) {
+                formData.append("firstname", jQuery("#firstname").val());
+                formData.append("lastname", jQuery("#lastname").val());
+            });
+        }
+    }
+
     let typeRadioButtons = document.querySelectorAll('input[type="radio"][name="type"]');
     let closePrompt = document.querySelector('div[name="close-prompt"]');
     if (!closePrompt || typeRadioButtons.length === 0) {
