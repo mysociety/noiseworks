@@ -154,6 +154,15 @@ class CaseManager(models.Manager):
 
 
 class Case(AbstractModel):
+    permissions = [
+        ("add_a_perpetrator_to_case", "Add a perpetrator to a case"),
+        ("follow_case", "Follow a case"),
+        ("merge_case", "Merge a case"),
+        ("view_internal_case_notes", "View internal case notes"),
+        ("view_internal_case_files", "View internal case files"),
+        ("assign_case", "Assign a case"),
+    ]
+
     KIND_CHOICES = [
         ("animal", "Animal noise"),
         ("buskers", "Buskers"),
