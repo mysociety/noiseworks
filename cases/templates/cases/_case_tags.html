@@ -1,5 +1,8 @@
 <div class="nw-tags">
     <span class="nw-tag nw-tag--id">{{ case.id }}</span>
+  {% if case.priority %}
+    <span class="nw-tag nw-tag--priority">Priority</span>
+  {% endif %}
   {% if case.closed %}
     <span class="nw-tag nw-tag--closed">Closed</span>
   {% endif %}

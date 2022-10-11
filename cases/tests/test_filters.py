@@ -42,6 +42,19 @@ def case_1(db, staff_user, normal_user):
 
 
 @pytest.fixture
+def case_2(db, staff_user, normal_user):
+    return Case.objects.create(
+        kind="other",
+        kind_other="Fireworks",
+        location_cache="123 High Street, Hackney",
+        estate="?",
+        assigned=staff_user,
+        created_by=normal_user,
+        ward="E05009373",
+    )
+
+
+@pytest.fixture
 def case_location(db):
     return Case.objects.create(
         kind="diy",
@@ -164,3 +177,19 @@ def test_closed_cases(admin_client, case_1):
     assertNotContains(response, f"/cases/{case_1.id}")
     response = admin_client.get("/cases?closed=on")
     assertContains(response, f"/cases/{case_1.id}")
+
+
+def test_priority_only_cases(admin_client, case_1, case_2):
+    case_1.priority = True
+    case_1.save()
+
+    case_2.priority = False
+    case_2.save()
+
+    response = admin_client.get("/cases")
+    assertContains(response, f"/cases/{case_1.id}")
+    assertContains(response, f"/cases/{case_2.id}")
+
+    response = admin_client.get("/cases?priority_only=on")
+    assertContains(response, f"/cases/{case_1.id}")
+    assertNotContains(response, f"/cases/{case_2.id}")

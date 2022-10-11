@@ -32,6 +32,10 @@
     @extend .lbh-tag--grey;
 }
 
+.nw-tag--priority {
+    @extend .lbh-tag--red;
+}
+
 .nw-case-list .nw-tag {
     font-size: 14px;
     font-size: 0.875rem;

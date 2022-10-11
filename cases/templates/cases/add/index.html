@@ -34,6 +34,16 @@ then create a new case.</p>
     radius.forEach(function(r) {
         r.addEventListener('change', nw.react);
     });
+    const hasReviewDate = document.querySelector('#id_internal-flags-has_review_date');
+    const reviewDate = document.querySelector('#id_internal-flags-review_date');
+    if (!hasReviewDate || !reviewDate) {
+        return;
+    }
+    let f = function() {
+        reviewDate.hidden = !hasReviewDate.checked;
+    };
+    hasReviewDate.addEventListener('change', f);
+    f();
 })();
 </script>
 

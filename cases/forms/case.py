@@ -298,3 +298,40 @@ class LocationForm(GDSForm, forms.ModelForm):
         if "addresses" in self.data and "postcode" in self.data:
             choices = self.address_choices(self.data["postcode"])
             self.fields["addresses"].choices = choices
+
+
+class ReviewDateForm(GDSForm, forms.ModelForm):
+    submit_text = "Update"
+
+    class Meta:
+        model = Case
+        fields = ["review_date"]
+
+    has_review_date = forms.BooleanField(
+        label="This case has a review date", required=False
+    )
+    review_date = DateInputField(label="", required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.helper.layout = Layout(
+            Fieldset(
+                "has_review_date",
+                "review_date",
+            )
+        )
+
+    def save(self):
+        m = super().save(commit=False)
+        if not self.cleaned_data["has_review_date"]:
+            m.review_date = None
+        m.save()
+        return m
+
+
+class PriorityForm(forms.ModelForm):
+    class Meta:
+        model = Case
+        fields = ["priority"]
+        widgets = {"priority": forms.HiddenInput}

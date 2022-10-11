@@ -74,6 +74,15 @@ class EffectForm(StepForm):
     )
 
 
+class InternalFlagsForm(StepForm):
+    title = "Internal Flags"
+    priority = forms.BooleanField(label="This case is a priority", required=False)
+    has_review_date = forms.BooleanField(
+        label="This case has a review date", required=False
+    )
+    review_date = DateInputField(label="", required=False)
+
+
 class SummaryForm(StepForm):
     submit_text = "Submit"
     title = "Check your answers"

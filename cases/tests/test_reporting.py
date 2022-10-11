@@ -116,12 +116,25 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     post_step("isnow", {"start_date": "today", "start_time": "9pm"})
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
-    resp = post_step("effect", {"effect": "Effect"}, follow=True)
+    post_step("effect", {"effect": "Effect"}, follow=True)
+    resp = post_step(
+        "internal-flags",
+        {
+            "priority": True,
+            "has_review_date": True,
+            "review_date_0": "12",
+            "review_date_1": "10",
+            "review_date_2": "2022",
+        },
+        follow=True,
+    )
     assertContains(resp, "Normal User, 1 High Street")
     assertContains(resp, "weekday, by email")
     assertContains(resp, "DIY")
     assertContains(resp, "A shop, bar, nightclub")
     assertContains(resp, "Line 1, Line 2, Line 3")
+    assertContains(resp, "Yes")  # Priority
+    assertContains(resp, "Wed, 12 Oct 2022")
     today = datetime.date.today()
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
     post_step("summary", {"true_statement": 1}, follow=True)
@@ -206,7 +219,8 @@ def test_staff_case_creation_new_user_map(
     )
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
-    resp = post_step("effect", {"effect": "Effect"}, follow=True)
+    post_step("effect", {"effect": "Effect"})
+    resp = post_step("internal-flags", {"priority": True}, follow=True)
     assertContains(resp, "Different User, Line 1, Line 2, Line 3, E8 1DY")
     assertContains(resp, "weekday, by email")
     assertContains(resp, "DIY")
@@ -214,6 +228,7 @@ def test_staff_case_creation_new_user_map(
     assertContains(resp, f"180m around ({POINT.x:.0f},{POINT.y:.0f})")
     assertContains(resp, "Wed, 17 Nov 2021, 2 a.m.")
     assertContains(resp, "Wed, 17 Nov 2021, 3 a.m.")
+    assertContains(resp, "Yes")  # Priority
     post_step("summary", {"true_statement": 1}, follow=True)
     assert len(mail.outbox) == 1
     assert len(mail.outbox[0].to) == 2

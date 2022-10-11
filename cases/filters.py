@@ -44,6 +44,9 @@ class CaseFilter(django_filters.FilterSet):
     )
     created = django_filters.DateRangeFilter(label="Created")
     modified = django_filters.DateRangeFilter(label="Last updated")
+    priority_only = django_filters.Filter(
+        label="Priority only", widget=forms.CheckboxInput, method="priority_only_filter"
+    )
     closed = django_filters.Filter(
         label="Include closed cases", widget=forms.CheckboxInput, method="closed_filter"
     )
@@ -85,6 +88,11 @@ class CaseFilter(django_filters.FilterSet):
         uprn = data.get("uprn")
         if not uprn:
             self.filters["uprn"].extra["widget"] = forms.HiddenInput
+
+    def priority_only_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(priority=True)
+        return queryset
 
     def closed_filter(self, queryset, name, value):
         """If ticked, want to return both"""

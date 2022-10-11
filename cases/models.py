@@ -203,6 +203,10 @@ class Case(AbstractModel):
     where = models.CharField(max_length=9, choices=WHERE_CHOICES)
     estate = models.CharField(max_length=1, choices=ESTATE_CHOICES, blank=True)
 
+    # Internal Flags
+    priority = models.BooleanField(default=False)
+    review_date = models.DateField(blank=True, null=True)
+
     perpetrators = models.ManyToManyField(User, related_name="cases_perpetrated")
 
     assigned = models.ForeignKey(

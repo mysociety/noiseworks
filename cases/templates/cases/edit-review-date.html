@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+<div>
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel</a>
+</div>
+
+{% include "cases/_case_tags.html" with case=case %}
+
+{% error_summary form %}
+
+<fieldset class="govuk-fieldset lbh-fieldset">
+    <legend class="govuk-fieldset__legend govuk-fieldset__legend--xl">
+        <h1 class="govuk-fieldset__heading">Change review date</h1>
+    </legend>
+    {% crispy form %}
+</fieldset>
+
+<script>
+(function(){
+    const hasReviewDate = document.querySelector('#id_has_review_date');
+    const reviewDate = document.querySelector('#div_id_review_date');
+    let f = function() {
+        reviewDate.hidden = !hasReviewDate.checked;
+    };
+    hasReviewDate.addEventListener('change', f);
+    f();
+})();
+</script>
+
+{% endblock %}

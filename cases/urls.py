@@ -26,6 +26,11 @@ urlpatterns = [
     path("/<int:pk>/complaint/<int:complaint>", views.complaint, name="complaint"),
     path("/<int:pk>/edit-kind", views.edit_kind, name="case-edit-kind"),
     path("/<int:pk>/edit-location", views.edit_location, name="case-edit-location"),
+    path(
+        "/<int:pk>/edit-review-date",
+        views.edit_review_date,
+        name="case-edit-review-date",
+    ),
     path("/<int:pk>/perpetrator/add", perpetrator_wizard, name="perpetrator-add"),
     path(
         "/<int:pk>/perpetrator/add/<step>",
@@ -47,4 +52,5 @@ urlpatterns = [
         name="case-edit-action",
     ),
     path("/<int:pk>/merge", views.merge, name="case-merge"),
+    path("/<int:pk>/priority", views.priority, name="case-priority"),
 ]

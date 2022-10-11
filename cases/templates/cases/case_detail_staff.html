@@ -79,6 +79,33 @@
     </dd>
   </div>
   <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Priority</dt>
+    <dd class="govuk-summary-list__value">
+    {% if case.priority %}
+        Yes
+    {% else %}
+        No
+    {% endif %}
+    </dd>
+    <dd class="govuk-summary-list__actions">
+        <form action={% url "case-priority" case.id %} method="post">{% csrf_token %}
+          {{ priority_change_form }}
+          <button type="submit" class="nw-link nw-link--no-visited-state" style="margin-top:0">
+            Change<span class="govuk-visually-hidden"> priority</span>
+          </button>
+        </form>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">Review Date</dt>
+    <dd class="govuk-summary-list__value">{{ case.review_date }}</dd>
+    <dd class="govuk-summary-list__actions">
+      <a class="nw-link--no-visited-state" href="{% url "case-edit-review-date" case.id %}">
+        Change<span class="govuk-visually-hidden"> review date</span>
+      </a>
+    </dd>
+  </div>
+  <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Followers</dt>
     <dd class="govuk-summary-list__value">
       {% for follower in case.followers.all %}

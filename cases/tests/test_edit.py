@@ -1,4 +1,6 @@
+import datetime
 import re
+from http import HTTPStatus
 
 import pytest
 from django.contrib.gis.geos import Point
@@ -186,3 +188,50 @@ def test_edit_location_to_uprn(
     case = Case.objects.get(id=case.id)
     assert case.location_display == "Line 1, Line 2, Line 3, E8 1DY"
     assert case.uprn == "10008315925"
+
+
+def test_edit_priority(admin_client):
+    case = Case.objects.create(kind="diy", location_cache="preset", priority=False)
+    admin_client.post(
+        f"/cases/{case.id}/priority",
+        {"priority": True},
+    )
+    case.refresh_from_db()
+    assert case.priority
+    admin_client.post(
+        f"/cases/{case.id}/priority",
+        {"priority": False},
+    )
+    case.refresh_from_db()
+    assert not case.priority
+
+
+def test_edit_review_date(admin_client):
+    case = Case.objects.create(kind="diy", location_cache="preset", review_date=None)
+
+    response = admin_client.get(f"/cases/{case.id}/edit-review-date")
+    assert response.status_code == HTTPStatus.OK
+
+    admin_client.post(
+        f"/cases/{case.id}/edit-review-date",
+        {
+            "has_review_date": True,
+            "review_date_0": "12",
+            "review_date_1": "10",
+            "review_date_2": "2022",
+        },
+    )
+    case.refresh_from_db()
+    assert case.review_date == datetime.date(2022, 10, 12)
+
+    admin_client.post(
+        f"/cases/{case.id}/edit-review-date",
+        {
+            "has_review_date": False,
+            "review_date_0": "12",
+            "review_date_1": "10",
+            "review_date_2": "2022",
+        },
+    )
+    case.refresh_from_db()
+    assert case.review_date == None

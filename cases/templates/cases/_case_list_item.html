@@ -24,6 +24,12 @@
             <dt class="govuk-summary-list__key">Assigned</dt>
             <dd class="govuk-summary-list__value">{{ case.assigned|default:"No-one" }}</dd>
         </div>
+        {% if case.review_date %}
+            <div class="govuk-summary-list__row">
+                <dt class="govuk-summary-list__key">Review date</dt>
+                <dd class="govuk-summary-list__value">{{ case.review_date }}</dd>
+            </div>
+        {% endif %}
     </dl>
   {% endif %}
 </li>

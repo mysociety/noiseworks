@@ -118,6 +118,7 @@ def case_staff(request, pk):
 
     is_follower = case.followers.filter(pk=request.user.id)
     timeline = case.timeline_staff_with_operation_flags(request.user)
+    priority_change_form = forms.PriorityForm(initial={"priority": not case.priority})
 
     return render(
         request,
@@ -126,6 +127,7 @@ def case_staff(request, pk):
             "case": case,
             "is_follower": is_follower,
             "timeline": timeline,
+            "priority_change_form": priority_change_form,
         },
     )
 
@@ -214,6 +216,28 @@ def edit_location(request, pk):
     return render(
         request,
         "cases/edit-location.html",
+        {
+            "case": case,
+            "form": form,
+        },
+    )
+
+
+@staff_member_required
+def edit_review_date(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    has_review_date = case.review_date != None
+    form = forms.ReviewDateForm(
+        request.POST or None,
+        instance=case,
+        initial={"has_review_date": has_review_date},
+    )
+    if form.is_valid():
+        form.save()
+        return redirect(case)
+    return render(
+        request,
+        "cases/edit-review-date.html",
         {
             "case": case,
             "form": form,
@@ -337,6 +361,15 @@ def merge_start(request, case):
     )
 
 
+@staff_member_required
+def priority(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    form = forms.PriorityForm(request.POST or None, instance=case)
+    if form.is_valid():
+        form.save()
+    return redirect(case)
+
+
 @login_required
 def complaint(request, pk, complaint):
     if not request.user.is_staff and not settings.NON_STAFF_ACCESS:
@@ -397,6 +430,11 @@ def show_user_address_form(wizard):
 
 def show_about_form(wizard):
     return not show_user_form(wizard)
+
+
+def show_internal_flags_form(wizard):
+    user = wizard.request.user
+    return user.is_active and user.is_staff
 
 
 def show_confirmation_step(wizard):
@@ -791,6 +829,7 @@ class ReportingWizard(CaseWizard):
         ("rooms", forms.RoomsAffectedForm),
         ("describe", forms.DescribeNoiseForm),
         ("effect", forms.EffectForm),
+        ("internal-flags", forms.InternalFlagsForm),
         ("summary", forms.SummaryForm),
         ("confirmation", forms.ConfirmationForm),
     ]
@@ -807,6 +846,7 @@ class ReportingWizard(CaseWizard):
         "where-map": show_map_form,
         "isnow": show_happening_now_form,
         "notnow": show_not_happening_now_form,
+        "internal-flags": show_internal_flags_form,
         "confirmation": show_confirmation_step,
     }
 
@@ -858,7 +898,10 @@ class ReportingWizard(CaseWizard):
             radius=data.get("radius"),
             uprn=data.get("source_uprn", ""),
             where=data["where"],
+            priority=data.get("priority", False),
         )
+        if data.get("has_review_date", False):
+            case.review_date = data.get("review_date", None)
         case.save()
 
         start, end = compile_dates(data)
