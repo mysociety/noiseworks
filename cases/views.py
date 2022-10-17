@@ -112,10 +112,6 @@ def case_staff(request, pk):
     qs = Case.objects.select_related("assigned").prefetch_related("perpetrators")
     case = get_object_or_404(qs, pk=pk)
 
-    # redirect = case.merged_into
-    # if redirect:
-    #    return redirect(redirect)
-
     is_follower = case.followers.filter(pk=request.user.id)
     timeline = case.timeline_staff_with_operation_flags(request.user)
     priority_change_form = forms.PriorityForm(initial={"priority": not case.priority})

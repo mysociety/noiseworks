@@ -195,6 +195,13 @@ class Case(AbstractModel):
 
     # State
     closed = models.BooleanField(default=False)
+    merged_into = models.ForeignKey(
+        "self",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="mergees",
+    )
 
     # Type
     kind = models.CharField("Type", max_length=15, choices=KIND_CHOICES)
@@ -327,7 +334,7 @@ class Case(AbstractModel):
         return merged[self.id]
 
     @cached_property
-    def merged_into(self):
+    def merged_into_final(self):
         """Return the ID of the final Case that this has been merged into, if any."""
         merged = self.merged_into_list
         merged = merged[-1]["id"] if merged else None
