@@ -325,6 +325,7 @@ class Case(AbstractModel):
         return wards.get(self.ward, self.ward)
 
     def merge_into(self, other):
+        self.merged_into = other
         Action.objects.create(case_old=self, case=other)
 
     @cached_property
@@ -417,6 +418,8 @@ class Case(AbstractModel):
                             )
                         )
                     elif d.field == "closed":
+                        continue
+                    elif d.field == "merged_into":
                         continue
                     else:
                         changes.append(d)

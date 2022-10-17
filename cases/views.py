@@ -325,6 +325,7 @@ def merge_action(request, case):
     other_id = request.session["merging_case"]["id"]
     other = Case.objects.get(pk=other_id)
     other.merge_into(case)
+    other.save()
     del request.session["merging_case"]
     messages.success(request, f"Case #{other_id} has been merged into this case.")
     return redirect(case)
