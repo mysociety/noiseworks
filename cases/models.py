@@ -58,7 +58,7 @@ class CaseSettingsSingleton(AbstractModel):
 
 class CaseManager(models.Manager):
     def unmerged(self):
-        q = Q(merge_action__isnull=True)
+        q = Q(merged_into__isnull=True)
         qs = self.filter(q).select_related("assigned")
         return qs
 
