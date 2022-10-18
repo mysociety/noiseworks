@@ -2,9 +2,10 @@ import datetime
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.utils.timezone import now
 from pytest_django.asserts import assertContains, assertNotContains
 
-from ..models import Action, ActionType, Case
+from ..models import Action, ActionType, Case, MergeRecord
 
 pytestmark = pytest.mark.django_db
 
@@ -41,15 +42,14 @@ def merged_case_setup(db):
         estate="?",
         point=Point(470267, 122766),
     )
-    c2.merged_into = c1
+    c2.merge_into(c1)
     c2.save()
-    action = Action.objects.create(case=c1, case_old=c2)
-    return (c1, c2, action)
+    return (c1, c2)
 
 
 @pytest.fixture
 def already_merged_case(db, merged_case_setup):
-    _, c, _ = merged_case_setup
+    _, c = merged_case_setup
     return c
 
 
@@ -152,11 +152,77 @@ def test_case_actions_reversed_only_inclues_actions_from_mergee_after_merge_time
     case B actions that have a time after the time of the merge action, regardless of when
     these actions are created.
     """
-    into, merged, merging_action = merged_case_setup
-    before_the_merge = merging_action.time - datetime.timedelta(days=1)
+    into, merged = merged_case_setup
+    before_the_merge = now() - datetime.timedelta(days=1)
     action_created_for_past_event = Action.objects.create(
         case=into, time=before_the_merge
     )
     merged_actions = merged.actions_reversed
-    assert len(merged_actions) == 1
     assert action_created_for_past_event not in merged_actions
+
+
+def test_timeline_merge_records(admin_client):
+    def _check_records(case, expected):
+        assert set(case.timeline_merge_records) == expected
+
+        # Clear cached properties.
+        del case.merge_map
+        del case.timeline_merge_records
+        del case.merged_into_list
+
+    a = Case.objects.create()
+    b = Case.objects.create()
+    c = Case.objects.create()
+    d = Case.objects.create()
+
+    a.merge_into(b)
+    a.save()
+    a_into_b = MergeRecord.objects.get(mergee=a, merged_into=b)
+    b.merge_into(c)
+    b.save()
+    b_into_c = MergeRecord.objects.get(mergee=b, merged_into=c)
+    c.merge_into(d)
+    c.save()
+    c_into_d = MergeRecord.objects.get(mergee=c, merged_into=d)
+
+    _check_records(a, {a_into_b, b_into_c, c_into_d})
+    _check_records(b, {a_into_b, b_into_c, c_into_d})
+    _check_records(c, {a_into_b, b_into_c, c_into_d})
+    _check_records(d, {a_into_b, b_into_c, c_into_d})
+
+    a.unmerge()
+    a.save()
+    a_out_of_b = MergeRecord.objects.get(mergee=a, merged_into=b, unmerge=True)
+
+    _check_records(a, {a_into_b, a_out_of_b})
+    _check_records(b, {a_into_b, b_into_c, c_into_d, a_out_of_b})
+    _check_records(c, {a_into_b, b_into_c, c_into_d, a_out_of_b})
+    _check_records(d, {a_into_b, b_into_c, c_into_d, a_out_of_b})
+
+    e = Case.objects.create()
+    a.merge_into(e)
+    a_into_e = MergeRecord.objects.get(mergee=a, merged_into=e, unmerge=False)
+    a.save()
+
+    _check_records(a, {a_into_b, a_out_of_b, a_into_e})
+    _check_records(b, {a_into_b, b_into_c, c_into_d, a_out_of_b})
+    _check_records(c, {a_into_b, b_into_c, c_into_d, a_out_of_b})
+    _check_records(d, {a_into_b, b_into_c, c_into_d, a_out_of_b})
+
+    c.unmerge()
+    c.save()
+    c_out_of_d = MergeRecord.objects.get(mergee=c, merged_into=d, unmerge=True)
+
+    _check_records(a, {a_into_b, a_out_of_b, a_into_e})
+    _check_records(b, {a_into_b, b_into_c, c_into_d, a_out_of_b, c_out_of_d})
+    _check_records(c, {a_into_b, b_into_c, c_into_d, a_out_of_b, c_out_of_d})
+    _check_records(d, {c_into_d, c_out_of_d})
+
+    b.unmerge()
+    b.save()
+    b_out_of_c = MergeRecord.objects.get(mergee=b, merged_into=c, unmerge=True)
+
+    _check_records(a, {a_into_b, a_out_of_b, a_into_e})
+    _check_records(b, {a_into_b, a_out_of_b, b_into_c, b_out_of_c})
+    _check_records(c, {b_into_c, c_into_d, c_out_of_d, b_out_of_c})
+    _check_records(d, {c_into_d, c_out_of_d})

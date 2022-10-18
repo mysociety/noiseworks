@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import Action, Case, Complaint
+from .models import Action, Case, Complaint, MergeRecord
 
 
 @receiver(post_save, sender=Complaint)
@@ -24,3 +24,13 @@ def update_case_for_action(sender, instance, **kwargs):
 
     # Update the case last modified
     instance.case.save()
+
+
+@receiver(post_save, sender=MergeRecord)
+def update_case_for_merge_record(sender, instance, created, **kwargs):
+    if created:
+        instance.mergee.last_update_type = Case.LastUpdateTypes.MERGE
+
+    # Update the case last modified
+    instance.mergee.save()
+    instance.merged_into.save()

@@ -167,7 +167,8 @@ def test_search_merged_case(admin_client):
         estate="?",
         point=Point(470267, 122766),
     )
-    c1.actions.create(case_old=c2)
+    c2.merge_into(c1)
+    c2.save()
     resp = admin_client.get(f"/cases?search={c2.id}")
     assertContains(resp, "Merged case")
 

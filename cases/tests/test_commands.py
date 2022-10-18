@@ -132,7 +132,8 @@ def test_close_cases_command(call_params, case):
     case2 = Case.objects.create(kind="diy", ward="E05009373")
     case3 = Case.objects.create(kind="diy", ward="E05009373")
     case4 = Case.objects.create(kind="diy", ward="E05009373")
-    Action.objects.create(case_old=case3, case=case4)
+    case3.merge_into(case4)
+    case3.save()
     for c in (case, case2, case3, case4):
         c.created = "2021-01-01T12:00:00Z"
         c.save()

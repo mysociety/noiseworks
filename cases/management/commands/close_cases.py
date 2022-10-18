@@ -27,9 +27,9 @@ class Command(BaseCommand):
 
         cases = Case.objects.annotate(Count("complaints"))
         # Ignore any that have been merged into another case
-        cases = cases.exclude(merge_action__id__isnull=False)
+        cases = cases.exclude(merged_into__isnull=False)
         # Ignore any that have had cases merged into them
-        cases = cases.exclude(actions__case_old_id__isnull=False)
+        cases = cases.exclude(mergee_records__isnull=False)
         cases = cases.filter(complaints__count__lte=1, created__lt=cutoff, closed=False)
         for case in cases:
             with transaction.atomic():

@@ -174,47 +174,62 @@ class CaseManager(models.Manager):
         if not case_ids:
             return {}
 
-        # Even though merging actions should not have an edited 'time', we need to
-        # use 'time' rather than 'created' for the merged 'at'.
-        # This is because in other action queries we use 'time' and we should be consistent,
-        # especially as there is a small delta between the values of 'time' and 'created' for
-        # a newly created action.
-
         query = self.raw(
             """WITH RECURSIVE cte AS (
                  SELECT
-                   c.id,
-                   c.merged_into_id
+                   m.mergee_id AS id,
+                   m.merged_into_id,
+                   m.time
                  FROM
-                   cases_case c
+                   cases_mergerecord m
                  WHERE
-                   c.id IN (%s)
-                   AND c.merged_into_id IS NOT NULL
+                   NOT m.unmerge
+                   AND (
+                     SELECT id
+                     FROM cases_mergerecord m2
+                     WHERE m2.id > m.id
+                     AND m2.mergee_id = m.mergee_id
+                     AND m2.merged_into_id = m.merged_into_id
+                     LIMIT 1
+                    ) IS NULL -- There are no later records.
+                   AND m.mergee_id IN (%s)
                  UNION
                  SELECT
-                   cte.id,
-                   c.merged_into_id
+                   cte.id AS id,
+                   m.merged_into_id,
+                   m.time
                  FROM
-                   cases_case c
-                   JOIN cte ON c.id = cte.merged_into_id
+                   cases_mergerecord m
+                   JOIN cte ON m.mergee_id = cte.merged_into_id
                  WHERE
-                   c.merged_into_id IS NOT NULL
+                   NOT m.unmerge
+                   AND (
+                     SELECT id
+                     FROM cases_mergerecord m2
+                     WHERE m2.id > m.id
+                     AND m2.mergee_id = m.mergee_id
+                     AND m2.merged_into_id = m.merged_into_id
+                     LIMIT 1
+                    ) IS NULL -- There are no later records.
                )
                SELECT
-                cte.id AS id,
-                cte.merged_into_id AS merged_into_id,
-                a.time AS time
+                 cte.id AS id,
+                 cte.merged_into_id AS merged_into_id,
+                 cte.time AS time
                FROM
                  cte
-               JOIN cases_action a ON a.case_id = cte.merged_into_id
-               AND a.case_old_id = cte.id
             """
             % case_ids,
         )
 
         merge_map = {c.id: [] for c in cases}
         for entry in query:
-            merge_map[entry.id].append({"id": entry.merged_into_id, "at": entry.time})
+            merge_map[entry.id].append(
+                {
+                    "id": entry.merged_into_id,
+                    "at": entry.time,
+                }
+            )
         return merge_map
 
 
@@ -222,6 +237,7 @@ class Case(AbstractModel):
     class LastUpdateTypes(models.TextChoices):
         ACTION = "AC", "Action"
         COMPLAINT = "CO", "Complaint"
+        MERGE = "MR", "Merge"
 
     KIND_CHOICES = [
         ("animal", "Animal noise"),
@@ -389,7 +405,13 @@ class Case(AbstractModel):
 
     def merge_into(self, other):
         self.merged_into = other
-        Action.objects.create(case_old=self, case=other)
+        MergeRecord.objects.create(mergee=self, merged_into=other, unmerge=False)
+
+    def unmerge(self):
+        MergeRecord.objects.create(
+            mergee=self, merged_into=self.merged_into, unmerge=True
+        )
+        self.merged_into = None
 
     @cached_property
     def merged_into_list(self) -> list:
@@ -403,6 +425,28 @@ class Case(AbstractModel):
         merged = self.merged_into_list
         merged = merged[-1]["id"] if merged else None
         return merged
+
+    @cached_property
+    def timeline_merge_records(self):
+        """Return a list of MergeRecords to display in the timeline for this case."""
+
+        # Records this case and cases that are currently merged into this case
+        # are referenced in.
+        merge_map = self.merge_map
+        direct_and_upstream_records = MergeRecord.objects.filter(
+            Q(merged_into_id__in=merge_map.keys()) | Q(mergee_id__in=merge_map.keys())
+        )
+
+        # Records referencing cases that this case has merged into (possibly transitively),
+        # after the time of the merge.
+        downstream_records_query = Q(pk=None)  # Match nothing.
+        for merged in self.merged_into_list:
+            downstream_records_query |= Q(time__gte=merged["at"]) & (
+                Q(merged_into_id=merged["id"]) | Q(mergee_id=merged["id"])
+            )
+        downstream_records = MergeRecord.objects.filter(downstream_records_query).all()
+
+        return direct_and_upstream_records | downstream_records
 
     def _timeline_edit_assign_entry(self, edit, prev, history_to_show):
         if history_to_show == "all":
@@ -446,7 +490,15 @@ class Case(AbstractModel):
         Case.objects.attach_diffs(histories)
         return histories
 
-    def _timeline(self, actions, action_fn, complaints, history_to_show, user=None):
+    def _timeline(
+        self,
+        actions,
+        action_fn,
+        complaints,
+        timeline_merge_records,
+        history_to_show,
+        user=None,
+    ):
         data = []
         for action in actions:
             row = {
@@ -472,6 +524,13 @@ class Case(AbstractModel):
             row = {
                 "complaint": complaint,
                 "time": complaint.created,
+            }
+            data.append(row)
+
+        for mr in timeline_merge_records:
+            row = {
+                "merge_record": mr,
+                "time": mr.time,
             }
             data.append(row)
 
@@ -516,6 +575,7 @@ class Case(AbstractModel):
             self.actions_public_reversed,
             action_fn,
             self.complaints_reversed,
+            [],
             "assigned",
         )
 
@@ -523,22 +583,31 @@ class Case(AbstractModel):
     def timeline_staff(self):
         """Staff timeline shows all actions and complaints on the case and its merged cases"""
         return self._timeline(
-            self.actions_reversed, str, self.all_complaints_reversed, "all"
+            self.actions_reversed,
+            str,
+            self.all_complaints_reversed,
+            self.timeline_merge_records,
+            "all",
         )
 
     def timeline_staff_with_operation_flags(self, staff):
         """Staff timeline but including flags for what operations the staff member can do"""
         return self._timeline(
-            self.actions_reversed, str, self.all_complaints_reversed, "all", user=staff
+            self.actions_reversed,
+            str,
+            self.all_complaints_reversed,
+            self.timeline_merge_records,
+            "all",
+            user=staff,
         )
 
     @cached_property
-    def action_merge_map(self):
+    def merge_map(self):
         return Case.objects.get_merged_cases([self])
 
     @cached_property
     def actions_reversed(self):
-        actions = self.action_merge_map
+        actions = self.merge_map
         query = Q(case__in=actions.keys())
 
         # If case A is merged into case B, case B's actions
@@ -568,7 +637,7 @@ class Case(AbstractModel):
     @cached_property
     def all_complaints(self):
         """The complaints on this case and any cases merged into it"""
-        actions = self.action_merge_map
+        actions = self.merge_map
         query = Q(case__in=actions.keys())
         complaints = Complaint.objects.filter(query).select_related("complainant")
         return complaints
@@ -749,3 +818,14 @@ class ActionFile(AbstractModel):
         return reverse(
             "action-file", args=[self.action.case.pk, self.action.pk, self.pk]
         )
+
+
+class MergeRecord(AbstractModel):
+    mergee = models.ForeignKey(
+        Case, on_delete=models.CASCADE, related_name="merge_records"
+    )
+    merged_into = models.ForeignKey(
+        Case, on_delete=models.CASCADE, related_name="mergee_records"
+    )
+    unmerge = models.BooleanField(default=False)
+    time = models.DateTimeField(default=timezone.now)

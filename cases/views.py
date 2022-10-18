@@ -419,7 +419,7 @@ def complaint(request, pk, complaint):
     complaint = get_object_or_404(
         Complaint.objects.select_related("case"), pk=complaint
     )
-    merge_map = case.action_merge_map
+    merge_map = case.merge_map
     case_ids = merge_map.keys()
     if complaint.case.id not in case_ids:
         return redirect(case)
