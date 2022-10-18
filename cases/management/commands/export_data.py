@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand, CommandError
 from smart_open import open
 
 from accounts.models import User
-from cases.models import Action, Case, Complaint, HistoricalCase
+from cases.models import Action, Case, Complaint, HistoricalCase, MergeRecord
 
 Case_perpetrators = Case.perpetrators.through
 
@@ -61,7 +61,6 @@ class Command(BaseCommand):
             "case_id",
             "type",
             "notes",
-            "case_old_id",
         ],
         User: [
             "id",
@@ -94,6 +93,13 @@ class Command(BaseCommand):
             "assigned_id",
         ],
         Case_perpetrators: ["case_id", "user_id"],
+        MergeRecord: [
+            "mergee_id",
+            "merged_into_id",
+            "time",
+            "created_by_id",
+            "created",
+        ],
     }
 
     special = {

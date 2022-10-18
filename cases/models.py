@@ -171,12 +171,6 @@ class CaseManager(models.Manager):
         if not case_ids:
             return {}
 
-        # Even though merging actions should not have an edited 'time', we need to
-        # use 'time' rather than 'created' for the merged 'at'.
-        # This is because in other action queries we use 'time' and we should be consistent,
-        # especially as there is a small delta between the values of 'time' and 'created' for
-        # a newly created action.
-
         query = self.raw(
             """WITH RECURSIVE cte AS (
                  SELECT
@@ -200,18 +194,36 @@ class CaseManager(models.Manager):
                SELECT
                 cte.id AS id,
                 cte.merged_into_id AS merged_into_id,
-                a.time AS time
+                m.time AS time,
+                u.id AS user_id,
+                u.email AS user_email
                FROM
                  cte
-               JOIN cases_action a ON a.case_id = cte.merged_into_id
-               AND a.case_old_id = cte.id
+               JOIN (
+                 SELECT m.mergee_id, m.merged_into_id, MAX(m.time) AS time
+                 FROM cases_mergerecord m
+                 GROUP BY m.mergee_id, m.merged_into_id
+               ) AS last_merge ON last_merge.merged_into_id = cte.merged_into_id
+               AND last_merge.mergee_id = cte.id
+               JOIN cases_mergerecord m ON m.mergee_id = last_merge.mergee_id
+               AND m.merged_into_id = last_merge.merged_into_id
+               AND m.time = last_merge.time
+               LEFT OUTER JOIN accounts_user u ON u.id = m.created_by_id
             """
             % case_ids,
         )
 
         merge_map = {c.id: [] for c in cases}
         for entry in query:
-            merge_map[entry.id].append({"id": entry.merged_into_id, "at": entry.time})
+            merge_map[entry.id].append(
+                {
+                    "mergee_id": entry.id,
+                    "merged_into_id": entry.merged_into_id,
+                    "at": entry.time,
+                    "merged_by_id": entry.user_id,
+                    "merged_by_email": entry.user_email,
+                }
+            )
         return merge_map
 
 
@@ -387,7 +399,6 @@ class Case(AbstractModel):
     def merge_into(self, other):
         self.merged_into = other
         MergeRecord.objects.create(mergee=self, merged_into=other)
-        Action.objects.create(case_old=self, case=other)
 
     @cached_property
     def merged_into_list(self) -> list:
@@ -399,7 +410,7 @@ class Case(AbstractModel):
     def merged_into_final(self):
         """Return the ID of the final Case that this has been merged into, if any."""
         merged = self.merged_into_list
-        merged = merged[-1]["id"] if merged else None
+        merged = merged[-1]["merged_into_id"] if merged else None
         return merged
 
     def _timeline_edit_assign_entry(self, edit, prev, history_to_show):
@@ -444,7 +455,15 @@ class Case(AbstractModel):
         Case.objects.attach_diffs(histories)
         return histories
 
-    def _timeline(self, actions, action_fn, complaints, history_to_show, user=None):
+    def _timeline(
+        self,
+        actions,
+        action_fn,
+        complaints,
+        merged_into_list,
+        history_to_show,
+        user=None,
+    ):
         data = []
         for action in actions:
             row = {
@@ -460,6 +479,15 @@ class Case(AbstractModel):
             row = {
                 "complaint": complaint,
                 "time": complaint.created,
+            }
+            data.append(row)
+        for merge_entry in merged_into_list:
+            row = {
+                "mergee_id": merge_entry["mergee_id"],
+                "merged_into_id": merge_entry["merged_into_id"],
+                "merged_by_id": merge_entry["merged_by_id"],
+                "merged_by_email": merge_entry["merged_by_email"],
+                "time": merge_entry["at"],
             }
             data.append(row)
 
@@ -504,6 +532,7 @@ class Case(AbstractModel):
             self.actions_public_reversed,
             action_fn,
             self.complaints_reversed,
+            self.merged_into_list,
             "assigned",
         )
 
@@ -511,13 +540,22 @@ class Case(AbstractModel):
     def timeline_staff(self):
         """Staff timeline shows all actions and complaints on the case and its merged cases"""
         return self._timeline(
-            self.actions_reversed, str, self.all_complaints_reversed, "all"
+            self.actions_reversed,
+            str,
+            self.all_complaints_reversed,
+            self.merged_into_list,
+            "all",
         )
 
     def timeline_staff_with_operation_flags(self, staff):
         """Staff timeline but including flags for what operations the staff member can do"""
         return self._timeline(
-            self.actions_reversed, str, self.all_complaints_reversed, "all", user=staff
+            self.actions_reversed,
+            str,
+            self.all_complaints_reversed,
+            self.merged_into_list,
+            "all",
+            user=staff,
         )
 
     @cached_property
@@ -535,7 +573,7 @@ class Case(AbstractModel):
         # action _added_ to case B after the merge but _recorded_ to have
         # happened before the merge will not be displayed.
         for merged in self.merged_into_list:
-            query |= Q(time__gte=merged["at"], case=merged["id"])
+            query |= Q(time__gte=merged["at"], case=merged["merged_into_id"])
 
         actions = Action.objects.filter(query)
         actions = actions.order_by("-time")
@@ -660,7 +698,7 @@ class ActionQuerySet(models.QuerySet):
 class ActionManager(models.Manager):
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.select_related("created_by", "case", "type", "case_old")
+        qs = qs.select_related("created_by", "case", "type")
         return qs
 
 
@@ -697,9 +735,7 @@ class Action(AbstractModel):
         )
 
     def __str__(self):
-        if self.case_old:
-            return f"{self.created_by} merged case {self.case_old_id} into case {self.case_id}"
-        elif self.type:
+        if self.type:
             return f"{self.created_by}, {self.type.name}, case {self.case_id}"
         else:
             return f"{self.created_by}, case {self.case_id}, unknown action"

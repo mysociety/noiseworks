@@ -320,6 +320,13 @@ var nw = nw || {};
             {% include "cases/_complaint_summary.html" with complaint=entry.complaint %}
         </div>
 
+    {% elif entry.merged_into_id %}
+        {% if entry.merged_by_id and entry.merged_by_email %}
+        <a href="{% url "cases" %}?assigned={{ entry.merged_by_id }}" class="nw-link--no-visited-state">{{ entry.merged_by_email }}</a>
+        {% endif %}
+        <span class="case-info">merged case #{{ entry.mergee_id}} into
+            case #{{ entry.merged_into_id}}
+        </span>
     {% else %}
         {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
 	    {% if entry.can_edit_action %}

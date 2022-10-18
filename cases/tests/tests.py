@@ -394,8 +394,6 @@ def test_action_output(
 ):
     a = Action(case=case_1, type=action_types[0], notes="Notes")
     assert str(a) == f"None, Letter sent, case {case_1.id}"
-    a = Action(case=case_1, case_old=case_other_uprn)
-    assert str(a) == f"None merged case {case_other_uprn.id} into case {case_1.id}"
     a = Action(case=case_1)
     assert str(a) == f"None, case {case_1.id}, unknown action"
 
@@ -438,10 +436,7 @@ def test_case_manager_get_merged_cases(case_1, case_other_uprn):
         case_other_uprn.id: case_1.id,
     }
     Case.objects.prefetch_timeline([case_1])
-    assert len(case_1.actions_reversed) == 1
-    action = case_1.actions_reversed[0]
-    assert action.case == case_1
-    assert action.case_old == case_other_uprn
+    assert len(case_1.actions_reversed) == 0
 
 
 def test_complaint_view(admin_client, complaint):
