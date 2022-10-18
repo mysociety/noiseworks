@@ -80,7 +80,7 @@ class CaseManager(models.Manager):
         work on history anyway, and b) we've got the added complication of the
         merged cases to deal with."""
 
-        merge_map = Action.objects.get_merged_cases(qs)
+        merge_map = Case.objects.get_merged_cases(qs)
         case_ids = merge_map.keys()
 
         # Note that if case A is merged into case B, case A's actions_by_case
@@ -124,6 +124,44 @@ class CaseManager(models.Manager):
                     prev, excluded_fields=["last_update_type"]
                 )
                 edit = prev
+
+    def get_merged_cases(self, cases):
+        """Given a list of Case IDs, returns a dict mapping other Cases that have
+        been merged into those Cases."""
+        case_ids = map(lambda x: str(x.id), cases)
+        case_ids = ",".join(case_ids)
+        if not case_ids:
+            return {}
+
+        query = self.raw(
+            """WITH RECURSIVE cte AS (
+                 SELECT
+                   c.id,
+                   c.merged_into_id
+                 FROM
+                   cases_case c
+                 WHERE
+                   c.merged_into_id IN (%s)
+                 UNION
+                 SELECT
+                   c.id,
+                   cte.merged_into_id
+                 FROM
+                   cases_case c
+                   JOIN cte ON cte.id = c.merged_into_id
+               )
+               SELECT
+                 *
+               FROM
+                 cte
+            """
+            % case_ids,
+        )
+
+        merge_map = {c.id: c.id for c in cases}
+        for entry in query:
+            merge_map[entry.id] = entry.merged_into_id
+        return merge_map
 
     def get_merged_into_cases(self, cases):
         """Given a list of Case IDs, returns a dict mapping those Cases into
@@ -461,7 +499,7 @@ class Case(AbstractModel):
 
     @cached_property
     def action_merge_map(self):
-        return Action.objects.get_merged_cases([self])
+        return Case.objects.get_merged_cases([self])
 
     @cached_property
     def actions_reversed(self):
@@ -601,28 +639,6 @@ class ActionManager(models.Manager):
         qs = super().get_queryset()
         qs = qs.select_related("created_by", "case", "type", "case_old")
         return qs
-
-    def get_merged_cases(self, cases):
-        """Given a list of Case IDs, returns a dict mapping other Cases that have
-        been merged into those Cases."""
-        case_ids = map(lambda x: str(x.id), cases)
-        case_ids = ",".join(case_ids)
-        if not case_ids:
-            return {}
-        query = self.raw(
-            """WITH RECURSIVE cte AS (
-                SELECT s.id,s.case_old_id,s.case_id FROM cases_action s WHERE s.case_id IN (%s) AND s.case_old_id IS NOT NULL
-                UNION
-                SELECT s.id,s.case_old_id,cte.case_id FROM cte JOIN cases_action s ON cte.case_old_id = s.case_id AND s.case_old_id IS NOT NULL
-            )
-            SELECT * FROM cte """
-            % case_ids,
-        )
-
-        merge_map = {c.id: c.id for c in cases}
-        for action in query:
-            merge_map[action.case_old_id] = action.case_id
-        return merge_map
 
 
 class Action(AbstractModel):

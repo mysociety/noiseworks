@@ -429,15 +429,19 @@ def test_case_manager_prefetch_timeline_sorts_actions_by_time(case_1):
     assert case_1.actions_reversed == [a1, a2]
 
 
-def test_action_manager(case_1, case_other_uprn):
-    a = Action.objects.create(case=case_1, case_old=case_other_uprn)
-    merge_map = Action.objects.get_merged_cases([case_1])
+def test_case_manager_get_merged_cases(case_1, case_other_uprn):
+    case_other_uprn.merge_into(case_1)
+    case_other_uprn.save()
+    merge_map = Case.objects.get_merged_cases([case_1])
     assert merge_map == {
         case_1.id: case_1.id,
         case_other_uprn.id: case_1.id,
     }
     Case.objects.prefetch_timeline([case_1])
-    assert case_1.actions_reversed == [a]
+    assert len(case_1.actions_reversed) == 1
+    action = case_1.actions_reversed[0]
+    assert action.case == case_1
+    assert action.case_old == case_other_uprn
 
 
 def test_complaint_view(admin_client, complaint):
