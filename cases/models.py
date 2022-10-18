@@ -717,15 +717,6 @@ class Action(AbstractModel):
     notes = models.TextField(blank=True)
     time = models.DateTimeField(default=timezone.now)
 
-    # Merge
-    case_old = models.ForeignKey(
-        Case,
-        blank=True,
-        null=True,
-        on_delete=models.PROTECT,
-        related_name="merge_action",
-    )
-
     objects = ActionManager.from_queryset(ActionQuerySet)()
 
     def can_edit(self, user):
