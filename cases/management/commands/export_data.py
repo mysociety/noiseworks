@@ -61,7 +61,6 @@ class Command(BaseCommand):
             "case_id",
             "type",
             "notes",
-            "case_old_id",
         ],
         User: [
             "id",

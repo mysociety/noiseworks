@@ -337,8 +337,6 @@ def test_action_output(
 ):
     a = Action(case=case_1, type=action_types[0], notes="Notes")
     assert str(a) == f"None, Letter sent, case {case_1.id}"
-    a = Action(case=case_1, case_old=case_other_uprn)
-    assert str(a) == f"None merged case {case_other_uprn.id} into case {case_1.id}"
     a = Action(case=case_1)
     assert str(a) == f"None, case {case_1.id}, unknown action"
 
