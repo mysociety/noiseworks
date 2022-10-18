@@ -3,7 +3,7 @@
 
 {% block merging %}
   {% with request.session.merging_case as duplicate %}
-    {% if duplicate and case.id != duplicate.id and not case.merged_into_final %}
+    {% if duplicate and case.id != duplicate.id and not case.merged_into %}
     <div class="lbh-merging-bar">
       <div class="lbh-container">
         <h5>Merging mode</h5>
@@ -20,7 +20,7 @@
 {% block content %}
 {% with request.session.merging_case as duplicate %}
 
-{% if case.merged_into_final %}
+{% if case.merged_into %}
 <section class="nw-page-announcement nw-page-announcement--info">
     <div class="nw-page-announcement__content">
         This case has been merged into
@@ -57,7 +57,7 @@
     {% endblocktranslate %}</dd>
     <dd class="govuk-summary-list__actions"></dd>
   </div>
-  {% if not case.merged_into_final %}
+  {% if not case.merged_into %}
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Last update</dt>
     <dd class="govuk-summary-list__value">{% include "cases/_case_last_update.html" %}</dd>
@@ -130,7 +130,7 @@
   {% endif %}
 </dl>
 
-{% if not case.merged_into_final %}
+{% if not case.merged_into %}
 <div class="nw-button-bar">
     <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
     <a href="{% url "complaint-add" case.id %}" class="nw-button nw-button--secondary">Report a reoccurrence</a>
@@ -297,7 +297,7 @@ var nw = nw || {};
 
 <ol class="lbh-timeline">
 <!-- lbh-timeline__event- -action-needed (grey box) -major (black filled) -minor (small filled) -gap-below (dotted line) -->
-  {% if not case.merged_into_final %}
+  {% if not case.merged_into %}
     <li class="lbh-timeline__event lbh-timeline__event--minor">
         <p class="lbh-body-m">Now</p>
         <a href="{% url "case-log-action" case.id %}" class="govuk-button lbh-button">Log an action</a>

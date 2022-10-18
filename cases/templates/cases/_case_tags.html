@@ -6,7 +6,7 @@
   {% if case.closed %}
     <span class="nw-tag nw-tag--closed">Closed</span>
   {% endif %}
-  {% if case.merged_into_final %}
+  {% if case.merged_into %}
     <a href="{% url 'case-view' case.merged_into_final %}"><span class="nw-tag nw-tag--merged">Merged into {{ case.merged_into_final }}</span></a>
   {% endif %}
   {% if case.had_abatement_notice %}
