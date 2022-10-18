@@ -4,7 +4,7 @@ import pytest
 from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains, assertNotContains
 
-from ..models import Action, ActionType, Case
+from ..models import Action, ActionType, Case, MergeRecord
 
 pytestmark = pytest.mark.django_db
 
@@ -42,7 +42,9 @@ def merged_case_setup(db):
         point=Point(470267, 122766),
     )
     c2.merged_into = c1
+    MergeRecord.objects.create(mergee=c2, merged_into=c1)
     c2.save()
+
     action = Action.objects.create(case=c1, case_old=c2)
     return (c1, c2, action)
 
