@@ -702,3 +702,17 @@ class Action(AbstractModel):
             return f"{self.created_by}, {self.type.name}, case {self.case_id}"
         else:
             return f"{self.created_by}, case {self.case_id}, unknown action"
+
+
+class MergeRecord(AbstractModel):
+    mergee = models.ForeignKey(
+        Case, on_delete=models.CASCADE, related_name="merge_records"
+    )
+    merged_into = models.ForeignKey(
+        Case,
+        on_delete=models.CASCADE,
+        related_name="mergee_records",
+        null=True,
+        blank=True,
+    )
+    time = models.DateTimeField(default=timezone.now)
