@@ -32,7 +32,7 @@ def address_for_uprn(uprn):
         data = r.json()
     except json.JSONDecodeError:
         return {"string": "", "ward": ""}
-    addresses = data["data"]["address"]
+    addresses = data.get("data", {}).get("address")
     if not addresses:
         return {"string": "", "ward": ""}
 

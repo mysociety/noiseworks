@@ -72,6 +72,14 @@ def test_addresses_api_error(requests_mock):
         "string": "",
         "ward": "",
     }
+    requests_mock.get(
+        re.compile("uprn=missing"),
+        text='{"statusCode": 0, "error": { "isValid": false, "validationErrors": [] } }',
+    )
+    assert address_for_uprn("missing") == {
+        "string": "",
+        "ward": "",
+    }
     requests_mock.get(re.compile("postcode=1234"), text="Error")
     assert "error" in addresses_for_postcode("1234")
 
