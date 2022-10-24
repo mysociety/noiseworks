@@ -52,5 +52,6 @@ urlpatterns = [
         name="case-edit-action",
     ),
     path("/<int:pk>/merge", views.merge, name="case-merge"),
+    path("/<int:pk>/unmerge", views.unmerge, name="case-unmerge"),
     path("/<int:pk>/priority", views.priority, name="case-priority"),
 ]

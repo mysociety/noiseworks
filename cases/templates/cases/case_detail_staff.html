@@ -130,15 +130,17 @@
   {% endif %}
 </dl>
 
-{% if not case.merged_into %}
 <div class="nw-button-bar">
+{% if not case.merged_into %}
     <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
     <a href="{% url "complaint-add" case.id %}" class="nw-button nw-button--secondary">Report a reoccurrence</a>
   {% if not duplicate %}
     <a href="{% url "case-merge" case.id %}" class="nw-button nw-button--secondary">Merge into another case</a>
   {% endif %}
-</div>
+{% else %}
+    <a href="{% url "case-unmerge" case.id %}" class="nw-button">Unmerge this case</a>
 {% endif %}
+</div>
 
 <h2 class="lbh-heading-h2 section-heading">Noise Source</h2>
 

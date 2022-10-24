@@ -159,3 +159,15 @@ def test_case_actions_reversed_only_inclues_actions_from_mergee_after_merge_time
     )
     merged_actions = merged.actions_reversed
     assert len(merged_actions) == 0
+
+
+def test_case_unmerge(admin_client, merged_case_setup):
+    into, merged = merged_case_setup
+    assert merged.merged_into == into
+
+    response = admin_client.post(f"/cases/{merged.id}/unmerge", follow=True)
+    merged.refresh_from_db()
+    assert merged.merged_into is None
+
+    response = admin_client.get(f"/cases/{into.id}")
+    assertNotContains(response, f'merged case #{merged.id} into case #{into.id}')
