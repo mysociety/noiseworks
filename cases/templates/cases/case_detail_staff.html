@@ -130,15 +130,19 @@
   {% endif %}
 </dl>
 
-{% if not case.merged_into %}
 <div class="nw-button-bar">
+{% if not case.merged_into %}
     <a href="{% url "case-log-action" case.id %}" class="nw-button">Log an action</a>
     <a href="{% url "complaint-add" case.id %}" class="nw-button nw-button--secondary">Report a reoccurrence</a>
   {% if not duplicate %}
     <a href="{% url "case-merge" case.id %}" class="nw-button nw-button--secondary">Merge into another case</a>
   {% endif %}
-</div>
+{% else %}
+    <form action={% url "case-unmerge" case.id %} method="post">{% csrf_token %}
+      <button type="submit" class="nw-button" style="margin-top:0">Unmerge this case</button>
+    </form>
 {% endif %}
+</div>
 
 <h2 class="lbh-heading-h2 section-heading">Noise Source</h2>
 

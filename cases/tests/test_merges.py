@@ -226,3 +226,10 @@ def test_timeline_merge_records(admin_client):
     _check_records(b, {a_into_b, a_out_of_b, b_into_c, b_out_of_c})
     _check_records(c, {b_into_c, c_into_d, c_out_of_d, b_out_of_c})
     _check_records(d, {c_into_d, c_out_of_d})
+
+
+def test_unmerge(admin_client, merged_case_setup):
+    into, merged = merged_case_setup
+    admin_client.post(f"/cases/{merged.id}/unmerge")
+    merged.refresh_from_db()
+    assert merged.merged_into is None

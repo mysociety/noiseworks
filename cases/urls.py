@@ -62,5 +62,6 @@ urlpatterns = [
         views.action_file_delete,
         name="action-file-delete",
     ),
+    path("/<int:pk>/unmerge", views.unmerge, name="case-unmerge"),
     path("/<int:pk>/priority", views.priority, name="case-priority"),
 ]
