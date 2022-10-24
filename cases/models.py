@@ -400,6 +400,10 @@ class Case(AbstractModel):
         self.merged_into = other
         MergeRecord.objects.create(mergee=self, merged_into=other)
 
+    def unmerge(self):
+        self.merged_into = None
+        MergeRecord.objects.create(mergee=self, merged_into=None)
+
     @cached_property
     def merged_into_list(self) -> list:
         """Return a list of the IDs of the Cases that this has been merged into, if any."""

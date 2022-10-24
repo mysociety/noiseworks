@@ -303,6 +303,14 @@ def edit_logged_action(request, case_pk, action_pk):
 
 
 @staff_member_required
+def unmerge(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    case.unmerge()
+    case.save()
+    return redirect(case)
+
+
+@staff_member_required
 def merge(request, pk):
     case = get_object_or_404(Case, pk=pk)
 
