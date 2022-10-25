@@ -699,7 +699,7 @@ class ActionQuerySet(models.QuerySet):
 class ActionManager(models.Manager):
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.select_related("created_by", "case", "type", "case_old")
+        qs = qs.select_related("created_by", "case", "type")
         return qs
 
 
