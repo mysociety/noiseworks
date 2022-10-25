@@ -2,9 +2,10 @@ import datetime
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.utils.timezone import now
 from pytest_django.asserts import assertContains, assertNotContains
 
-from ..models import Action, ActionType, Case, MergeRecord
+from ..models import Action, ActionType, Case, MergeRecord, User
 
 pytestmark = pytest.mark.django_db
 
@@ -41,17 +42,14 @@ def merged_case_setup(db):
         estate="?",
         point=Point(470267, 122766),
     )
-    c2.merged_into = c1
-    MergeRecord.objects.create(mergee=c2, merged_into=c1)
+    c2.merge_into(c1)
     c2.save()
-
-    action = Action.objects.create(case=c1, case_old=c2)
-    return (c1, c2, action)
+    return (c1, c2)
 
 
 @pytest.fixture
 def already_merged_case(db, merged_case_setup):
-    _, c, _ = merged_case_setup
+    _, c = merged_case_setup
     return c
 
 
@@ -154,8 +152,8 @@ def test_case_actions_reversed_only_inclues_actions_from_mergee_after_merge_time
     case B actions that have a time after the time of the merge action, regardless of when
     these actions are created.
     """
-    into, merged, merging_action = merged_case_setup
-    before_the_merge = merging_action.time - datetime.timedelta(days=1)
+    into, merged = merged_case_setup
+    before_the_merge = now() - datetime.timedelta(days=1)
     action_created_for_past_event = Action.objects.create(
         case=into, time=before_the_merge
     )
