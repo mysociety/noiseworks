@@ -736,9 +736,7 @@ class Action(AbstractModel):
         )
 
     def __str__(self):
-        if self.case_old:
-            return f"{self.created_by} merged case {self.case_old_id} into case {self.case_id}"
-        elif self.type:
+        if self.type:
             return f"{self.created_by}, {self.type.name}, case {self.case_id}"
         else:
             return f"{self.created_by}, case {self.case_id}, unknown action"
