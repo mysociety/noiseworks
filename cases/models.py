@@ -171,12 +171,6 @@ class CaseManager(models.Manager):
         if not case_ids:
             return {}
 
-        # Even though merging actions should not have an edited 'time', we need to
-        # use 'time' rather than 'created' for the merged 'at'.
-        # This is because in other action queries we use 'time' and we should be consistent,
-        # especially as there is a small delta between the values of 'time' and 'created' for
-        # a newly created action.
-
         query = self.raw(
             """WITH RECURSIVE cte AS (
                  SELECT
@@ -200,18 +194,31 @@ class CaseManager(models.Manager):
                SELECT
                 cte.id AS id,
                 cte.merged_into_id AS merged_into_id,
-                a.time AS time
+                m.time AS time
                FROM
                  cte
-               JOIN cases_action a ON a.case_id = cte.merged_into_id
-               AND a.case_old_id = cte.id
+               JOIN (
+                 SELECT m.mergee_id, m.merged_into_id, MAX(m.time) AS time
+                 FROM cases_mergerecord m
+                 WHERE m.unmerge IS NOT TRUE
+                 GROUP BY m.mergee_id, m.merged_into_id
+               ) AS last_merge ON last_merge.merged_into_id = cte.merged_into_id
+               AND last_merge.mergee_id = cte.id
+               JOIN cases_mergerecord m ON m.mergee_id = last_merge.mergee_id
+               AND m.merged_into_id = last_merge.merged_into_id
+               AND m.time = last_merge.time
             """
             % case_ids,
         )
 
         merge_map = {c.id: [] for c in cases}
         for entry in query:
-            merge_map[entry.id].append({"id": entry.merged_into_id, "at": entry.time})
+            merge_map[entry.id].append(
+                {
+                    "id": entry.merged_into_id,
+                    "at": entry.time,
+                }
+            )
         return merge_map
 
 
