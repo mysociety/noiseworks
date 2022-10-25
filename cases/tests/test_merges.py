@@ -158,5 +158,4 @@ def test_case_actions_reversed_only_inclues_actions_from_mergee_after_merge_time
         case=into, time=before_the_merge
     )
     merged_actions = merged.actions_reversed
-    assert len(merged_actions) == 1
     assert action_created_for_past_event not in merged_actions

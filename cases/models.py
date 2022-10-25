@@ -392,7 +392,6 @@ class Case(AbstractModel):
     def merge_into(self, other):
         self.merged_into = other
         MergeRecord.objects.create(mergee=self, merged_into=other, unmerge=False)
-        Action.objects.create(case_old=self, case=other)
 
     @cached_property
     def merged_into_list(self) -> list:
