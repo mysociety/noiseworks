@@ -16,10 +16,6 @@
     <span class="case-info">from case #{{ case.id }}</span>
 {% elif action.type == "edit" %}
     <span class="case-info">edited case details</span>
-{% elif action.case_old %}
-    <span class="case-info">merged case #{{ action.case_old_id }} into
-        case #{{ action.case_id }}
-    </span>
 {% elif action.type %}
     <span class="case-info">
         {% if action.created_by %}– {% endif %}
