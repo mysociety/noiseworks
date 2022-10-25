@@ -319,7 +319,22 @@ var nw = nw || {};
         <div class="nw-printable-timeline-details" hidden>
             {% include "cases/_complaint_summary.html" with complaint=entry.complaint %}
         </div>
-
+    {% elif entry.merge_record %}
+        {% with entry.merge_record as mr %}
+        {% if mr.created_by %}
+            <a href="{% url "cases" %}?assigned={{ mr.created_by.id }}" class="nw-link--no-visited-state">{{ mr.created_by }}</a>
+        {% endif %}
+        <span class="case-info">
+            {% if mr.unmerge %}unmerged {% else %}merged {% endif %}
+            <a class="nw-link--no-visited-state" href="{% url "case-view" mr.mergee_id %}">
+                case #{{ mr.mergee_id }}
+            </a>
+            {% if mr.unmerge %} from {% else %} into {% endif %}
+            <a class="nw-link--no-visited-state" href="{% url "case-view" mr.merged_into_id %}">
+                case #{{ mr.merged_into_id }}
+            </a>
+        </span>
+        {% endwith %}
     {% else %}
         {% include "cases/_case_action_summary.html" with action=entry.action summary=entry.summary %}
 	    {% if entry.can_edit_action %}

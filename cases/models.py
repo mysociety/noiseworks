@@ -83,8 +83,6 @@ class CaseManager(models.Manager):
         merge_map = Case.objects.get_merged_cases(qs)
         case_ids = merge_map.keys()
 
-        # Note that if case A is merged into case B, case A's actions_by_case
-        # will not include case B's actions from after the merge.
         actions = Action.objects.filter(case__in=case_ids).order_by("-time")
         actions_by_case = self.prefetch_timeline_part(merge_map, actions, "case_id")
         merged_intos = Case.objects.get_merged_into_cases(qs)
@@ -409,6 +407,16 @@ class Case(AbstractModel):
         merged = merged[-1]["id"] if merged else None
         return merged
 
+    @cached_property
+    def timeline_merge_records(self):
+        """Return a list of MergeRecords to display in the timeline for this case."""
+        merge_map = self.merge_map
+        case_ids = merge_map.keys()
+        mrs = MergeRecord.objects.filter(
+            Q(merged_into_id__in=case_ids) | Q(mergee_id__in=case_ids)
+        ).all()
+        return mrs
+
     def _timeline_edit_assign_entry(self, edit, prev, history_to_show):
         if history_to_show == "all":
             return {
@@ -451,7 +459,15 @@ class Case(AbstractModel):
         Case.objects.attach_diffs(histories)
         return histories
 
-    def _timeline(self, actions, action_fn, complaints, history_to_show, user=None):
+    def _timeline(
+        self,
+        actions,
+        action_fn,
+        complaints,
+        timeline_merge_records,
+        history_to_show,
+        user=None,
+    ):
         data = []
         for action in actions:
             row = {
@@ -467,6 +483,13 @@ class Case(AbstractModel):
             row = {
                 "complaint": complaint,
                 "time": complaint.created,
+            }
+            data.append(row)
+
+        for mr in timeline_merge_records:
+            row = {
+                "merge_record": mr,
+                "time": mr.time,
             }
             data.append(row)
 
@@ -511,6 +534,7 @@ class Case(AbstractModel):
             self.actions_public_reversed,
             action_fn,
             self.complaints_reversed,
+            self.timeline_merge_records,
             "assigned",
         )
 
@@ -518,22 +542,31 @@ class Case(AbstractModel):
     def timeline_staff(self):
         """Staff timeline shows all actions and complaints on the case and its merged cases"""
         return self._timeline(
-            self.actions_reversed, str, self.all_complaints_reversed, "all"
+            self.actions_reversed,
+            str,
+            self.all_complaints_reversed,
+            self.timeline_merge_records,
+            "all",
         )
 
     def timeline_staff_with_operation_flags(self, staff):
         """Staff timeline but including flags for what operations the staff member can do"""
         return self._timeline(
-            self.actions_reversed, str, self.all_complaints_reversed, "all", user=staff
+            self.actions_reversed,
+            str,
+            self.all_complaints_reversed,
+            self.timeline_merge_records,
+            "all",
+            user=staff,
         )
 
     @cached_property
-    def action_merge_map(self):
+    def merge_map(self):
         return Case.objects.get_merged_cases([self])
 
     @cached_property
     def actions_reversed(self):
-        actions = self.action_merge_map
+        actions = self.merge_map
         query = Q(case__in=actions.keys())
 
         # If case A is merged into case B, case B's actions
@@ -562,7 +595,7 @@ class Case(AbstractModel):
     @cached_property
     def all_complaints(self):
         """The complaints on this case and any cases merged into it"""
-        actions = self.action_merge_map
+        actions = self.merge_map
         query = Q(case__in=actions.keys())
         complaints = Complaint.objects.filter(query).select_related("complainant")
         return complaints
