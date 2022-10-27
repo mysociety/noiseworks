@@ -41,6 +41,8 @@ def merged_case_setup(db):
         estate="?",
         point=Point(470267, 122766),
     )
+    c2.merged_into = c1
+    c2.save()
     action = Action.objects.create(case=c1, case_old=c2)
     return (c1, c2, action)
 
