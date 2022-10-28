@@ -28,7 +28,7 @@ from noiseworks.message import send_email, send_sms
 
 from . import forms, map_utils
 from .filters import CaseFilter
-from .models import Action, ActionFile, ActionType, Case, Complaint
+from .models import Action, ActionFile, ActionType, Case, Complaint, Notification
 
 
 def home(request):
@@ -1042,3 +1042,42 @@ def send_emails(request, complaint, template):
         if template == "report":
             params["case"] = case
         send_email(complainant.email, subject, f"cases/email/logged_{template}", params)
+
+
+@staff_member_required
+def delete_notifications(request):
+    notification_ids = request.POST.getlist("notification_ids")
+    Notification.objects.filter(
+        id__in=notification_ids, recipient=request.user
+    ).delete()
+    return redirect("notifications")
+
+
+@staff_member_required
+def mark_notifications_as_read(request):
+    notification_ids = request.POST.getlist("notification_ids")
+    Notification.objects.filter(
+        id__in=notification_ids, recipient=request.user, read=False
+    ).update(read=True)
+    return redirect("notifications")
+
+
+@staff_member_required
+def consume_notification(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    if notification.recipient != request.user:
+        raise PermissionDenied
+    if not notification.read:
+        notification.read = True
+        notification.save()
+    return redirect(notification.case)
+
+
+@staff_member_required
+def notifications_list(request):
+    notifications = request.user.notifications.order_by("read", "-time").all()
+    return render(
+        request,
+        "cases/notifications/notification_list.html",
+        {"notifications": notifications},
+    )

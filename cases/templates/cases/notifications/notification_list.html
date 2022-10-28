@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block content %}
+
+<h1>Notifications</h1>
+
+{% if not notifications %}
+    <p> You have no notifications.</p>
+{% else %}
+    <form method="POST">{% csrf_token %}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0">
+            <div>
+                <button type="button" id="select-all-notifications" class="govuk-button govuk-button--secondary lbh-button lbh-button--secondary" style="display:none" disabled>
+                    Select all
+                </button>
+                <button type="button" id="unselect-all-notifications" class="govuk-button govuk-button--secondary lbh-button lbh-button--secondary" style="display:none" disabled>
+                    Unselect all
+                </button>
+            </div>
+            <div style="margin-top:0">
+                <input id="mark-as-read" type="submit" formaction="{% url 'mark-notifications-as-read' %}" class="govuk-button lbh-button" value="Mark as read">
+                <input id="delete" type="submit" formaction="{% url 'delete-notifications' %}" class="govuk-button lbh-button" value="Delete">
+            </div>
+        </div>
+
+        <table class="govuk-table lbh-table">
+            <thead class="govuk-table__head">
+                <tr class="govuk-table__row">
+                    <th scope="col" class="govuk-table__header govuk-!-width-one-eigth">Status</th>
+                    <th scope="col" class="govuk-table__header govuk-!-width-one-eigth">Time</th>
+                    <th scope="col" class="govuk-table__header govuk-!-width-one-eigth">Who</th>
+                    <th scope="col" class="govuk-table__header govuk-!-width-three-eigths">What</th>
+                    <th scope="col" class="govuk-table__header govuk-!-width-one-eigth">Case</th>
+                    <th scope="col" class="govuk-table__header govuk-!-width-one-eight">Selected</th>
+                </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+            {% for notification in notifications %}
+                <tr class="govuk-table__row">
+                    <td class="govuk-table__cell">
+                        {% if not notification.read %}
+                          <span class="govuk-tag lbh-tag">New</span>
+                        {% else %}
+                          <span class="govuk-tag lbh-tag lbh-tag--grey">Read</span>
+                        {% endif %}
+                    </td>
+                    <td class="govuk-table__cell">{{ notification.time | naturaltime }}</td>
+                    <td class="govuk-table__cell">
+                        {{ notification.triggered_by }}
+                    </td>
+                    <td class="govuk-table__cell">
+                        {{ notification.message }}
+                    </td>
+                    <td class="govuk-table__cell">
+                        <a class="nw-link--no-visited-state" href="{% url 'consume-notification' notification.id %}">
+                            #{{ notification.case.id }}<span class="govuk-visually-hidden"> notification</span>
+                        </a>
+                    </td>
+                    <td class="govuk-table__cell">
+                        <div class="govuk-checkboxes govuk-checkboxes--small lbh-checkboxes lbh-checkboxes--small">
+                            <div class="govuk-checkboxes__item">
+                                <input
+                                    class="govuk-checkboxes__input"
+                                    name="notification_ids"
+                                    type="checkbox"
+                                    id="notification-select-{{notification.id}}"
+                                    value="{{notification.id}}"
+                                />
+                                <label class="govuk-label govuk-checkboxes__label" for="inotification-select-{{notification.id}}">
+                                    <span class="govuk-visually-hidden">Selected</span>
+                                </label>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    <form>
+
+    <script>
+    (function() {
+        const selectAllNotificationsButton = document.getElementById("select-all-notifications");
+        const unselectAllNotificationsButton = document.getElementById("unselect-all-notifications");
+
+        selectAllNotificationsButton.disabled = false;
+        unselectAllNotificationsButton.disabled = false;
+
+        // Clear "display:none" to show.
+        selectAllNotificationsButton.style = "";
+        unselectAllNotificationsButton.style = "";
+
+        const markAsReadButton = document.getElementById("mark-as-read");
+        const deleteButton = document.getElementById("delete");
+        const notificationSelectionCheckboxes = document.querySelectorAll('input[name="notification_ids"]');
+
+        const setNotificationControlsDisabled = function(disabled) {
+            markAsReadButton.disabled = disabled;
+            deleteButton.disabled = disabled;
+        };
+
+        const enableNotificationControlsIfNotificationSelected = function() {
+            let shouldBeDisabled = true;
+            for (i = 0; i < notificationSelectionCheckboxes.length; ++i) {
+                c = notificationSelectionCheckboxes[i];
+                if (c.checked) {
+                    shouldBeDisabled = false;
+                    break;
+                }
+            }
+            setNotificationControlsDisabled(shouldBeDisabled);
+        };
+
+        enableNotificationControlsIfNotificationSelected();
+
+        notificationSelectionCheckboxes.forEach(function(c) {
+            c.addEventListener('change', function() {
+                enableNotificationControlsIfNotificationSelected();
+            });
+        });
+
+        selectAllNotificationsButton.addEventListener('click', function() {
+            notificationSelectionCheckboxes.forEach(function(c) {
+                c.checked = true;
+            });
+            setNotificationControlsDisabled(false);
+        });
+
+        unselectAllNotificationsButton.addEventListener('click', function() {
+            notificationSelectionCheckboxes.forEach(function(c) {
+                c.checked = false;
+            });
+            setNotificationControlsDisabled(true);
+        });
+    })();
+    </script>
+{% endif %}
+
+
+{% endblock %}

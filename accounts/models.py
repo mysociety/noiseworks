@@ -149,6 +149,10 @@ class User(AbstractUser):
         reporting = self.complaints.aggregate(models.Count("case", distinct=True))
         return perpetrated + reporting["case__count"]
 
+    @cached_property
+    def unread_notifications_count(self):
+        return self.notifications.filter(read=False).count()
+
     def get_wards_display(self):
         if not self.wards:
             return "No wards"

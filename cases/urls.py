@@ -64,4 +64,24 @@ urlpatterns = [
     ),
     path("/<int:pk>/unmerge", views.unmerge, name="case-unmerge"),
     path("/<int:pk>/priority", views.priority, name="case-priority"),
+    path(
+        "/notifications/delete",
+        views.delete_notifications,
+        name="delete-notifications",
+    ),
+    path(
+        "/notifications/read",
+        views.mark_notifications_as_read,
+        name="mark-notifications-as-read",
+    ),
+    path(
+        "/notifications/<int:pk>",
+        views.consume_notification,
+        name="consume-notification",
+    ),
+    path(
+        "/notifications",
+        views.notifications_list,
+        name="notifications",
+    ),
 ]

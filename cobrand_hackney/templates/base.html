@@ -144,6 +144,17 @@
         {% if request.user.is_authenticated %}
           <a href="{% url "accounts:sign-out" %}">Sign out</a>
         {% endif %}
+        {% if request.user.is_staff %}
+          {% with unreads=request.user.unread_notifications_count %}
+            <a href="{% url "notifications" %}">
+              <img
+                style="width:22px"
+                src={% if not unreads %}{% static 'notification-bell.png' %}{% else %}{% static 'notification-bell-pinging.png' %}{% endif %}
+                alt="{{ unreads }} notifications"
+              >
+            </a>
+          {% endwith %}
+        {% endif %}
       </div>
     </div>
   </div>

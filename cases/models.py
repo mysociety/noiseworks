@@ -448,6 +448,18 @@ class Case(AbstractModel):
 
         return direct_and_upstream_records | downstream_records
 
+    def notify_followers(self, message, triggered_by=None):
+        for follower in self.followers.all():
+            if follower == triggered_by:
+                continue
+
+            Notification.objects.create(
+                case=self,
+                message=message,
+                recipient=follower,
+                triggered_by=triggered_by,
+            )
+
     def _timeline_edit_assign_entry(self, edit, prev, history_to_show):
         if history_to_show == "all":
             return {
@@ -818,3 +830,24 @@ class MergeRecord(AbstractModel):
     )
     unmerge = models.BooleanField(default=False)
     time = models.DateTimeField(default=timezone.now)
+
+
+class Notification(AbstractModel):
+    case = models.ForeignKey(
+        Case, on_delete=models.CASCADE, related_name="notifications"
+    )
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    triggered_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        related_name="notifications_triggered",
+        blank=True,
+        null=True,
+    )
+    time = models.DateTimeField(default=timezone.now)
+    message = models.TextField()
+    read = models.BooleanField(default=False)
