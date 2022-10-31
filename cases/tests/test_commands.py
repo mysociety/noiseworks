@@ -11,7 +11,7 @@ from django.core.management import CommandError, call_command
 
 from cases.management.commands.export_data import client
 
-from ..models import Action, ActionFile, Case
+from ..models import Action, ActionFile, Case, Notification, User
 from .conftest import ADDRESS
 
 
@@ -69,6 +69,11 @@ def temp_dir_path():
 @pytest.fixture
 def use_temp_dir_media_root(temp_dir_path, settings):
     settings.MEDIA_ROOT = temp_dir_path
+
+
+@pytest.fixture
+def staff_user(db):
+    return User.objects.create(is_staff=True, username="staffuser")
 
 
 @pytest.fixture
@@ -169,3 +174,27 @@ def test_delete_local_orphaned_files_command(
 
     assert not storage.exists("orphan.txt")
     assert storage.exists("not_orphan.txt")
+
+
+def test_delete_old_notifications_command_bad_input(case):
+    with pytest.raises(CommandError) as excinfo:
+        call_command("delete_old_notifications")
+    assert "Please specify a number of days" == str(excinfo.value)
+
+
+def test_delete_old_notifications_command(case, staff_user):
+    old = Notification.objects.create(
+        case=case,
+        recipient=staff_user,
+        message="old",
+        time="2021-01-01T12:00:00Z",
+    )
+    recent = Notification.objects.create(
+        case=case,
+        recipient=staff_user,
+        message="recent",
+    )
+    call_command("delete_old_notifications", days=28)
+    all_ = Notification.objects.all()
+    assert recent in all_
+    assert old not in all_
