@@ -139,6 +139,7 @@ def reassign(request, pk):
         form.save()
         user = form.cleaned_data["assigned"]
         case.followers.add(user)
+        case.notify_followers(f"Assigned {user}.", triggered_by=request.user)
         if user.id != request.user.id:
             url = request.build_absolute_uri(case.get_absolute_url())
             send_email(
@@ -194,6 +195,9 @@ def edit_kind(request, pk):
     form = forms.KindForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
+        case.notify_followers(
+            f"Set kind to {form.cleaned_data['kind']}.", triggered_by=request.user
+        )
         return redirect(case)
     return render(
         request,
@@ -211,6 +215,7 @@ def edit_location(request, pk):
     form = forms.LocationForm(request.POST or None, instance=case)
     if form.is_valid():
         form.save()
+        case.notify_followers("Changed location.", triggered_by=request.user)
         return redirect(case)
     return render(
         request,
@@ -233,6 +238,12 @@ def edit_review_date(request, pk):
     )
     if form.is_valid():
         form.save()
+        description = ""
+        if form.cleaned_data["has_review_date"]:
+            description = f"Set review date to {form.cleaned_data['review_date']}."
+        else:
+            description = "Set no review date."
+        case.notify_followers(description, triggered_by=request.user)
         return redirect(case)
     return render(
         request,
@@ -252,6 +263,7 @@ def remove_perpetrator(request, pk, perpetrator):
     Action.objects.create(
         case=case, type=ActionType.edit_case, notes="Removed perpetrator"
     )
+    case.notify_followers("Removed perpetrator.", triggered_by=request.user)
     return redirect(case)
 
 
@@ -260,11 +272,18 @@ def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.LogActionForm(request.POST or None, request.FILES or None, case=case)
     if form.is_valid():
-        if form.cleaned_data["type"] == ActionType.case_closed:
+        type_ = form.cleaned_data["type"]
+        description = ""
+        if type_ == ActionType.case_closed:
             case.closed = True
-        if form.cleaned_data["type"] == ActionType.case_reopened:
+            description = "Closed case."
+        elif type_ == ActionType.case_reopened:
             case.closed = False
+            description = "Opened case."
+        else:
+            description = f"Added '{type_}'."
         form.save()
+        case.notify_followers(description, triggered_by=request.user)
         for f in request.FILES.getlist("files"):
             ActionFile.objects.create(
                 action=form.instance,
@@ -348,8 +367,12 @@ def action_file(request, case_pk, action_pk, file_pk):
 @staff_member_required
 def unmerge(request, pk):
     case = get_object_or_404(Case, pk=pk)
+    other = case.merged_into
     case.unmerge()
     case.save()
+    notification = f"Unmerged case #{case.id} from case #{other.id}."
+    other.notify_followers(notification, triggered_by=request.user)
+    case.notify_followers(notification, triggered_by=request.user)
     return redirect(case)
 
 
@@ -379,6 +402,9 @@ def merge_action(request, case):
     other.save()
     del request.session["merging_case"]
     messages.success(request, f"Case #{other_id} has been merged into this case.")
+    notification = f"Merged case #{other.id} into case #{case.id}."
+    other.notify_followers(notification, triggered_by=request.user)
+    case.notify_followers(notification, triggered_by=request.user)
     return redirect(case)
 
 
@@ -414,6 +440,12 @@ def priority(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.PriorityForm(request.POST or None, instance=case)
     if form.is_valid():
+        message = (
+            "Marked as priority."
+            if form.cleaned_data["priority"]
+            else "Marked as not priority."
+        )
+        case.notify_followers(message, triggered_by=request.user)
         form.save()
     return redirect(case)
 
@@ -658,6 +690,9 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
         )
         complaint.save()
         send_emails(self.request, complaint, "reoccurrence")
+        self.object.notify_followers(
+            "Recurrence added.", triggered_by=self.request.user
+        )
         # Reopen a case if it was closed - do this after email so email can know if it was closed
         if self.object.closed:
             self.object.closed = False
@@ -1022,6 +1057,9 @@ class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
             name="Edit case", defaults={"visibility": "internal"}
         )
         Action.objects.create(case=self.object, type=typ, notes="Added perpetrator")
+        self.object.notify_followers(
+            "Added perpetrator.", triggered_by=self.request.user
+        )
         return redirect(self.object)
 
 
