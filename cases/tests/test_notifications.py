@@ -25,12 +25,12 @@ def normal_user(db):
 
 @pytest.fixture
 def staff_user(db):
-    return User.objects.create(is_staff=True, username="staffuser")
+    return User.objects.create(is_staff=True, username="staffuser", is_superuser=True)
 
 
 @pytest.fixture
 def staff_user_2(db):
-    return User.objects.create(is_staff=True, username="staffuser2")
+    return User.objects.create(is_staff=True, username="staffuser2", is_superuser=True)
 
 
 @pytest.fixture

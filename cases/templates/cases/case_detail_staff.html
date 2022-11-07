@@ -262,6 +262,7 @@ var nw = nw || {};
         {% include 'cases/_person.html' with person=person case=case relationship='perpetrator' %}
     </li>
   {% endfor %}
+  {% if perms.cases.edit_perpetrators %}
     <li>
         <div class="nw-person nw-person--empty">
             <a class="nw-link--no-visited-state" href="{% url 'perpetrator-add' case.id %}">
@@ -269,6 +270,7 @@ var nw = nw || {};
             </a>
         </div>
     </li>
+  {% endif %}
 </ul>
 
 {% else %}

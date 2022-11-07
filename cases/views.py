@@ -5,7 +5,7 @@ import re
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
@@ -255,7 +255,7 @@ def edit_review_date(request, pk):
     )
 
 
-@staff_member_required
+@permission_required("cases.edit_perpetrators")
 def remove_perpetrator(request, pk, perpetrator):
     case = get_object_or_404(Case, pk=pk)
     user = get_object_or_404(User, pk=perpetrator)
@@ -1016,7 +1016,7 @@ class ReportingWizard(CaseWizard):
         )
 
 
-@method_decorator(staff_member_required, name="dispatch")
+@method_decorator(permission_required("cases.edit_perpetrators"), name="dispatch")
 class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
     template_name = "cases/complaint_add.html"
     summary_check_page = "user_search"

@@ -60,14 +60,17 @@
   {% endif %}
 
     <ul class="nw-inline-list">
-      {% if relationship == 'perpetrator' and case %}
+      {% if relationship == 'perpetrator' and case and perms.cases.edit_perpetrators %}
         <li>
             <a class="nw-link--no-visited-state" href="{% url 'case-remove-perpetrator' case.id person.id %}">Remove from case</a>
         </li>
       {% endif %}
+      {% if relationship == 'perpetrator' and case and not perms.cases.edit_perpetrators %}
+      {% else %}
         <li>
             <a class="nw-link--no-visited-state" href="{% url "accounts:edit" person.id %}?case={{ case.id }}">Edit details</a>
         </li>
+      {% endif %}
     </ul>
 
 </div>
