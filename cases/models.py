@@ -321,6 +321,18 @@ class Case(AbstractModel):
 
     class Meta:
         ordering = ("-modified", "-id")
+        permissions = [
+            (
+                "edit_perpetrators",
+                "Can add and remove perpetrators and edit their details",
+            ),
+            ("follow", "Can follow a case"),
+            ("get_assigned", "Can get assigned to a case"),
+            ("assign", "Can assign a case"),
+            ("change_priority", "Can change priority"),
+            ("change_review_date", "Can change review date"),
+            ("merge", "Can merge and unmerge cases"),
+        ]
 
     @property
     def _history_user(self):
