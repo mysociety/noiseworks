@@ -5,6 +5,7 @@ from crispy_forms_gds.choices import Choice
 from crispy_forms_gds.fields import DateInputField
 from crispy_forms_gds.layout import Fieldset, Layout, HTML
 from django import forms
+from django.db.models import Q
 from django.utils.timezone import make_aware, now
 from django.core.exceptions import ValidationError
 from humanize import naturalsize
@@ -71,10 +72,16 @@ class FollowersForm(GDSForm, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        staff_users = User.objects.filter(is_staff=True, is_active=True)
+        staff_that_can_follow = User.objects.filter(
+            Q(is_active=True)
+            & (
+                Q(user_permissions__codename="follow")
+                | Q(groups__permissions__codename="follow")
+            )
+        )
         ward_staff = []
         other_staff = []
-        for user in staff_users:
+        for user in staff_that_can_follow:
             if user.wards and self.instance.ward in user.wards:
                 ward_staff.append(Choice(user.id, user))
             else:

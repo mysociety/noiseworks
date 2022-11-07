@@ -159,7 +159,7 @@ def reassign(request, pk):
     )
 
 
-@staff_member_required
+@permission_required("cases.follow")
 def followers(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.FollowersForm(request.POST or None, instance=case)
@@ -183,6 +183,8 @@ def follower_state(request, pk):
         raise PermissionDenied
     user = request.user
     if request.POST.get("add"):
+        if not user.has_perm("cases.follow"):
+            raise PermissionDenied
         case.followers.add(user)
     else:
         case.followers.remove(user)

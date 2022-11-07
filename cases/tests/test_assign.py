@@ -1,7 +1,10 @@
 import re
+from http import HTTPStatus
 
 import pytest
 from django.core import mail
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
@@ -13,12 +16,32 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def staff_user_1(db):
-    return User.objects.create(is_staff=True, username="staffuser1")
+def follow_perm(db):
+    return Permission.objects.get(
+        codename="follow", content_type=ContentType.objects.get_for_model(Case)
+    )
 
 
 @pytest.fixture
-def staff_user_2(db):
+def staff_user_1(db, follow_perm):
+    u = User.objects.create(is_staff=True, username="staffuser1")
+    u.user_permissions.set([follow_perm])
+    u.save()
+    return u
+
+
+@pytest.fixture
+def staff_user_2(db, follow_perm):
+    u = User.objects.create(
+        is_staff=True, username="staffuser2", email="staffuser2@example.org"
+    )
+    u.user_permissions.set([follow_perm])
+    u.save()
+    return u
+
+
+@pytest.fixture
+def cant_follow_staff_user(db):
     return User.objects.create(
         is_staff=True, username="staffuser2", email="staffuser2@example.org"
     )
@@ -121,3 +144,25 @@ def test_follower_buttons(admin_client, case_1):
         f"/cases/{case_1.id}/follower-state", {"remove": 1}, follow=True
     )
     assertNotContains(response, "admin")
+
+
+def test_following_requires_permission(client, case_1, cant_follow_staff_user):
+    client.force_login(cant_follow_staff_user)
+    response = client.post(
+        f"/cases/{case_1.id}/follower-state",
+        {"add": cant_follow_staff_user.id},
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_unfollowing_does_not_require_permission(client, case_1, staff_user_1):
+    case_1.followers.set([staff_user_1])
+    case_1.save()
+    client.force_login(staff_user_1)
+    response = client.post(
+        f"/cases/{case_1.id}/follower-state", {"remove": staff_user_1.id}, follow=True
+    )
+    assert response.status_code == HTTPStatus.OK
+    case_1.refresh_from_db()
+    assert len(case_1.followers.all()) == 0

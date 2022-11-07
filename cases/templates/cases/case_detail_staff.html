@@ -116,16 +116,18 @@
         None
       {% endfor %}
     </dd>
-    <dd class="govuk-summary-list__actions">
-        <form action="{% url "case-follower-state" case.id %}" method="post">
-         {% if is_follower %}
-          <input class="nw-fake-link nw-link" type="submit" value="Unfollow this case" name="remove">
-         {% else %}
-          <input class="nw-fake-link nw-link" type="submit" value="Follow this case" name="add">
-         {% endif %}
-         {% csrf_token %}
-        </form>
-    </dd>
+      <dd class="govuk-summary-list__actions">
+        {% if perms.cases.follow or is_follower %}
+          <form action="{% url "case-follower-state" case.id %}" method="post">
+             {% if is_follower %}
+              <input class="nw-fake-link nw-link" type="submit" value="Unfollow this case" name="remove">
+             {% elif perms.cases.follow %}
+              <input class="nw-fake-link nw-link" type="submit" value="Follow this case" name="add">
+             {% endif %}
+             {% csrf_token %}
+          </form>
+        {% endif %}
+      </dd>
   </div>
   {% endif %}
 </dl>
