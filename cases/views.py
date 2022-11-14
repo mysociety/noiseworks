@@ -366,7 +366,7 @@ def action_file(request, case_pk, action_pk, file_pk):
     return FileResponse(action_file)
 
 
-@staff_member_required
+@permission_required("cases.merge")
 def unmerge(request, pk):
     case = get_object_or_404(Case, pk=pk)
     other = case.merged_into
@@ -378,7 +378,7 @@ def unmerge(request, pk):
     return redirect(case)
 
 
-@staff_member_required
+@permission_required("cases.merge")
 def merge(request, pk):
     case = get_object_or_404(Case, pk=pk)
 
