@@ -37,10 +37,16 @@ class ReassignForm(GDSForm, forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         self.current_assigned = self.instance.assigned
-        staff_users = User.objects.filter(is_staff=True, is_active=True)
+        assignable_staff = User.objects.filter(
+            Q(is_active=True)
+            & (
+                Q(user_permissions__codename="get_assigned")
+                | Q(groups__permissions__codename="get_assigned")
+            )
+        )
         ward_staff = []
         other_staff = []
-        for user in staff_users:
+        for user in assignable_staff:
             user_str = f"{user} ({user.get_wards_display()})"
             if user.wards and self.instance.ward in user.wards:
                 ward_staff.append(Choice(user.id, user_str))

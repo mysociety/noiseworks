@@ -2,6 +2,7 @@ import pytest
 from http import HTTPStatus
 
 from accounts.models import User
+from django.contrib.auth.models import Permission
 from pytest_django.asserts import assertContains
 
 from ..models import ActionType, Case, Notification
@@ -24,8 +25,19 @@ def normal_user(db):
 
 
 @pytest.fixture
-def staff_user(db):
-    return User.objects.create(is_staff=True, username="staffuser", is_superuser=True)
+def get_assigned_perm(db):
+    return Permission.objects.get(codename="get_assigned")
+
+
+@pytest.fixture
+def staff_user(db, get_assigned_perm):
+    u = User.objects.create(
+        is_staff=True,
+        username="staffuser",
+        is_superuser=True,
+    )
+    u.user_permissions.set([get_assigned_perm])
+    return u
 
 
 @pytest.fixture

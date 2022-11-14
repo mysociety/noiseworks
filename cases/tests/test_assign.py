@@ -2,6 +2,8 @@ import re
 from http import HTTPStatus
 
 import pytest
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -23,27 +25,36 @@ def follow_perm(db):
 
 
 @pytest.fixture
-def staff_user_1(db, follow_perm):
+def get_assigned_perm(db):
+    return Permission.objects.get(
+        codename="get_assigned", content_type=ContentType.objects.get_for_model(Case)
+    )
+
+
+@pytest.fixture
+def staff_user_1(db, follow_perm, get_assigned_perm):
     u = User.objects.create(is_staff=True, username="staffuser1")
-    u.user_permissions.set([follow_perm])
+    u.user_permissions.set([follow_perm, get_assigned_perm])
     u.save()
     return u
 
 
 @pytest.fixture
-def staff_user_2(db, follow_perm):
+def staff_user_2(db, follow_perm, get_assigned_perm):
     u = User.objects.create(
         is_staff=True, username="staffuser2", email="staffuser2@example.org"
     )
-    u.user_permissions.set([follow_perm])
+    u.user_permissions.set([follow_perm, get_assigned_perm])
     u.save()
     return u
 
 
 @pytest.fixture
-def cant_follow_staff_user(db):
+def no_perms_staff_user(db):
     return User.objects.create(
-        is_staff=True, username="staffuser2", email="staffuser2@example.org"
+        is_staff=True,
+        username="nopermstaff",
+        email="nopermstaff@example.org",
     )
 
 
@@ -84,13 +95,13 @@ def test_reassign_success(case_1, staff_user_2):
     assert form.is_valid()
 
 
-def test_reassign_ward_list(admin_client, admin_user, case_1, staff_user_1):
-    admin_user.wards = ["E05009372", case_1.ward]
-    admin_user.save()
+def test_reassign_ward_list(admin_client, case_1, staff_user_1, staff_user_2):
+    staff_user_2.wards = ["E05009372", case_1.ward]
+    staff_user_2.save()
     response = admin_client.get(f"/cases/{case_1.id}/reassign")
     assert re.search(
         r'(?s)id="id_assigned_1"\s+value="'
-        + str(admin_user.id)
+        + str(staff_user_2.id)
         + r'".*?<div class="govuk-radios__divider">or</div>.*?id="id_assigned_2"\s+value="'
         + str(staff_user_1.id)
         + '"',
@@ -111,6 +122,14 @@ def test_reassign_view_to_yourself(client, case_1):
     client.force_login(case_1.assigned)
     client.post(f"/cases/{case_1.id}/reassign", {"assigned": case_1.assigned.id})
     assert not len(mail.outbox)
+
+
+def test_reassign_does_not_include_unassignable_staff(
+    admin_client, case_1, staff_user_1, no_perms_staff_user
+):
+    response = admin_client.get(f"/cases/{case_1.id}/reassign")
+    assertContains(response, staff_user_1.username)
+    assertNotContains(response, no_perms_staff_user.username)
 
 
 def test_followers(admin_client, admin_user, case_1, staff_user_2):
@@ -146,11 +165,11 @@ def test_follower_buttons(admin_client, case_1):
     assertNotContains(response, "admin")
 
 
-def test_following_requires_permission(client, case_1, cant_follow_staff_user):
-    client.force_login(cant_follow_staff_user)
+def test_following_requires_permission(client, case_1, no_perms_staff_user):
+    client.force_login(no_perms_staff_user)
     response = client.post(
         f"/cases/{case_1.id}/follower-state",
-        {"add": cant_follow_staff_user.id},
+        {"add": no_perms_staff_user.id},
         follow=True,
     )
     assert response.status_code == HTTPStatus.FORBIDDEN
