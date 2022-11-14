@@ -90,12 +90,14 @@
     {% endif %}
     </dd>
     <dd class="govuk-summary-list__actions">
+      {% if perms.cases.change_priority %}
         <form action={% url "case-priority" case.id %} method="post">{% csrf_token %}
           {{ priority_change_form }}
           <button type="submit" class="nw-link nw-link--no-visited-state" style="margin-top:0">
             Change<span class="govuk-visually-hidden"> priority</span>
           </button>
         </form>
+      {% endif %}
     </dd>
   </div>
   <div class="govuk-summary-list__row">

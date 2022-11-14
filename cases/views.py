@@ -437,7 +437,7 @@ def merge_start(request, case):
     )
 
 
-@staff_member_required
+@permission_required("cases.change_priority")
 def priority(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.PriorityForm(request.POST or None, instance=case)
