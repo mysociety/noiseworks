@@ -2,7 +2,7 @@ import re
 from unittest.mock import mock_open, patch
 
 import pytest
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.management import CommandError, call_command
@@ -13,6 +13,11 @@ from .forms import CodeForm
 from .models import User
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture
+def case_workers(db):
+    return Group.objects.get(name="case_workers")
 
 
 @pytest.fixture
@@ -311,7 +316,7 @@ def test_sign_out(client):
     assertContains(resp, "signed out")
 
 
-def test_add_staff_command(db, capsys, monkeypatch):
+def test_add_staff_command(db, case_workers, capsys, monkeypatch):
     with pytest.raises(CommandError):
         call_command("add_staff_users")
 
@@ -332,12 +337,11 @@ def test_add_staff_command(db, capsys, monkeypatch):
 
     call_command("add_staff_users", csv_file="good.csv")
     assert User.objects.count() == 0, "no change in users without commit"
-    call_command("add_staff_users", csv_file="good.csv", commit=True)
+    call_command("add_staff_users", csv_file="good.csv", case_workers=True, commit=True)
     user = User.objects.get(email="test2@example.org")
-    assert user.first_name == "Test"
-    assert user.is_staff
     user = User.objects.get(email="test3@example.org")
     assert user.wards == ["E05009372", "E05009386"]
+    assert case_workers in user.groups.all()
 
     call_command(
         "add_staff_users",

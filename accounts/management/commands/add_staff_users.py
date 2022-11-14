@@ -1,5 +1,6 @@
 import csv
 
+from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand, CommandError
 
 from accounts.models import User
@@ -22,6 +23,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--csv-file")
         parser.add_argument("--ward-mapping")
+        parser.add_argument("--case-workers", action="store_true")
         parser.add_argument("--commit", action="store_true")
 
     def handle(self, **options):
@@ -31,15 +33,18 @@ class Command(BaseCommand):
         if options["ward_mapping"]:
             self.read_mapping(options["ward_mapping"])
 
+        case_workers = Group.objects.get(name="case_workers")
+        group = case_workers if options["case_workers"] else None
+
         for line in csv.DictReader(open(options["csv_file"])):
-            self.add_staff_user(line)
+            self.add_staff_user(line, group)
 
     def read_mapping(self, filename):
         for line in csv.DictReader(open(filename)):
             ward = ward_name_to_id(line["Ward"])
             self.ward_mapping.setdefault(line["Name"], []).append(ward)
 
-    def add_staff_user(self, line):
+    def add_staff_user(self, line, group):
         email = line["Email"].lower()
         users = User.objects.filter(email=email, email_verified=True)
         if users.count():
@@ -59,10 +64,12 @@ class Command(BaseCommand):
             wards = []
         self.stdout.write(f"User {first} {last}, {email}, {wards}")
         if self.commit:
-            User.objects.create_user(
+            u = User.objects.create_user(
                 first_name=first,
                 last_name=last,
                 email=email,
                 wards=wards,
                 is_staff=True,
             )
+            if group:
+                group.user_set.add(u)
