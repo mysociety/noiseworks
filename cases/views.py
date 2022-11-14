@@ -229,7 +229,7 @@ def edit_location(request, pk):
     )
 
 
-@staff_member_required
+@permission_required("cases.change_review_date")
 def edit_review_date(request, pk):
     case = get_object_or_404(Case, pk=pk)
     has_review_date = case.review_date != None
