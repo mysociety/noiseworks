@@ -152,7 +152,7 @@ def test_log_in_by_code(client, non_staff_access):
     assert response.status_code == 302
 
 
-def test_user_adding(client, staff_user):
+def test_user_adding(client, staff_user, case_workers):
     client.force_login(staff_user)
     response = client.get("/a/add")
     assert response.status_code == 403
@@ -169,12 +169,14 @@ def test_user_adding(client, staff_user):
             "last_name": "User",
             "email": "foo2@example.org",
             "wards": ["E05009378", "E05009374"],
+            "case_worker": True,
         },
     )
     assert response.status_code == 302
     assert response.url == "/a/list"
     user = User.objects.get(email="foo2@example.org", email_verified=True)
     assert user.is_staff
+    assert case_workers in user.groups.all()
 
 
 def test_basic_user_editing(client, staff_user, normal_user):
@@ -195,7 +197,7 @@ def test_staff_user_editing_by_staff(client, staff_user):
     assert response.status_code == 403
 
 
-def test_staff_user_editing(client, staff_user):
+def test_staff_user_editing(client, staff_user, case_workers):
     permission = Permission.objects.get(
         codename="change_user", content_type=ContentType.objects.get_for_model(User)
     )
@@ -209,10 +211,26 @@ def test_staff_user_editing(client, staff_user):
             "last_name": "User",
             "email": "foo@example.org",
             "wards": ["E05009378", "E05009374"],
+            "case_worker": True,
+            "is_staff": True,
         },
     )
     assert response.status_code == 302
     assert response.url == "/a/list"
+    user = User.objects.get(email="foo@example.org")
+    assert case_workers in user.groups.all()
+
+    client.post(
+        f"/a/{staff_user.id}/edit",
+        {
+            "first_name": "Staff",
+            "last_name": "User",
+            "email": "foo@example.org",
+            "wards": ["E05009378", "E05009374"],
+        },
+    )
+    user.refresh_from_db()
+    assert case_workers not in user.groups.all()
 
 
 def test_staff_user_existing(admin_client, staff_user, normal_user):
@@ -254,6 +272,7 @@ def test_edit_redirect_back_to_case(admin_client, staff_user):
             "last_name": "User",
             "email": "foo@example.org",
             "wards": ["E05009378", "E05009374"],
+            "case_worker": True,
         },
     )
     assert response.status_code == 302

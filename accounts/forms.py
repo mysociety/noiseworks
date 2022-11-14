@@ -4,6 +4,7 @@ import uuid
 import phonenumbers
 from django import forms
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from phonenumber_field.phonenumber import PhoneNumber, to_python
@@ -169,6 +170,10 @@ class EditStaffForm(UserForm):
     wards = forms.MultipleChoiceField(
         choices=get_wards, widget=forms.CheckboxSelectMultiple, required=False
     )
+    case_worker = forms.BooleanField(
+        help_text="Case workers have more permissions for interacting with cases.",
+        required=False,
+    )
 
     class Meta:
         model = User
@@ -180,6 +185,7 @@ class EditStaffForm(UserForm):
             "email_verified",
             "phone",
             "phone_verified",
+            "case_worker",
             "wards",
         )
 
@@ -195,8 +201,21 @@ class EditStaffForm(UserForm):
         self.fields["email_verified"].disabled = True
         if not self.instance.pk:
             self.fields["is_staff"].disabled = True
+        else:
+            is_case_worker = "case_workers" in [
+                g.name for g in self.instance.groups.all()
+            ]
+            self.fields["case_worker"].initial = is_case_worker
 
     def save(self, *args, **kwargs):
         if not self.instance.username:
             self.instance.username = str(uuid.uuid4())
         super().save(*args, **kwargs)
+
+        case_workers = Group.objects.get(name="case_workers")
+        is_case_worker = case_workers in self.instance.groups.all()
+        case_worker_selected = self.cleaned_data.get("case_worker", False)
+        if case_worker_selected and not is_case_worker:
+            case_workers.user_set.add(self.instance)
+        elif not case_worker_selected and is_case_worker:
+            case_workers.user_set.remove(self.instance)
