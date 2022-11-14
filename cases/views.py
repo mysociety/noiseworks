@@ -131,7 +131,7 @@ def case_staff(request, pk):
     )
 
 
-@staff_member_required
+@permission_required("cases.assign")
 def reassign(request, pk):
     case = get_object_or_404(Case, pk=pk)
     form = forms.ReassignForm(request.POST or None, instance=case)

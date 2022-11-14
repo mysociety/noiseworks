@@ -73,9 +73,11 @@
       {% endif %}
     </dd>
     <dd class="govuk-summary-list__actions">
-    <a class="nw-link--no-visited-state" href="{% url "case-reassign" case.id %}">
-        Change<span class="govuk-visually-hidden"> assignment</span>
-      </a>
+      {% if perms.cases.assign %}
+        <a class="nw-link--no-visited-state" href="{% url "case-reassign" case.id %}">
+            Change<span class="govuk-visually-hidden"> assignment</span>
+        </a>
+      {% endif %}
     </dd>
   </div>
   <div class="govuk-summary-list__row">
