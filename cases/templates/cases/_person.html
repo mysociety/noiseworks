@@ -2,9 +2,9 @@
 
 <div class="nw-person">
   {% if relationship == 'perpetrator' %}
-    {% include 'icons/avatar-triangle.html' %}
+    {% include 'icons/avatar-triangle.html' with classes="person-icon" %}
   {% else %}
-    {% include 'icons/avatar-circle.html' %}
+    {% include 'icons/avatar-circle.html' with classes="person-icon" %}
   {% endif %}
 
     <h3>
@@ -58,6 +58,23 @@
         by {{ person.get_best_method_display|default:"unknown"|lower }}
     </p>
   {% endif %}
+
+  {% if person.contact_warning %}
+  <p>
+    <details class="govuk-details lbh-details" data-module="govuk-details">
+      <summary class="govuk-details__summary">
+        <span class=govuk-details__summary-text">
+            Contact warning
+            {% include 'icons/warning-triangle.html' %}
+        </span>
+      </summary>
+      <div class="govuk-details__text">
+          {{ person.contact_warning }}
+      </div>
+    </details>
+  </p>
+  {% endif %}
+
 
     <ul class="nw-inline-list">
       {% if relationship == 'perpetrator' and case and perms.cases.edit_perpetrators %}
