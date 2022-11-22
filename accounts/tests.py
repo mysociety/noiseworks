@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.management import CommandError, call_command
-from pytest_django.asserts import assertContains
+from pytest_django.asserts import assertContains, assertNotContains
 from sesame.tokens import create_token
 
 from .forms import CodeForm
@@ -189,6 +189,20 @@ def test_basic_user_editing(client, staff_user, normal_user):
     )
     assert response.status_code == 302
     assert response.url == "/a/list"
+
+
+def test_basic_user_contact_warning_editing_permission(client, staff_user, normal_user):
+    permission = Permission.objects.get(
+        codename="edit_contact_warning",
+        content_type=ContentType.objects.get_for_model(User),
+    )
+    client.force_login(staff_user)
+    response = client.get(f"/a/{normal_user.id}/edit")
+    assertNotContains(response, "Contact warning")
+
+    staff_user.user_permissions.add(permission)
+    response = client.get(f"/a/{normal_user.id}/edit")
+    assertContains(response, "Contact warning")
 
 
 def test_staff_user_editing_by_staff(client, staff_user):

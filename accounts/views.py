@@ -119,7 +119,15 @@ def edit(request, user_id):
             raise PermissionDenied
         form = EditStaffForm(True, request.POST or None, instance=user)
     else:
-        form = EditUserForm(perm, request.POST or None, instance=user)
+        can_edit_contact_warning = request.user.has_perm(
+            "accounts.edit_contact_warning"
+        )
+        form = EditUserForm(
+            perm,
+            request.POST or None,
+            instance=user,
+            can_edit_contact_warning=can_edit_contact_warning,
+        )
     if form.is_valid():
         form.save()
         if request.GET.get("case"):

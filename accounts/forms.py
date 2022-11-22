@@ -132,6 +132,11 @@ class UserForm(GDSForm, forms.ModelForm):
 
 
 class EditUserForm(UserForm):
+    contact_warning = forms.CharField(
+        help_text="Optionally provide a warning for when contacting this person.",
+        required=False,
+        widget=forms.Textarea,
+    )
     best_time = forms.MultipleChoiceField(
         choices=User.BEST_TIME_CHOICES,
         widget=forms.CheckboxSelectMultiple,
@@ -155,9 +160,15 @@ class EditUserForm(UserForm):
             "phone_verified",
             "uprn",
             "address",
+            "contact_warning",
             "best_time",
             "best_method",
         )
+
+    def __init__(self, *args, can_edit_contact_warning=False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not can_edit_contact_warning:
+            del self.fields["contact_warning"]
 
 
 def get_wards():
