@@ -88,6 +88,8 @@ class User(AbstractUser):
     best_method = models.CharField(
         choices=BEST_METHOD_CHOICES, max_length=5, null=True, blank=True
     )
+    # For complainants and perpetrators
+    contact_warning = models.TextField(blank=True, null=True)
     # Staff things
     wards = ArrayField(
         models.CharField(max_length=9),
