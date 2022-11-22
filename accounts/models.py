@@ -113,6 +113,9 @@ class User(AbstractUser):
                 condition=models.Q(phone_verified=True),
             ),
         ]
+        permissions = [
+            ("edit_contact_warning", "Can add, remove or edit a contact warning."),
+        ]
 
     def __str__(self):
         name = self.get_full_name() or self.email or self.username
