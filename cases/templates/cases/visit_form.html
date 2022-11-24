@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags crispy_forms_gds static %}
+
+{% block content %}
+
+<div>
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">Cancel, back to case</a>
+</div>
+
+{% include "cases/_case_tags.html" with case=case %}
+<h1 style="margin-top: 0">{{form_title}}</h1>
+
+{% error_summary form %}
+{% crispy form %}
+
+<script>
+(function() {
+    {% include "cases/_file_upload.js" %}
+    const wentInsideSelector = document.querySelector('select[name="went_inside"]');
+    const hideWhenInsideBlocks = document.querySelectorAll('div[name="hide-when-inside"]');
+    const showWhenInsideBlocks = document.querySelectorAll('div[name="show-when-inside"]');
+
+    if (!wentInsideSelector) {
+        return;
+    }
+
+    function updateHiddenControls(inside) {
+        hideWhenInsideBlocks.forEach(function(b) {
+            b.hidden = inside;
+        });
+        showWhenInsideBlocks.forEach(function(b) {
+            b.hidden = !inside;
+        });
+    }
+
+    wentInsideSelector.addEventListener('change', function() {
+        updateHiddenControls(wentInsideSelector.value == "Yes");
+    });
+
+    updateHiddenControls(wentInsideSelector.value == "Yes");
+})();
+</script>
+
+{% endblock %}

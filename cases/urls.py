@@ -46,6 +46,7 @@ urlpatterns = [
     path("/<int:pk>/followers", views.followers, name="case-followers"),
     path("/<int:pk>/follower-state", views.follower_state, name="case-follower-state"),
     path("/<int:pk>/log", views.log_action, name="case-log-action"),
+    path("/<int:pk>/log-visit", views.log_visit, name="case-log-visit"),
     path(
         "/<int:case_pk>/log/<int:action_pk>/edit",
         views.edit_logged_action,

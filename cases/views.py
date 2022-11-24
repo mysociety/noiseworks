@@ -269,6 +269,39 @@ def remove_perpetrator(request, pk, perpetrator):
     return redirect(case)
 
 
+def _save_action_files(request, action):
+    for f in request.FILES.getlist("files"):
+        ActionFile.objects.create(
+            action=action,
+            file=f,
+            original_name=f.name,
+        )
+
+
+@staff_member_required
+def log_visit(request, pk):
+    case = get_object_or_404(Case, pk=pk)
+    form = forms.LogVisitForm(request.POST or None, request.FILES or None, case=case)
+    if form.is_valid():
+        form.save()
+        case.notify_followers("Added a visit.", triggered_by=request.user)
+        _save_action_files(request, form.instance)
+        return redirect(case)
+    bytes_remaining = case.file_storage_remaining_bytes
+    return render(
+        request,
+        "cases/visit_form.html",
+        {
+            "case": case,
+            "form": form,
+            "form_title": "Log a visit",
+            "can_upload_files": bytes_remaining > 0,
+            "remaining_file_storage_bytes": bytes_remaining,
+            "remaining_file_storage_human_readable": naturalsize(bytes_remaining),
+        },
+    )
+
+
 @staff_member_required
 def log_action(request, pk):
     case = get_object_or_404(Case, pk=pk)
@@ -286,12 +319,7 @@ def log_action(request, pk):
             description = f"Added '{type_}'."
         form.save()
         case.notify_followers(description, triggered_by=request.user)
-        for f in request.FILES.getlist("files"):
-            ActionFile.objects.create(
-                action=form.instance,
-                file=f,
-                original_name=f.name,
-            )
+        _save_action_files(request, form.instance)
         return redirect(case)
     bytes_remaining = case.file_storage_remaining_bytes
     return render(

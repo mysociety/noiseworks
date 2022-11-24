@@ -769,6 +769,13 @@ class ActionType(models.Model):
         )
         return typ
 
+    @classproperty
+    def visit(cls):
+        typ, _ = ActionType.objects.get_or_create(
+            name="Visit", defaults={"visibility": "staff"}
+        )
+        return typ
+
     def __str__(self):
         return self.name
 
