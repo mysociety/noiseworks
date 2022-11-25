@@ -797,6 +797,7 @@ class Action(AbstractModel):
         related_name="actions",
     )
     notes = models.TextField(blank=True)
+    notes_last_edit_time = models.DateTimeField(blank=True, null=True)
     time = models.DateTimeField(default=timezone.now)
 
     objects = ActionManager.from_queryset(ActionQuerySet)()

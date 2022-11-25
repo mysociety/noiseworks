@@ -363,6 +363,11 @@ var nw = nw || {};
                 </summary>
                 <div class="govuk-details__text">
                     {{ entry.action.notes|urlize }}
+                    {% if entry.action.notes_last_edit_time %}
+                        <p class="lbh-body lbh-!-font-weight-medium">
+                            Edited {{ entry.action.notes_last_edit_time }}
+                        </p>
+                    {% endif %}
                 </div>
             </details>
             <div class="nw-printable-timeline-details" hidden>

@@ -263,6 +263,10 @@ class EditActionForm(GDSForm, forms.ModelForm):
 
     notes = action_notes_field()
 
+    def save(self):
+        self.instance.notes_last_edit_time = now()
+        super().save()
+
 
 class LocationForm(GDSForm, forms.ModelForm):
     """Update the location of case"""
