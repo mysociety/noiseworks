@@ -157,6 +157,12 @@ class CaseManager(models.Manager):
             )
         return merge_map
 
+    def annotate_reoccurrences(self, qs):
+        return qs.annotate(
+            reoccurrences=Count("complaints")
+            - Count("complaints__complainant", distinct=True)
+        )
+
 
 class Case(AbstractModel):
     class LastUpdateTypes(models.TextChoices):
