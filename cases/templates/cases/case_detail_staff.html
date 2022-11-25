@@ -54,7 +54,7 @@
     <dd class="govuk-summary-list__value">{{ case.number_all_complaints }},
     {% blocktranslate count counter=case.number_all_complainants trimmed %}
     from {{ counter }} complainant{% plural %}from {{ counter }} complainants
-    {% endblocktranslate %}</dd>
+    {% endblocktranslate %}, {{ case.reoccurrences }} reoccurrence{{ case.reoccurrences|pluralize }}</dd>
     <dd class="govuk-summary-list__actions"></dd>
   </div>
   {% if not case.merged_into %}
