@@ -29,7 +29,6 @@ class CaseFilter(django_filters.FilterSet):
     assigned = django_filters.ChoiceFilter(
         choices=[
             ("me", "Assigned to me"),
-            ("following", "Cases I am following"),
             ("others", "Assigned to others"),
             ("none", "Unassigned"),
         ],
@@ -63,6 +62,11 @@ class CaseFilter(django_filters.FilterSet):
         label="Only show cases where the last update was a complaint",
         widget=forms.CheckboxInput,
         method="last_update_was_complaint_filter",
+    )
+    followed_by_me = django_filters.Filter(
+        label="Only show cases I follow",
+        widget=forms.CheckboxInput,
+        method="followed_by_me_filter",
     )
 
     class Meta:
@@ -132,11 +136,14 @@ class CaseFilter(django_filters.FilterSet):
             return queryset
         return queryset.filter(last_update_type=Case.LastUpdateTypes.COMPLAINT)
 
+    def followed_by_me_filter(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(followers=self.request.user)
+
     def assigned_filter(self, queryset, name, value):
         if value == "me":
             return queryset.filter(assigned=self.request.user)
-        elif value == "following":
-            return queryset.filter(followers=self.request.user)
         elif value == "others":
             return queryset.exclude(assigned=self.request.user).exclude(assigned=None)
         elif value == "none":

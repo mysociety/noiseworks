@@ -2,6 +2,7 @@ import pytest
 from datetime import timedelta
 from django.contrib.gis.geos import Point
 from functools import partial
+from http import HTTPStatus
 from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
@@ -89,9 +90,6 @@ def test_assigned_filter(admin_client, admin_user, case_1, case_location):
     case_1.assigned = None
     case_1.save()
     response = admin_client.get("/cases?assigned=none")
-    assertContains(response, f"/cases/{case_1.id}")
-    case_1.followers.add(admin_user)
-    response = admin_client.get("/cases?assigned=following")
     assertContains(response, f"/cases/{case_1.id}")
 
 
@@ -273,3 +271,16 @@ def test_last_update_was_complaint(admin_client, case_1, action_type):
     action_2.time = case_1.modified + timedelta(minutes=1)
     action_2.save()
     includes_case(False)
+
+
+def test_following_filter(client, staff_user, case_1):
+    client.force_login(staff_user)
+
+    response = client.get("/cases?followed_by_me=on")
+    assert response.status_code == HTTPStatus.OK
+    assertNotContains(response, f"/cases/{case_1.id}")
+
+    case_1.followers.add(staff_user)
+    response = client.get("/cases?followed_by_me=on")
+    assert response.status_code == HTTPStatus.OK
+    assertContains(response, f"/cases/{case_1.id}")
