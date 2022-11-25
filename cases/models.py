@@ -232,6 +232,9 @@ class CaseManager(models.Manager):
             )
         return merge_map
 
+    def annotate_total_complaints(self, qs):
+        return qs.annotate(total_complaints=Count("complaints"))
+
 
 class Case(AbstractModel):
     class LastUpdateTypes(models.TextChoices):
