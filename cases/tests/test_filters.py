@@ -73,6 +73,19 @@ def action_type(db):
     ActionType.objects.create(name="An action type", common=True),
 
 
+def _check_display_order(response, cases):
+    case_links = [f"/cases/{case.id}" for case in cases]
+    response_text = response.content.decode(response.charset)
+    highest_first_occurrence = 0
+    for case_link in case_links:
+        first_occurrence = response_text.find(case_link)
+        assert first_occurrence != -1, f"{case_link} not found"
+        assert (
+            first_occurrence > highest_first_occurrence
+        ), f"{case_link} found earlier than expected"
+        highest_first_occurrence = first_occurrence
+
+
 def test_list(admin_client, case_1):
     response = admin_client.get("/cases")
     assertContains(response, "Cases")
@@ -284,3 +297,22 @@ def test_following_filter(client, staff_user, case_1):
     response = client.get("/cases?followed_by_me=on")
     assert response.status_code == HTTPStatus.OK
     assertContains(response, f"/cases/{case_1.id}")
+
+
+def test_complaints_filter(admin_client, case_1, case_2):
+    for _ in range(3):
+        Complaint.objects.create(
+            case=case_1, complainant=case_1.created_by, happening_now=True
+        )
+    for _ in range(2):
+        Complaint.objects.create(
+            case=case_2, complainant=case_1.created_by, happening_now=True
+        )
+
+    response = admin_client.get("/cases?complaints=highest")
+    assert response.status_code == HTTPStatus.OK
+    _check_display_order(response, [case_1, case_2])
+
+    response = admin_client.get("/cases?complaints=lowest")
+    assert response.status_code == HTTPStatus.OK
+    _check_display_order(response, [case_2, case_1])

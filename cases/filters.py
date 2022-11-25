@@ -55,6 +55,14 @@ class CaseFilter(django_filters.FilterSet):
         method="closed_filter",
         initial="none",
     )
+    complaints = django_filters.ChoiceFilter(
+        label="Complaints",
+        choices=[
+            ("highest", "Highest to lowest"),
+            ("lowest", "Lowest to highest"),
+        ],
+        method="complaints_filter",
+    )
     priority_only = django_filters.Filter(
         label="Priority only", widget=forms.CheckboxInput, method="priority_only_filter"
     )
@@ -130,6 +138,14 @@ class CaseFilter(django_filters.FilterSet):
         elif value == "only":
             return queryset.filter(closed=True)
         return queryset  # pragma: no cover - should not be reachable.
+
+    def complaints_filter(self, queryset, name, value):
+        qs = Case.objects.annotate_total_complaints(queryset)
+        if value == "highest":
+            return qs.order_by("-total_complaints")
+        elif value == "lowest":
+            return qs.order_by("total_complaints")
+        return qs  # pragma: no cover - should not be reachable.
 
     def last_update_was_complaint_filter(self, queryset, name, value):
         if not value:
