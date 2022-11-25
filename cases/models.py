@@ -702,6 +702,10 @@ class Case(AbstractModel):
     def number_all_complainants(self):
         return len({c.complainant_id for c in self.all_complaints_reversed})
 
+    @cached_property
+    def reoccurrences(self):
+        return max(self.number_all_complaints - self.number_all_complainants, 0)
+
     @property
     def file_storage_used_bytes(self):
         bytes_used = 0
