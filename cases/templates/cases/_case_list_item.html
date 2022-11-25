@@ -13,7 +13,7 @@
                 {{ complaints }}, from {{ counter }} complainant
               {% plural %}
                 {{ complaints }}, from {{ counter }} complainants
-              {% endblocktranslate %}
+              {% endblocktranslate %}, {{ case.reoccurrences }} reoccurrence{{ case.reoccurrences|pluralize }}
             </dd>
         </div>
         <div class="govuk-summary-list__row">
