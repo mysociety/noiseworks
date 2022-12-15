@@ -1,4 +1,5 @@
 import re
+from http import HTTPStatus
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -387,3 +388,33 @@ def test_add_staff_command(db, case_workers, capsys, monkeypatch):
     assert "test4@example.org" in output.out
     user = User.objects.get(email="test4@example.org")
     assert user.wards == ["E05009372", "E05009385"]
+
+
+def test_staff_settings(staff_user, client):
+    client.force_login(staff_user)
+    resp = client.get("/a/staff-settings")
+    assert resp.status_code == HTTPStatus.OK
+
+    resp = client.post(
+        "/a/staff-settings",
+        {
+            "staff_web_notifications": "on",
+        },
+        follow=True,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    staff_user.refresh_from_db()
+    assert not staff_user.staff_email_notifications
+    assert staff_user.staff_web_notifications
+
+    resp = client.post(
+        "/a/staff-settings",
+        {
+            "staff_email_notifications": "on",
+        },
+        follow=True,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    staff_user.refresh_from_db()
+    assert staff_user.staff_email_notifications
+    assert not staff_user.staff_web_notifications
