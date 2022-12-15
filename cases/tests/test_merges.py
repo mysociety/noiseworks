@@ -2,6 +2,7 @@ import datetime
 
 import pytest
 from django.contrib.gis.geos import Point
+from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 from pytest_django.asserts import assertContains, assertNotContains
 
@@ -233,3 +234,10 @@ def test_unmerge(admin_client, merged_case_setup):
     admin_client.post(f"/cases/{merged.id}/unmerge")
     merged.refresh_from_db()
     assert merged.merged_into is None
+
+
+def test_cant_merge_case_into_itself(admin_client, case):
+    admin_client.post(f"/cases/{case.id}/merge")
+    with pytest.raises(ValidationError) as e:
+        admin_client.post(f"/cases/{case.id}/merge", {"dupe": 1}, follow=True)
+    assert "You cannot merge a case into itself." in str(e.value)
