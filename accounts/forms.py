@@ -230,3 +230,16 @@ class EditStaffForm(UserForm):
             case_workers.user_set.add(self.instance)
         elif not case_worker_selected and is_case_worker:
             case_workers.user_set.remove(self.instance)
+
+
+class StaffSettingsForm(GDSForm, forms.ModelForm):
+    class Meta:
+        model = User
+        fields = (
+            "staff_email_notifications",
+            "staff_web_notifications",
+        )
+        labels = {
+            "staff_email_notifications": "Receive email notifications.",
+            "staff_web_notifications": "Receive web notifications.",
+        }

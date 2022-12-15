@@ -14,7 +14,7 @@ from noiseworks.base32 import bytes_to_base32
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_email, send_sms
 
-from .forms import CodeForm, EditStaffForm, EditUserForm, SignInForm
+from .forms import CodeForm, EditStaffForm, EditUserForm, StaffSettingsForm, SignInForm
 
 User = get_user_model()
 
@@ -141,3 +141,12 @@ def edit(request, user_id):
 def list(request):
     users = User.objects.filter(is_staff=True)
     return render(request, "accounts/list.html", {"users": users})
+
+
+@staff_member_required
+def staff_settings(request):
+    form = StaffSettingsForm(request.POST or None, instance=request.user)
+    if form.is_valid():
+        form.save()
+        return redirect("cases")
+    return render(request, "accounts/staff_settings.html", {"form": form})

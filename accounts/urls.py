@@ -9,6 +9,7 @@ urlpatterns = [
     path("/list", views.list, name="list"),
     path("/sign-out", views.signout, name="sign-out"),
     path("/add", views.add, name="add"),
+    path("/staff-settings", views.staff_settings, name="staff-settings"),
     path("/<int:user_id>/edit", views.edit, name="edit"),
     path("/<str:token>", views.token_url, name="token"),
 ]

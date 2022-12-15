@@ -155,6 +155,15 @@
             </a>
           {% endwith %}
         {% endif %}
+        {% if request.user.is_staff %}
+          <a href="{% url "accounts:staff-settings" %}">
+            <img
+              style="width:22px"
+              src={% static 'settings-cog.png' %}
+              alt="settings"
+            >
+          </a>
+        {% endif %}
       </div>
     </div>
   </div>
