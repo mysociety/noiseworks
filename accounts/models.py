@@ -96,6 +96,8 @@ class User(AbstractUser):
         null=True,
         blank=True,
     )
+    staff_email_notifications = models.BooleanField(default=True)
+    staff_web_notifications = models.BooleanField(default=True)
 
     objects = UserManager()
 
