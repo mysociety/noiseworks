@@ -142,12 +142,13 @@ def reassign(request, pk):
         case.notify_followers(f"Assigned {user}.", triggered_by=request.user)
         if user.id != request.user.id:
             url = request.build_absolute_uri(case.get_absolute_url())
-            send_email(
-                user.email,
-                "You have been assigned",
-                "cases/email/assigned",
-                {"case": case, "url": url, "user": user, "by": request.user},
-            )
+            if user.staff_email_notifications:
+                send_email(
+                    user.email,
+                    "You have been assigned",
+                    "cases/email/assigned",
+                    {"case": case, "url": url, "user": user, "by": request.user},
+                )
         return redirect(case)
     return render(
         request,

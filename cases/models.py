@@ -462,7 +462,7 @@ class Case(AbstractModel):
 
     def notify_followers(self, message, triggered_by=None):
         for follower in self.followers.all():
-            if follower == triggered_by:
+            if follower == triggered_by or not follower.staff_web_notifications:
                 continue
 
             Notification.objects.create(
