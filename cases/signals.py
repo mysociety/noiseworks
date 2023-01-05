@@ -1,7 +1,40 @@
 from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.dispatch import receiver, Signal
+
+from accounts.models import User
+from noiseworks import cobrand
+from noiseworks.message import send_email
 
 from .models import Action, Case, Complaint, MergeRecord
+
+new_case_reported = Signal()
+
+
+@receiver(new_case_reported)
+def auto_assign_new_case(sender, case, case_absolute_url, **kwargs):
+    if case.assigned or case.estate == "y" or not case.ward:
+        return
+    ward_principal = User.objects.filter(principal_wards__contains=[case.ward]).first()
+
+    if not ward_principal:
+        return
+
+    case.assign(ward_principal, None)
+    case.save()
+
+    wards = cobrand.api.wards()
+    ward_gss_to_name = {ward["gss"]: ward["name"] for ward in wards}
+    ward_name = ward_gss_to_name.get(case.ward, case.ward)
+    ward_principal.send_email(
+        "You have been assigned",
+        "cases/email/auto_assigned",
+        {
+            "case": case,
+            "url": case_absolute_url,
+            "user": ward_principal,
+            "ward_name": ward_name,
+        },
+    )
 
 
 @receiver(post_save, sender=Complaint)

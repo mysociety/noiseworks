@@ -10,6 +10,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
 
 from noiseworks import cobrand
+from noiseworks.message import send_email
 
 
 class UserManager(BaseManager):
@@ -96,6 +97,7 @@ class User(AbstractUser):
         null=True,
         blank=True,
     )
+    principal_wards = ArrayField(models.CharField(max_length=9), default=list)
     staff_email_notifications = models.BooleanField(default=True)
     staff_web_notifications = models.BooleanField(default=True)
 
@@ -161,9 +163,27 @@ class User(AbstractUser):
         return self.notifications.filter(read=False).count()
 
     def get_wards_display(self):
-        if not self.wards:
+        principal_wards = self.principal_wards if self.principal_wards else []
+        wards = self.wards if self.wards else []
+
+        if not wards and not principal_wards:
             return "No wards"
-        wards = cobrand.api.wards()
-        wards = {ward["gss"]: ward["name"] for ward in wards}
-        wards = [wards.get(w) for w in self.wards]
-        return ", ".join(wards)
+
+        ward_mappings = cobrand.api.wards()
+        ward_gss_to_name = {w["gss"]: w["name"] for w in ward_mappings}
+
+        ward_principal_names = [
+            ward_gss_to_name.get(w) + " (principal)" for w in principal_wards
+        ]
+        assigned_ward_names = [
+            ward_gss_to_name.get(w) for w in wards if w not in principal_wards
+        ]
+
+        return ", ".join(ward_principal_names + assigned_ward_names)
+
+    def send_email(self, *args, **kwargs):
+        if not self.is_staff:
+            raise Exception("Not implemented for non-staff users.")
+        if not self.staff_email_notifications:
+            return
+        send_email(self.email, *args, **kwargs)

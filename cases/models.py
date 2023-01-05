@@ -475,6 +475,11 @@ class Case(AbstractModel):
                 triggered_by=triggered_by,
             )
 
+    def assign(self, assignee, triggered_by=None):
+        self.assigned = assignee
+        self.followers.add(assignee)
+        self.notify_followers(f"Assigned {assignee}.", triggered_by=triggered_by)
+
     def _timeline_edit_assign_entry(self, edit, prev, history_to_show):
         if history_to_show == "all":
             return {

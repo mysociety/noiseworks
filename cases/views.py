@@ -29,6 +29,7 @@ from noiseworks.message import send_email, send_sms
 from . import forms, map_utils
 from .filters import CaseFilter
 from .models import Action, ActionFile, ActionType, Case, Complaint, Notification
+from .signals import new_case_reported
 
 
 def home(request):
@@ -138,17 +139,14 @@ def reassign(request, pk):
     if form.is_valid():
         form.save()
         user = form.cleaned_data["assigned"]
-        case.followers.add(user)
-        case.notify_followers(f"Assigned {user}.", triggered_by=request.user)
+        case.assign(user, triggered_by=request.user)
         if user.id != request.user.id:
             url = request.build_absolute_uri(case.get_absolute_url())
-            if user.staff_email_notifications:
-                send_email(
-                    user.email,
-                    "You have been assigned",
-                    "cases/email/assigned",
-                    {"case": case, "url": url, "user": user, "by": request.user},
-                )
+            user.send_email(
+                "You have been assigned",
+                "cases/email/assigned",
+                {"case": case, "url": url, "user": user, "by": request.user},
+            )
         return redirect(case)
     return render(
         request,
@@ -1019,6 +1017,11 @@ class ReportingWizard(CaseWizard):
         if data.get("has_review_date", False):
             case.review_date = data.get("review_date", None)
         case.save()
+        new_case_reported.send(
+            sender=self.__class__,
+            case=case,
+            case_absolute_url=self.request.build_absolute_uri(case.get_absolute_url()),
+        )
 
         start, end = compile_dates(data)
         complaint = Complaint(

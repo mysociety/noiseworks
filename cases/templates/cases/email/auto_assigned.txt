@@ -1,0 +1,6 @@
+Hi {{ user }},
+
+You have been automatically assigned to case #{{ case.id }}, {{ case.kind_display }} at
+{{ case.location_display }}, as you are the principal for {{ ward_name }}.
+
+{{ url }}

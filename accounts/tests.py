@@ -10,8 +10,11 @@ from django.core.management import CommandError, call_command
 from pytest_django.asserts import assertContains, assertNotContains
 from sesame.tokens import create_token
 
+from cases.models import Case
+
 from .forms import CodeForm
 from .models import User
+
 
 pytestmark = pytest.mark.django_db
 
@@ -31,6 +34,18 @@ def staff_user(db):
     return User.objects.create_user(
         is_staff=True, email="foo@example.org", wards=["E05009374"]
     )
+
+
+@pytest.fixture
+def staff_user_2(db):
+    return User.objects.create_user(
+        is_staff=True, email="foo2@example.org", wards=["E05009374"]
+    )
+
+
+@pytest.fixture
+def case(db):
+    return Case.objects.create()
 
 
 @pytest.fixture
@@ -418,3 +433,73 @@ def test_staff_settings(staff_user, client):
     staff_user.refresh_from_db()
     assert staff_user.staff_email_notifications
     assert not staff_user.staff_web_notifications
+
+
+def test_set_staff_as_ward_principal(admin_client, staff_user, staff_user_2):
+    resp = admin_client.post(
+        f"/a/{staff_user.id}/edit",
+        {
+            "first_name": "Staff",
+            "last_name": "User",
+            "email": "foo@example.org",
+            "wards": [],
+            "principal_wards": ["E05009378"],
+            "case_worker": True,
+            "is_staff": True,
+        },
+        follow=True,
+    )
+    assert resp.status_code == HTTPStatus.OK
+    staff_user.refresh_from_db()
+    assert staff_user.wards == ["E05009378"]
+    assert staff_user.principal_wards == ["E05009378"]
+    resp = admin_client.post(
+        f"/a/{staff_user_2.id}/edit",
+        {
+            "first_name": "Staff",
+            "last_name": "User",
+            "email": "foo2@example.org",
+            "wards": [],
+            "principal_wards": ["E05009378"],
+            "case_worker": True,
+            "is_staff": True,
+        },
+    )
+    assert resp.status_code == HTTPStatus.OK
+    expected_error = (
+        f"Hoxton West already has principal {staff_user.email}. "
+        + "This user must be unassigned as principal before a new principal can be assigned."
+    )
+    assert expected_error in resp.content.decode("utf-8")
+
+
+def test_staff_email_settings(staff_user, case):
+    staff_user.staff_email_notifications = True
+    staff_user.save()
+
+    staff_user.send_email(
+        "You have been assigned",
+        "cases/email/assigned",
+        {
+            "case": case,
+            "url": "some-url",
+            "user": staff_user,
+            "ward_name": "some ward name",
+        },
+    )
+    assert len(mail.outbox) == 1
+
+    staff_user.staff_email_notifications = False
+    staff_user.save()
+
+    staff_user.send_email(
+        "You have been assigned",
+        "cases/email/assigned",
+        {
+            "case": case,
+            "url": "some-url",
+            "user": staff_user,
+            "ward_name": "some ward name",
+        },
+    )
+    assert len(mail.outbox) == 1

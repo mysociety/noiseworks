@@ -171,7 +171,7 @@ class EditUserForm(UserForm):
             del self.fields["contact_warning"]
 
 
-def get_wards():
+def get_wards_as_choices():
     wards = cobrand.api.wards()
     wards = {ward["gss"]: ward["name"] for ward in wards}
     return list(wards.items())
@@ -179,7 +179,15 @@ def get_wards():
 
 class EditStaffForm(UserForm):
     wards = forms.MultipleChoiceField(
-        choices=get_wards, widget=forms.CheckboxSelectMultiple, required=False
+        choices=get_wards_as_choices,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
+    principal_wards = forms.MultipleChoiceField(
+        choices=get_wards_as_choices,
+        help_text="When a staff member is the principal for a ward, all non-housing reports will be automatically assigned to them. Only one staff member can be the principal for a ward at a time.",
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
     )
     case_worker = forms.BooleanField(
         help_text="Case workers have more permissions for interacting with cases.",
@@ -198,6 +206,7 @@ class EditStaffForm(UserForm):
             "phone_verified",
             "case_worker",
             "wards",
+            "principal_wards",
         )
 
     def __init__(self, *args, **kwargs):
@@ -218,9 +227,33 @@ class EditStaffForm(UserForm):
             ]
             self.fields["case_worker"].initial = is_case_worker
 
+    def clean_principal_wards(self):
+        principal_wards = self.cleaned_data.get("principal_wards", [])
+        if principal_wards:
+            for w in principal_wards:
+                existing_principals = User.objects.filter(
+                    principal_wards__contains=[w]
+                ).all()
+                if len(existing_principals) > 0:
+                    ward_mappings = {
+                        ward["gss"]: ward["name"] for ward in cobrand.api.wards()
+                    }
+                    raise ValidationError(
+                        f"{ward_mappings[w]} already has principal {existing_principals[0].email}."
+                        + " This user must be unassigned as principal before a new principal can be assigned."
+                    )
+        return principal_wards
+
     def save(self, *args, **kwargs):
         if not self.instance.username:
             self.instance.username = str(uuid.uuid4())
+
+        # Ensure that a staff member is always assigned to a ward they are the principal of.
+        principal_wards = self.cleaned_data.get("principal_wards", [])
+        for w in principal_wards:
+            if w not in self.cleaned_data["wards"]:
+                self.cleaned_data["wards"].append(w)
+
         super().save(*args, **kwargs)
 
         case_workers = Group.objects.get(name="case_workers")
