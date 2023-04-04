@@ -14,18 +14,18 @@
     {% compress css %}
         <link rel="stylesheet" type="text/x-scss" href="{% static 'app.scss' %}">
     {% endcompress %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    <link rel="stylesheet" href="{% static 'vendor/leaflet.1.7.1.css' %}"
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
         crossorigin=""/>
-    <link href="https://unpkg.com/filepond@4.30.4/dist/filepond.css" rel="stylesheet">
+    <link href="{% static 'vendor/filepond.4.30.4.min.css' %}" rel="stylesheet">
 
     {% compress js inline %}
     {% endcompress %}
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    <script src="{% static 'vendor/leaflet.1.7.1.js' %}"
         integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
         crossorigin=""></script>
-    <script src="https://unpkg.com/dom-focus-lock@1.0.4/umd/index.js"></script>
-    <script src="https://unpkg.com/filepond@4.30.4/dist/filepond.js"></script>
+    <script src="{% static 'vendor/dom-focus-lock.1.0.4.js' %}"></script>
+    <script src="{% static 'vendor/filepond.4.30.4.min.js' %}"></script>
 
     {% if 'noiseworks.staging.societyworks.org' in request.get_host %}
          {% include "_ux_tweak_snippet.html" %}
