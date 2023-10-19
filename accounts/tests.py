@@ -277,6 +277,23 @@ def test_staff_user_existing(admin_client, staff_user, normal_user):
     assertContains(response, "user with this email address already")
 
 
+def test_user_upgrading(admin_client, normal_user):
+    response = admin_client.post(
+        "/a/add",
+        {
+            "first_name": "Normal",
+            "last_name": "User",
+            "email": normal_user.email,
+            "wards": ["E05009378", "E05009374"],
+            "case_worker": True,
+        },
+    )
+    assert response.status_code == 302
+    assert response.url == "/a/list"
+    user = User.objects.get(email=normal_user.email, email_verified=True)
+    assert user.is_staff
+
+
 def test_staff_user_existing_phone(admin_client, staff_user, normal_user):
     normal_user.phone_verified = True
     normal_user.phone = "07900000000"
