@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import tempfile
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -13,6 +14,12 @@ from ..models import (
 )
 
 pytestmark = pytest.mark.django_db
+TEMPDIR = tempfile.TemporaryDirectory().name
+
+
+@pytest.fixture(autouse=True)
+def use_temporary_media_root(settings):
+    settings.MEDIA_ROOT = TEMPDIR
 
 
 def test_log_files_happy_path(admin_client, case_1, action_types):
