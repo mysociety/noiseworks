@@ -14,6 +14,7 @@ from simple_history.models import HistoricalRecords
 
 from accounts.models import User
 from noiseworks import cobrand
+from noiseworks.current_user import get_current_user
 
 
 def ward_name_to_id(ward):
@@ -42,6 +43,14 @@ class AbstractModel(models.Model):
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        user = get_current_user()
+        if user:
+            if not self.created_by:
+                self.created_by = user
+            self.modified_by = user
+        super().save(*args, **kwargs)
 
 
 class CaseSettingsSingleton(AbstractModel):
