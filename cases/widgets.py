@@ -21,9 +21,7 @@ class MapWidget(forms.BaseGeometryWidget):
         if not value:
             return context
 
-        accessToken = "pk.eyJ1IjoibGJoZWxld2lzIiwiYSI6ImNqeXJkN25uNjA5M3Uzb251bWVyejJ3YW8ifQ.uzO8I54w64U6QkNknW32FA"
-        url_base = "https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/"
-
+        url_base = "https://tile.openstreetmap.org/"
         x, y, px, py = map_utils.latlon_to_tile_px(value[1], value[0], self.zoom)
         context.update(
             {
@@ -31,7 +29,7 @@ class MapWidget(forms.BaseGeometryWidget):
                 "tile": {
                     "x": x,
                     "y": y,
-                    "url": f"{url_base}{self.zoom}/{x}/{y}?access_token={accessToken}",
+                    "url": f"{url_base}{self.zoom}/{x}/{y}.png",
                 },
                 "pin": {
                     "x": px,
