@@ -21,7 +21,7 @@ class MapWidget(forms.BaseGeometryWidget):
         if not value:
             return context
 
-        url_base = "https://tile.openstreetmap.org/"
+        url_base = "https://tilma.mysociety.org/os/hackney/Road_3857/"
         x, y, px, py = map_utils.latlon_to_tile_px(value[1], value[0], self.zoom)
         context.update(
             {
