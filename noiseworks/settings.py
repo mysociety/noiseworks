@@ -287,16 +287,16 @@ LOGGING = {
     },
     "handlers": {
         "file": {
-            "level": env("LOG_LEVEL"),
+            "level": env.str("LOG_LEVEL", "WARNING"),
             "class": "logging.FileHandler",
-            "filename": env("LOG_FILE"),
+            "filename": env.str("LOG_FILE", BASE_DIR / "noise.log"),
             "formatter": "timestamp",
         },
     },
     "loggers": {
         "noiseworks": {
             "handlers": ["file"],
-            "level": env.str("LOG_LEVEL"),
+            "level": env.str("LOG_LEVEL", "WARNING"),
             "propagate": False,
         },
     },
