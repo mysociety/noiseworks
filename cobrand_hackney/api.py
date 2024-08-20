@@ -284,6 +284,7 @@ def geocode(q):
             "format": "jsonv2",
         },
     )
+    r.raise_for_status()
     data = r.json()
     out = []
     for row in data:
