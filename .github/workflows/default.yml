@@ -68,6 +68,8 @@ jobs:
         DATABASE_URL: 'postgis://postgres:password@localhost/noiseworks'
         COBRAND: 'cobrand_hackney'
         FILE_STORAGE_RELATIVE_PATH: 'storage'
+        LOG_LEVEL: 'DEBUG'
+        LOG_FILE: 'noise.log'
       run: coverage run -m pytest
 
     - name: Upload code coverage

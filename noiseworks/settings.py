@@ -273,3 +273,31 @@ NOTIFY_TEMPLATE_ID = env.str("NOTIFY_TEMPLATE_ID", None)
 file_storage_relative_path = env.str("FILE_STORAGE_RELATIVE_PATH", None)
 if file_storage_relative_path:
     MEDIA_ROOT = BASE_DIR / file_storage_relative_path
+
+# Logging
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "timestamp": {
+            "format": "{asctime} {levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": env.str("LOG_LEVEL", "WARNING"),
+            "class": "logging.FileHandler",
+            "filename": env.str("LOG_FILE", BASE_DIR / "noise.log"),
+            "formatter": "timestamp",
+        },
+    },
+    "loggers": {
+        "noiseworks": {
+            "handlers": ["file"],
+            "level": env.str("LOG_LEVEL", "WARNING"),
+            "propagate": False,
+        },
+    },
+}

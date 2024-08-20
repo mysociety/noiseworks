@@ -16,3 +16,5 @@ conf/stack.yml
 conf/stack.yml.deployed
 
 storage/
+
+noise.log
