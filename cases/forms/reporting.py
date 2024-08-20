@@ -1,9 +1,9 @@
 import re
 
-import requests
 from crispy_forms_gds.choices import Choice
 from django.contrib.gis import forms
 from phonenumber_field.formfields import PhoneNumberField
+from requests.exceptions import RequestException
 
 from accounts.models import User
 from noiseworks import cobrand
@@ -185,7 +185,7 @@ class WhereLocationForm(StepForm):
         else:
             try:
                 results = cobrand.api.geocode(search)
-            except requests.HTTPError:
+            except RequestException:
                 raise forms.ValidationError(
                     "Sorry, address lookup by name is not working at the moment, please search by postcode instead"
                 )
