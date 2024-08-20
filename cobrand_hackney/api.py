@@ -1,10 +1,15 @@
 import json
+import logging
 import math
 import sys
 
 import requests
 from django.conf import settings
 from requests_cache import CachedSession
+
+
+logger = logging.getLogger("noiseworks")
+
 
 api = settings.COBRAND_SETTINGS["address_api"]
 if "pytest" in sys.modules:
@@ -284,6 +289,7 @@ def geocode(q):
             "format": "jsonv2",
         },
     )
+    logger.debug(f"Attempted {url}\nGot: {r.text}\nStatus code: {r.status_code}.")
     r.raise_for_status()
     data = r.json()
     out = []
