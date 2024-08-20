@@ -1,5 +1,6 @@
 import re
 
+import requests
 from crispy_forms_gds.choices import Choice
 from django.contrib.gis import forms
 from phonenumber_field.formfields import PhoneNumberField
@@ -182,7 +183,12 @@ class WhereLocationForm(StepForm):
                 choices.append((addr["value"], addr["label"]))
             self.to_store = {"postcode_results": choices}
         else:
-            results = cobrand.api.geocode(search)
+            try:
+                results = cobrand.api.geocode(search)
+            except requests.HTTPError:
+                raise forms.ValidationError(
+                    "Sorry, address lookup by name is not working at the moment, please search by postcode instead"
+                )
             if len(results) > 1:
                 self.to_store = {"geocode_results": results}
             elif len(results) == 1:
