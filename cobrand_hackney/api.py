@@ -158,18 +158,24 @@ def wards():
     )
 
 
-def _wfs_lookup(url, typename, bbox):
-    r = requests.get(
-        f"https://map2.hackney.gov.uk/geoserver/{url}/ows",
-        params={
-            "SERVICE": "WFS",
-            "VERSION": "1.1.0",
-            "REQUEST": "GetFeature",
-            "typename": typename,
-            "outputformat": "json",
-            "srsname": "urn:ogc:def:crs:EPSG::27700",
-            "BBOX": bbox,
-        },
+def _wfs_lookup(url, typename, cql_filter=None, bbox=None):
+    params = {
+        "SERVICE": "WFS",
+        "VERSION": "1.1.0",
+        "REQUEST": "GetFeature",
+        "typename": typename,
+        "outputformat": "json",
+        "srsname": "urn:ogc:def:crs:EPSG::27700",
+    }
+    if cql_filter:
+        params["CQL_FILTER"] = cql_filter
+    if bbox:
+        params["BBOX"] = bbox
+    url = f"https://map2.hackney.gov.uk/geoserver/{url}/ows"
+
+    r = requests.get(url, params)
+    logger.debug(
+        f"Attempted WFS lookup at {url} with query parameters {params}\n Got: {r.text}\nStatus code: {r.status_code}."
     )
     try:
         return r.json()
@@ -180,7 +186,7 @@ def _wfs_lookup(url, typename, bbox):
 def _wfs_point_lookup(pt, url, typename):
     pt.transform(27700)
     bbox = f"{pt.x},{pt.y},{pt.x},{pt.y},urn:ogc:def:crs:EPSG:27700"
-    data = _wfs_lookup(url, typename, bbox)
+    data = _wfs_lookup(url, typename, bbox=bbox)
     name = False
     if data.get("features", []):
         name = data["features"][0]["properties"]
@@ -196,10 +202,8 @@ def in_an_estate(pt):
 
 
 def nearest_roads(pt):
-    filter = (
-        f"<Filter xmlns:gml=\"http://www.opengis.net/gml\"><DWithin><PropertyName>geom</PropertyName><gml:Point><gml:coordinates>{pt.x},{pt.y}</gml:coordinates></gml:Point><Distance units='m'>50</Distance></DWithin></Filter>",
-    )
-    data = _wfs_lookup("transport", "os_highways_street", filter)
+    cql_filter = f"DWITHIN(geom, POINT({pt.x} {pt.y}), 50, meters)"
+    data = _wfs_lookup("transport", "os_highways_street", cql_filter=cql_filter)
     data = _sorted_by_distance(pt, data.get("features", []))
     data = data[:2]
     data = map(lambda x: x["properties"]["name"].title() or "Unknown road", data)
