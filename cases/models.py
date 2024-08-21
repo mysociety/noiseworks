@@ -738,6 +738,12 @@ class Case(AbstractModel):
             - self.file_storage_used_bytes
         )
 
+    @property
+    def is_closed_or_merged_into_closed(self):
+        return self.closed or any(
+            [Case.objects.get(pk=m["id"]).closed for m in self.merged_into_list]
+        )
+
 
 class Complaint(AbstractModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="complaints")
