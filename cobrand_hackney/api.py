@@ -16,7 +16,7 @@ if "pytest" in sys.modules:
     session = requests.Session()
 else:  # pragma: no cover
     session = CachedSession(expire_after=86400)
-session.headers.update({"Authorization": api["key"]})
+session.headers.update({"Authorization": api["key"], "User-Agent": api["user_agent"]})
 
 
 def construct_address(address, include_postcode=False):

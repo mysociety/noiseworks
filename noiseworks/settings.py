@@ -244,6 +244,7 @@ COBRAND_SETTINGS = {
         "url": env.str("ADDRESS_API_URL", "https://example.com/"),
         "pageAttr": env.str("ADDRESS_API_PAGEATTR", "page_count"),
         "key": env.str("ADDRESS_API_KEY", "key"),
+        "user_agent": env.str("USER_AGENT", "noiseworks"),
     },
     "data_export": {
         "ACCESS_KEY_ID": env.str("EXPORT_KEY", None),
