@@ -158,7 +158,7 @@ def wards():
     )
 
 
-def _wfs_lookup(url, typename, bbox):
+def _wfs_lookup(url, typename, cql_filter):
     r = requests.get(
         f"https://map2.hackney.gov.uk/geoserver/{url}/ows",
         params={
@@ -168,7 +168,7 @@ def _wfs_lookup(url, typename, bbox):
             "typename": typename,
             "outputformat": "json",
             "srsname": "urn:ogc:def:crs:EPSG::27700",
-            "BBOX": bbox,
+            "CQL_FILTER": cql_filter,
         },
     )
     try:
@@ -196,10 +196,8 @@ def in_an_estate(pt):
 
 
 def nearest_roads(pt):
-    filter = (
-        f"<Filter xmlns:gml=\"http://www.opengis.net/gml\"><DWithin><PropertyName>geom</PropertyName><gml:Point><gml:coordinates>{pt.x},{pt.y}</gml:coordinates></gml:Point><Distance units='m'>50</Distance></DWithin></Filter>",
-    )
-    data = _wfs_lookup("transport", "os_highways_street", filter)
+    cql_filter = f"DWITHIN(geom, POINT({pt.x} {pt.y}), 50, meters)"
+    data = _wfs_lookup("transport", "os_highways_street", cql_filter)
     data = _sorted_by_distance(pt, data.get("features", []))
     data = data[:2]
     data = map(lambda x: x["properties"]["name"].title() or "Unknown road", data)
