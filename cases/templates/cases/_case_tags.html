@@ -3,7 +3,7 @@
   {% if case.priority %}
     <span class="nw-tag nw-tag--priority">Priority</span>
   {% endif %}
-  {% if case.closed %}
+  {% if case.is_closed_or_merged_into_closed %}
     <span class="nw-tag nw-tag--closed">Closed</span>
   {% endif %}
   {% if case.merged_into %}
