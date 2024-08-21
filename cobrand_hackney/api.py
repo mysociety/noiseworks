@@ -159,17 +159,20 @@ def wards():
 
 
 def _wfs_lookup(url, typename, cql_filter):
-    r = requests.get(
-        f"https://map2.hackney.gov.uk/geoserver/{url}/ows",
-        params={
-            "SERVICE": "WFS",
-            "VERSION": "1.1.0",
-            "REQUEST": "GetFeature",
-            "typename": typename,
-            "outputformat": "json",
-            "srsname": "urn:ogc:def:crs:EPSG::27700",
-            "CQL_FILTER": cql_filter,
-        },
+    params = {
+        "SERVICE": "WFS",
+        "VERSION": "1.1.0",
+        "REQUEST": "GetFeature",
+        "typename": typename,
+        "outputformat": "json",
+        "srsname": "urn:ogc:def:crs:EPSG::27700",
+        "CQL_FILTER": cql_filter,
+    }
+    url = f"https://map2.hackney.gov.uk/geoserver/{url}/ows"
+
+    r = requests.get(url, params)
+    logger.debug(
+        f"Attempted WFS lookup at {url} with query parameters {params}\n Got: {r.text}\nStatus code: {r.status_code}."
     )
     try:
         return r.json()
