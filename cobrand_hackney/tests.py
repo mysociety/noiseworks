@@ -41,7 +41,10 @@ def make_api_result():
             "statusCode": 200,
         }
         output["data"]["address"][0]["line3"] = line3
-        output["data"]["address"][0]["locality"] = locality
+        if locality is None:
+            del output["data"]["address"][0]["locality"]
+        else:
+            output["data"]["address"][0]["locality"] = locality
         return output
 
     return _make_api_result
@@ -109,6 +112,9 @@ def test_addresses_api_street(requests_mock, make_api_result):
     requests_mock.get(re.compile(r"street=test\+street"), json=make_api_result())
     assert len(addresses_for_string("test street")) == 1
 
+def test_addresses_api_missing_locality(requests_mock, make_api_result):
+    requests_mock.get(re.compile(r"postcode=SW1A1AA"), json=make_api_result(locality=None))
+    assert "error" in addresses_for_postcode("SW1A1AA")
 
 def test_wfs_server_down(requests_mock):
     requests_mock.get(re.compile("greenspaces/ows"), text="Error")
