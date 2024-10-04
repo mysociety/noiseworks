@@ -196,27 +196,21 @@ def test_closed_cases(admin_client):
     closed_case = Case.objects.create(
         closed=True,
     )
-    merged_into_closed_case = Case.objects.create(closed=False)
-    merged_into_closed_case.merge_into(closed_case)
     response = admin_client.get("/cases")
     assertContains(response, f"/cases/{open_case.id}")
     assertNotContains(response, f"/cases/{closed_case.id}")
-    assertNotContains(response, f"/cases/{merged_into_closed_case.id}")
 
     response = admin_client.get("/cases?closed=none")
     assertContains(response, f"/cases/{open_case.id}")
     assertNotContains(response, f"/cases/{closed_case.id}")
-    assertNotContains(response, f"/cases/{merged_into_closed_case.id}")
 
     response = admin_client.get("/cases?closed=include")
     assertContains(response, f"/cases/{open_case.id}")
     assertContains(response, f"/cases/{closed_case.id}")
-    assertContains(response, f"/cases/{merged_into_closed_case.id}")
 
     response = admin_client.get("/cases?closed=only")
     assertNotContains(response, f"/cases/{open_case.id}")
     assertContains(response, f"/cases/{closed_case.id}")
-    assertContains(response, f"/cases/{merged_into_closed_case.id}")
 
 
 def test_priority_only_cases(admin_client, case_1, case_2):

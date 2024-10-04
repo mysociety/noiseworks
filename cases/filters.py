@@ -132,14 +132,12 @@ class CaseFilter(django_filters.FilterSet):
 
     def closed_filter(self, queryset, name, value):
         if value == "none":
-            cs = [c for c in queryset if not c.is_closed_or_merged_into_closed]
+            return queryset.filter(closed=False)
         elif value == "include":
             return queryset
         elif value == "only":
-            cs = [c for c in queryset if c.is_closed_or_merged_into_closed]
-        else:
-            return queryset  # pragma: no cover - should not be reachable.
-        return queryset.filter(id__in=[c.id for c in cs])
+            return queryset.filter(closed=True)
+        return queryset  # pragma: no cover - should not be reachable.
 
     def complaints_filter(self, queryset, name, value):
         qs = Case.objects.annotate_total_complaints(queryset)
