@@ -91,6 +91,10 @@ class Command(BaseCommand):
             "where",
             "estate",
             "assigned_id",
+            "history_id",
+            "history_date",
+            "history_type",
+            "history_user_id",
         ],
         Case_perpetrators: ["case_id", "user_id"],
         MergeRecord: [
