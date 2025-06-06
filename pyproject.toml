@@ -28,7 +28,7 @@ flake8 = "^5.0.4"
 humanize = "^4.4.0"
 django-cleanup = "^6.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black = "^22.1"
 pytest-django = "^4.3.0"
 django-debug-toolbar = "^3.2.1"
