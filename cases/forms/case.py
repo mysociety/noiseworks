@@ -180,7 +180,11 @@ class BaseActionForm(GDSForm, forms.ModelForm):
 
     def clean_files(self):
         files = self.files.getlist("files")
-        upload_size_bytes = sum([f.size for f in files])
+        upload_size_bytes = 0
+        for f in files:
+            upload_size_bytes += f.size
+            if len(f.name) > 128:
+                raise ValidationError(f'Filename {f.name} too long, please rename')
         remaining_bytes = self.case.file_storage_remaining_bytes
         if upload_size_bytes > remaining_bytes:
             human_readable_remaining_space = naturalsize(remaining_bytes)

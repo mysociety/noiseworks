@@ -122,6 +122,25 @@ def test_delete_logged_fails_for_non_logging_staff(
     assert ActionFile.objects.filter(action=logged_action_1).count() == 1
 
 
+def test_cant_log_very_long_filenames(admin_client, case_1, action_types):
+    content = b"some content"
+
+    def _file(name):
+        return SimpleUploadedFile(name, content, content_type="text/plain")
+
+    response = admin_client.post(
+        f"/cases/{case_1.id}/log",
+        add_time_to_log_payload({
+            "notes": "notes",
+            "type": action_types[0].id,
+            "files": [ _file("x" * 129) ],
+        }),
+        follow=True,
+    )
+    assert response.status_code == HTTPStatus.OK
+    assertContains(response, "too long, please rename")
+
+
 def test_cant_log_files_bigger_than_remaining_space(admin_client, case_1, action_types):
     content = b"some content"
     file_size = len(content)
