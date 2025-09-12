@@ -6,17 +6,17 @@ authors = ["mySociety"]
 license = "AGPL"
 
 [tool.poetry.dependencies]
-python = "^3.7"
-Django = "^3.2.3"
-django-environ = "^0.9.0"
+python = "^3.9"
+Django = "^4.2.24"
+django-environ = "^0.12.0"
 psycopg2 = "^2.8.6"
 django-libsass = "^0.9"
-crispy-forms-gds = "^0.2.2"
-django-filter = "^22.1"
+crispy-forms-gds = "^0.3.2"
+django-filter = "^25.1"
 Authlib = "^1.0.1"
 requests = "^2.25.1"
 django-sesame = "^3.1"
-django-phonenumber-field = {extras = ["phonenumberslite"], version = "^6.3.0"}
+django-phonenumber-field = {extras = ["phonenumberslite"], version = "^8.1.0"}
 notifications-python-client = "^6.3.0"
 django-formtools = "^2.3"
 requests-cache = "<0.8"
@@ -26,7 +26,7 @@ smart-open = {extras = ["s3"], version = "^6.0.0"}
 isort = "^5.10.1"
 flake8 = "^5.0.4"
 humanize = "^4.4.0"
-django-cleanup = "^6.0.0"
+django-cleanup = "^9.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.1"
@@ -40,8 +40,7 @@ ptpython = "^3.0.20"
 DJANGO_SETTINGS_MODULE = "noiseworks.settings"
 python_files = ["tests.py", "test_*.py"]
 filterwarnings = [
-    "ignore:'[^']*' defines default_app_config = '[^']*'. Django now detects this configuration automatically. You can remove default_app_config.:PendingDeprecationWarning",
-    "ignore::django.utils.deprecation.RemovedInDjango40Warning",
+    "ignore::django.utils.deprecation.RemovedInDjango50Warning",
 ]
 
 [tool.coverage.run]

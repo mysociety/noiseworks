@@ -139,6 +139,24 @@ def combine_date_and_time(date, action_time):
     return make_aware(combined_unaware)
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = [single_file_clean(data, initial)]
+        return result
+
+
 class BaseActionForm(GDSForm, forms.ModelForm):
     in_the_past = forms.BooleanField(
         label="This happened in the past",
@@ -154,11 +172,7 @@ class BaseActionForm(GDSForm, forms.ModelForm):
         help_text="For example, 9pm or 2:30am – enter 12am for midnight",
         required=False,
     )
-    files = forms.FileField(
-        label="Attachments",
-        widget=forms.ClearableFileInput(attrs={"multiple": True}),
-        required=False,
-    )
+    files = MultipleFileField(label="Attachments", required=False)
 
     def __init__(self, *args, case=None, **kwargs):
         self.case = case

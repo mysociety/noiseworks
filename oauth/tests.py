@@ -1,14 +1,14 @@
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from authlib.jose import jwk
+from authlib.jose import JsonWebKey
 from authlib.oidc.core.grants.util import generate_id_token
 from django.contrib.auth import get_user_model
 
 from oauth.views import oauth
 
 # Replace the oauth value in views.py (XXX Do this a better way?)
-key = jwk.dumps("secret", "oct")
+key = JsonWebKey.import_key('secret', {'kty': 'oct'}).as_dict()
 del oauth._clients["google"]
 oauth.register(
     "google",

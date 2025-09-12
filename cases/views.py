@@ -886,7 +886,9 @@ class ReportingWizard(CaseWizard):
             if "where-map" in self.initial_dict:  # no-JS map click
                 return self.initial_dict["where-map"]
             data1 = self.storage.get_step_data("where-location") or {}
-            data2 = self.get_cleaned_data_for_step("where-geocode-results") or {}
+            data2 = {}
+            if 'where-geocode-results' in self.get_form_list():
+                data2 = self.get_cleaned_data_for_step("where-geocode-results") or {}
             initial = {
                 "radius": 30,
                 "zoom": 16,
