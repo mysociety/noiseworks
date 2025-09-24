@@ -96,11 +96,35 @@ expand_all_toggle();
 
 // Ajax updating of listing
 
+function disable_searching() {
+    var searchButton = document.querySelector('#cases-search-button');
+    var loadingSpinner = document.querySelector('#loading-spinner');
+    if (loadingSpinner) {
+        loadingSpinner.style.display = "";
+    }
+    if (searchButton) {
+        searchButton.disabled = true;
+    }
+}
+
+function enable_searching() {
+    var searchButton = document.querySelector('#cases-search-button');
+    var loadingSpinner = document.querySelector('#loading-spinner');
+    if (loadingSpinner) {
+        loadingSpinner.style.display = "none";
+    }
+    if (searchButton) {
+        searchButton.disabled = false;
+    }
+}
+
 function filter_update(e) {
     e.preventDefault();
+    disable_searching();
     var qs = new URLSearchParams(new FormData(this)).toString();
     var url = '/cases?ajax=1&' + qs;
     fetch(url).then(res => {
+        enable_searching();
         if (!res.ok) {
             location.href = url;
         }

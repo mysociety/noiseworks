@@ -2,6 +2,8 @@
   {% include "cases/_pagination.html" %}
 {% endif %}
 
+{% include 'icons/loading.html' %}
+
 <ul class="nw-case-list">
   {% for case in qs %}
     {% include "cases/_case_list_item.html" %}
