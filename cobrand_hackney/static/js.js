@@ -96,25 +96,17 @@ expand_all_toggle();
 
 // Ajax updating of listing
 
-function disable_searching() {
-    var searchButton = document.querySelector('#cases-search-button');
+function show_spinner() {
     var loadingSpinner = document.querySelector('#loading-spinner');
     if (loadingSpinner) {
         loadingSpinner.style.display = "";
     }
-    if (searchButton) {
-        searchButton.disabled = true;
-    }
 }
 
-function enable_searching() {
-    var searchButton = document.querySelector('#cases-search-button');
+function hide_spinner() {
     var loadingSpinner = document.querySelector('#loading-spinner');
     if (loadingSpinner) {
         loadingSpinner.style.display = "none";
-    }
-    if (searchButton) {
-        searchButton.disabled = false;
     }
 }
 
@@ -122,7 +114,7 @@ let controller;
 
 function filter_update(e) {
     e.preventDefault();
-    disable_searching();
+    show_spinner();
     if (controller) {
         controller.abort();
     }
@@ -130,7 +122,7 @@ function filter_update(e) {
     var url = '/cases?ajax=1&' + qs;
     controller = new AbortController();
     fetch(url, { signal: controller.signal }).then(res => {
-        enable_searching();
+        hide_spinner();
         if (!res.ok) {
             location.href = url;
         }
