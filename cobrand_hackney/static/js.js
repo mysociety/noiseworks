@@ -118,12 +118,18 @@ function enable_searching() {
     }
 }
 
+let controller;
+
 function filter_update(e) {
     e.preventDefault();
     disable_searching();
+    if (controller) {
+        controller.abort();
+    }
     var qs = new URLSearchParams(new FormData(this)).toString();
     var url = '/cases?ajax=1&' + qs;
-    fetch(url).then(res => {
+    controller = new AbortController();
+    fetch(url, { signal: controller.signal }).then(res => {
         enable_searching();
         if (!res.ok) {
             location.href = url;
@@ -132,7 +138,10 @@ function filter_update(e) {
     }).then(text => {
         document.querySelector('.js-case-list').innerHTML = text;
     }).catch(err => {
-        location.href = url;
+        if (err.name === 'AbortError') {
+        } else {
+            location.href = '/cases?' + qs;
+        }
     });
 }
 
