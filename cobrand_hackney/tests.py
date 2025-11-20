@@ -22,7 +22,9 @@ ADDRESS = {
     "town": "LONDON",
     "postcode": "E8 1DY",
     "UPRN": 10008315925,
-    "locality": "LOCALITY",
+    "locality": "",
+    "gazetteer": "GAZETTEER",
+    "hackneyGazetteerOutOfBoroughAddress": False,
     "ward": "Hackney Central",
     "longitude": -0.0575203934113829,
     "latitude": 51.5449668465297,
@@ -31,7 +33,7 @@ ADDRESS = {
 
 @pytest.fixture
 def make_api_result():
-    def _make_api_result(line3="LINE 3", locality="HACKNEY"):
+    def _make_api_result(line3="LINE 3", gazetteer="HACKNEY", outof=None):
         output = {
             "data": {
                 "address": [ADDRESS],
@@ -41,10 +43,12 @@ def make_api_result():
             "statusCode": 200,
         }
         output["data"]["address"][0]["line3"] = line3
-        if locality is None:
-            del output["data"]["address"][0]["locality"]
+        if outof is None:
+            if "hackneyGazetteerOutOfBoroughAddress" in output["data"]["address"][0]:
+                del output["data"]["address"][0]["hackneyGazetteerOutOfBoroughAddress"]
         else:
-            output["data"]["address"][0]["locality"] = locality
+            output["data"]["address"][0]["hackneyGazetteerOutOfBoroughAddress"] = outof
+        output["data"]["address"][0]["gazetteer"] = gazetteer
         return output
 
     return _make_api_result
@@ -57,7 +61,7 @@ def test_with_client(admin_client):
 
 def test_addresses_api_only_outside(requests_mock, make_api_result):
     requests_mock.get(
-        re.compile("postcode=E81DY"), json=make_api_result(locality="ELSEWHERE")
+        re.compile("postcode=E81DY"), json=make_api_result(gazetteer="National")
     )
     assert len(addresses_for_postcode("E81DY")) == 1
 
@@ -112,8 +116,8 @@ def test_addresses_api_street(requests_mock, make_api_result):
     requests_mock.get(re.compile(r"street=test\+street"), json=make_api_result())
     assert len(addresses_for_string("test street")) == 1
 
-def test_addresses_api_missing_locality(requests_mock, make_api_result):
-    requests_mock.get(re.compile(r"postcode=SW1A1AA"), json=make_api_result(locality=None))
+def test_addresses_api_outofborough(requests_mock, make_api_result):
+    requests_mock.get(re.compile(r"postcode=SW1A1AA"), json=make_api_result(outof=True))
     assert "error" in addresses_for_postcode("SW1A1AA")
 
 def test_wfs_server_down(requests_mock):

@@ -75,7 +75,9 @@ def _addresses_api(params):
             return {"error": "Sorry, did not recognise that postcode"}
         pages = data["data"].get(api["pageAttr"], 0)
         for address in data["data"]["address"]:
-            if address.get("locality") != "HACKNEY":
+            outofborough = address.get('hackneyGazetteerOutOfBoroughAddress')
+            gazetteer = address.get('gazetteer')
+            if gazetteer != 'Hackney' or outofborough:
                 outside = True
                 continue
             addresses.append(

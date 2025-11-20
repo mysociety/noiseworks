@@ -43,7 +43,7 @@ def test_edit_location(requests_mock, admin_client, form_defaults):
     requests_mock.get(re.compile("postcode=BAD"), json={})
     requests_mock.get(
         re.compile("postcode=SW1A1AA"),
-        json={"data": {"address": [{**ADDRESS, "locality": "WESTMINSTER"}]}},
+        json={"data": {"address": [{**ADDRESS, "gazetteer": "National"}]}},
     )
     requests_mock.get(
         re.compile("point/27700"),
