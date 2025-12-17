@@ -88,6 +88,7 @@ CRISPY_CLASS_CONVERTERS = {
     "textarea": "govuk-textarea lbh-textarea",
     "clearablefileinput": "govuk-file-upload lbh-file-upload",
     "searchwidget": "govuk-input lbh-input",
+    "regionalphonenumberwidget": "govuk-input lbh-input",
 }
 
 AUTH_USER_MODEL = "accounts.User"
