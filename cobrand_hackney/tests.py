@@ -23,8 +23,8 @@ ADDRESS = {
     "postcode": "E8 1DY",
     "UPRN": 10008315925,
     "locality": "",
-    "gazetteer": "GAZETTEER",
-    "hackneyGazetteerOutOfBoroughAddress": False,
+    "gazetteer": "Gazetteer",
+    "outOfBoroughAddress": False,
     "ward": "Hackney Central",
     "longitude": -0.0575203934113829,
     "latitude": 51.5449668465297,
@@ -33,7 +33,7 @@ ADDRESS = {
 
 @pytest.fixture
 def make_api_result():
-    def _make_api_result(line3="LINE 3", gazetteer="HACKNEY", outof=None):
+    def _make_api_result(line3="LINE 3", gazetteer="Hackney", outof=None):
         output = {
             "data": {
                 "address": [ADDRESS],
@@ -44,10 +44,10 @@ def make_api_result():
         }
         output["data"]["address"][0]["line3"] = line3
         if outof is None:
-            if "hackneyGazetteerOutOfBoroughAddress" in output["data"]["address"][0]:
-                del output["data"]["address"][0]["hackneyGazetteerOutOfBoroughAddress"]
+            if "outOfBoroughAddress" in output["data"]["address"][0]:
+                del output["data"]["address"][0]["outOfBoroughAddress"]
         else:
-            output["data"]["address"][0]["hackneyGazetteerOutOfBoroughAddress"] = outof
+            output["data"]["address"][0]["outOfBoroughAddress"] = outof
         output["data"]["address"][0]["gazetteer"] = gazetteer
         return output
 
