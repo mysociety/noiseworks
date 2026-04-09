@@ -13,7 +13,7 @@ psycopg2 = "^2.8.6"
 django-libsass = "^0.9"
 crispy-forms-gds = "^0.3.2"
 django-filter = "^25.1"
-Authlib = "^1.0.1"
+Authlib = "^1.6.9"
 requests = "^2.25.1"
 django-sesame = "^3.1"
 django-phonenumber-field = {extras = ["phonenumberslite"], version = "^8.1.0"}
