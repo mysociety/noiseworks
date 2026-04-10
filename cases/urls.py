@@ -85,4 +85,8 @@ urlpatterns = [
         views.notifications_list,
         name="notifications",
     ),
+    path("/search", views.case_search, name="case-search"),
+    path("/<int:pk>/export", views.case_export, name="case-export"),
+    path("/staff-redirect", views.staff_redirect, name="staff-redirect"),
+    path("/<int:pk>/notes-preview", views.case_notes_preview, name="case-notes-preview"),
 ]
