@@ -6,7 +6,7 @@ authors = ["mySociety"]
 license = "AGPL"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 Django = "^4.2.30"
 django-environ = "^0.12.1"
 psycopg2 = "^2.9.11"
