@@ -73,7 +73,7 @@ class PersonPickForm(StepForm):
                         ch.pop(i)
                         ch.insert(
                             0,
-                            (c[0], mark_safe(format_html(f"<strong>{c[1]}</strong>"))),
+                            (c[0], mark_safe(format_html("<strong>{}</strong>", c[1]))),
                         )
                 if not found:  # pragma: no cover - it will be there from init
                     ch.insert(0, (existing_user.id, str(existing_user)))
