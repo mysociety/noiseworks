@@ -339,7 +339,7 @@ def log_action(request, pk):
 @staff_member_required
 def edit_logged_action(request, case_pk, action_pk):
     case = get_object_or_404(Case, pk=case_pk)
-    action = get_object_or_404(Action, pk=action_pk)
+    action = get_object_or_404(Action, pk=action_pk, case_id=case_pk)
 
     if not action.can_edit(request.user):
         raise PermissionDenied
@@ -388,8 +388,8 @@ def action_file_delete(request, case_pk, action_pk, file_pk):
 @staff_member_required
 def action_file(request, case_pk, action_pk, file_pk):
     get_object_or_404(Case, pk=case_pk)
-    get_object_or_404(Action, pk=action_pk)
-    action_file = get_object_or_404(ActionFile, pk=file_pk).file
+    get_object_or_404(Action, pk=action_pk, case_id=case_pk)
+    action_file = get_object_or_404(ActionFile, pk=file_pk, action_id=action_pk).file
     return FileResponse(action_file)
 
 
@@ -483,10 +483,15 @@ def priority(request, pk):
 
 @login_required
 def complaint(request, pk, complaint):
-    if not request.user.is_staff and not settings.NON_STAFF_ACCESS:
-        return redirect("/")
+    if request.user.is_staff:
+        case = get_object_or_404(Case, pk=pk)
+    else:
+        if settings.NON_STAFF_ACCESS:
+            qs = Case.objects.by_complainant(request.user)
+            case = get_object_or_404(qs, pk=pk)
+        else:
+            return redirect("/")
 
-    case = get_object_or_404(Case, pk=pk)
     complaint = get_object_or_404(
         Complaint.objects.select_related("case"), pk=complaint
     )

@@ -145,3 +145,9 @@ def test_non_staff_complaint_view(client, normal_user, complaint, only_staff_acc
     client.force_login(normal_user)
     response = client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
     assert response.status_code == 302
+
+
+def test_non_staff_complaint_view_when_open(client, normal_user_2, complaint, non_staff_access):
+    client.force_login(normal_user_2)
+    response = client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
+    assert response.status_code == 404
