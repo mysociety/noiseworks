@@ -140,11 +140,11 @@ class CaseManager(models.Manager):
     def get_merged_cases(self, cases):
         """Given a list of Case IDs, returns a dict mapping other Cases that have
         been merged into those Cases."""
-        case_ids = map(lambda x: str(x.id), cases)
-        case_ids = ",".join(case_ids)
-        if not case_ids:
+        case_id_list = [c.id for c in cases]
+        if not case_id_list:
             return {}
 
+        placeholders = ",".join(["%s"] * len(case_id_list))
         query = self.raw(
             """WITH RECURSIVE cte AS (
                  SELECT
@@ -167,7 +167,8 @@ class CaseManager(models.Manager):
                FROM
                  cte
             """
-            % case_ids,
+            % placeholders,
+            params=case_id_list,
         )
 
         merge_map = {c.id: c.id for c in cases}
@@ -178,11 +179,11 @@ class CaseManager(models.Manager):
     def get_merged_into_cases(self, cases):
         """Given a list of Case IDs, returns a dict mapping those Cases into
         ones they have been merged into."""
-        case_ids = map(lambda x: str(x.id), cases)
-        case_ids = ",".join(case_ids)
-        if not case_ids:
+        case_id_list = [c.id for c in cases]
+        if not case_id_list:
             return {}
 
+        placeholders = ",".join(["%s"] * len(case_id_list))
         query = self.raw(
             """WITH RECURSIVE cte AS (
                  SELECT
@@ -228,7 +229,8 @@ class CaseManager(models.Manager):
                FROM
                  cte
             """
-            % case_ids,
+            % placeholders,
+            params=case_id_list,
         )
 
         merge_map = {c.id: [] for c in cases}
