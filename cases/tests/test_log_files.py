@@ -1,17 +1,17 @@
-from http import HTTPStatus
 import tempfile
+from http import HTTPStatus
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from humanize import naturalsize
 from pytest_django.asserts import assertContains, assertNotContains
 
-from .conftest import add_time_to_log_payload
 from ..models import (
     Action,
     ActionFile,
     CaseSettingsSingleton,
 )
+from .conftest import add_time_to_log_payload
 
 pytestmark = pytest.mark.django_db
 TEMPDIR = tempfile.TemporaryDirectory().name
@@ -133,7 +133,7 @@ def test_cant_log_very_long_filenames(admin_client, case_1, action_types):
         add_time_to_log_payload({
             "notes": "notes",
             "type": action_types[0].id,
-            "files": [ _file("x" * 129) ],
+            "files": [_file("x" * 129)],
         }),
         follow=True,
     )

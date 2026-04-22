@@ -234,4 +234,4 @@ def test_edit_review_date(admin_client):
         },
     )
     case.refresh_from_db()
-    assert case.review_date == None
+    assert case.review_date is None

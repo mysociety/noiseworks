@@ -14,7 +14,7 @@ from noiseworks.base32 import bytes_to_base32
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_email, send_sms
 
-from .forms import CodeForm, EditStaffForm, EditUserForm, StaffSettingsForm, SignInForm
+from .forms import CodeForm, EditStaffForm, EditUserForm, SignInForm, StaffSettingsForm
 
 User = get_user_model()
 

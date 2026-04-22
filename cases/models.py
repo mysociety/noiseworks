@@ -1,5 +1,7 @@
-import requests
 import math
+from functools import lru_cache
+
+import requests
 from django.conf import settings
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
@@ -8,7 +10,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property, classproperty
 from django.utils.html import format_html, mark_safe
-from functools import lru_cache
 from humanize import naturalsize
 from simple_history.models import HistoricalRecords
 

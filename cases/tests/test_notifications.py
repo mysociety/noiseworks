@@ -1,9 +1,10 @@
-import pytest
 from http import HTTPStatus
 
-from accounts.models import User
+import pytest
 from django.contrib.auth.models import Permission
 from pytest_django.asserts import assertContains
+
+from accounts.models import User
 
 from ..models import ActionType, Case, Notification
 
@@ -463,7 +464,7 @@ def test_case_recurrence_notifications(
 
     client.force_login(staff_user_2)
     client.get(f"/cases/{case.id}/complaint/add", follow=True)
-    response = client.post(
+    client.post(
         f"/cases/{case.id}/complaint/add/isitnow",
         {
             f"recurrence_wizard_{case.id}-current_step": "isitnow",
@@ -471,7 +472,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    response = client.post(
+    client.post(
         f"/cases/{case.id}/complaint/add/isnow",
         {
             f"recurrence_wizard_{case.id}-current_step": "isnow",
@@ -480,7 +481,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    response = client.post(
+    client.post(
         f"/cases/{case.id}/complaint/add/rooms",
         {
             f"recurrence_wizard_{case.id}-current_step": "rooms",
@@ -488,7 +489,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    resonse = client.post(
+    client.post(
         f"/cases/{case.id}/complaint/add/describe",
         {
             f"recurrence_wizard_{case.id}-current_step": "describe",
@@ -496,7 +497,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    response = client.post(
+    client.post(
         f"/cases/{case.id}/complaint/add/effect",
         {
             f"recurrence_wizard_{case.id}-current_step": "effect",
@@ -504,7 +505,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    response = client.post(
+    client.post(
         f"/cases/{case.id}/complaint/add/user_search",
         {
             f"recurrence_wizard_{case.id}-current_step": "user_search",
@@ -512,7 +513,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    response = client.post(
+    client.post(
         f"/cases/{case.id}/complaint/add/user_pick",
         {
             f"recurrence_wizard_{case.id}-current_step": "user_pick",

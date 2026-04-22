@@ -20,7 +20,6 @@ from django.utils.decorators import method_decorator
 from formtools.wizard.views import NamedUrlSessionWizardView
 from humanize import naturalsize
 
-
 from accounts.models import User
 from noiseworks import cobrand
 from noiseworks.decorators import staff_member_required
@@ -231,7 +230,7 @@ def edit_location(request, pk):
 @permission_required("cases.change_review_date")
 def edit_review_date(request, pk):
     case = get_object_or_404(Case, pk=pk)
-    has_review_date = case.review_date != None
+    has_review_date = case.review_date is not None
     form = forms.ReviewDateForm(
         request.POST or None,
         instance=case,
