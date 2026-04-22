@@ -9,7 +9,7 @@ jobs:
 
     services:
       postgres:
-        image: postgis/postgis:13-3.1
+        image: postgis/postgis:15-3.5
         env:
           POSTGRES_PASSWORD: password
         ports:
@@ -27,7 +27,7 @@ jobs:
       CFLAGS: "-O0"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v5
 
     - name: Install system packages
       run: |
@@ -35,9 +35,9 @@ jobs:
         sudo apt-get install binutils libproj-dev gdal-bin
 
     - name: Set up python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
-        python-version: 3.11
+        python-version: 3.13
 
     - name: Load cached venv
       uses: actions/cache@v4
