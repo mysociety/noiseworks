@@ -116,9 +116,11 @@ def test_addresses_api_street(requests_mock, make_api_result):
     requests_mock.get(re.compile(r"street=test\+street"), json=make_api_result())
     assert len(addresses_for_string("test street")) == 1
 
+
 def test_addresses_api_outofborough(requests_mock, make_api_result):
     requests_mock.get(re.compile(r"postcode=SW1A1AA"), json=make_api_result(outof=True))
     assert "error" in addresses_for_postcode("SW1A1AA")
+
 
 def test_wfs_server_down(requests_mock):
     requests_mock.get(re.compile("greenspaces/ows"), text="Error")

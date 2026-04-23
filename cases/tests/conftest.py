@@ -1,7 +1,7 @@
 import re
 
 import pytest
-from django.utils.timezone import localtime, make_aware, now
+from django.utils.timezone import localtime, now
 
 from accounts.models import User
 
