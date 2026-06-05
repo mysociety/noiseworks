@@ -88,9 +88,17 @@ document.querySelectorAll('.govuk-tabs__tab').forEach(function(tab) {
     map.zoomControl.setPosition('topright');
     map.attributionControl.setPrefix('');
 
-    var layer = L.tileLayer('https://tilma.mysociety.org/os/hackney/Road_3857/{z}/{x}/{y}.png', {
-        maxZoom: 19
-    });
+    var layer;
+    if (nw.MAP_TYPE === 'osm') {
+        layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        });
+    } else {
+        layer = L.tileLayer('https://tilma.mysociety.org/os/hackney/Road_3857/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        });
+    }
     layer.addTo(map);
 
     map.on('click', function(e) {
