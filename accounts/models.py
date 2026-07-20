@@ -123,7 +123,7 @@ class User(AbstractUser):
 
     def __str__(self):
         name = self.get_full_name() or self.email or self.username
-        if self.address:
+        if not self.is_staff and self.address:
             name += f", {self.address}"
         return name
 
