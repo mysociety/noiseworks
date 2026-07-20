@@ -49,6 +49,10 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
+# Override the 'same-origin' default
+# See https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECURE_REFERRER_POLICY
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
 INTERNAL_IPS = ["127.0.0.1"]
 
 # Application definition
