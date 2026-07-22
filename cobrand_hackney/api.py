@@ -7,7 +7,6 @@ import requests
 from django.conf import settings
 from requests_cache import CachedSession
 
-
 logger = logging.getLogger("noiseworks")
 
 

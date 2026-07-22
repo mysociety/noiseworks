@@ -8,7 +8,6 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.core.management import CommandError, call_command
 
-
 from cases.management.commands.export_data import client
 
 from ..models import Action, ActionFile, Case, Notification, User

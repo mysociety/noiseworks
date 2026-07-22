@@ -1,8 +1,9 @@
-import pytest
 from datetime import timedelta
-from django.contrib.gis.geos import Point
 from functools import partial
 from http import HTTPStatus
+
+import pytest
+from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
