@@ -138,15 +138,17 @@ def test_close_cases_command(call_params, case):
     case4 = Case.objects.create(kind="diy", ward="E05009373")
     case3.merge_into(case4)
     case3.save()
-    for c in (case, case2, case3, case4):
-        c.created = "2021-01-01T12:00:00Z"
-        c.save()
+    Case.objects.filter(id__in=(case.id, case2.id, case4.id)).update(
+        where="business", modified="2021-01-01T12:00:00Z"
+    )
     call_command("close_cases", days=28, verbosity=0)
     case.refresh_from_db()
     assert not case.closed
     call_command("close_cases", days=28, commit=True)
     case.refresh_from_db()
     assert case.closed
+    case2.refresh_from_db()
+    assert case2.closed
     case3.refresh_from_db()
     assert not case3.closed
     case4.refresh_from_db()

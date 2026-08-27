@@ -245,6 +245,41 @@ class CaseManager(models.Manager):
     def annotate_total_complaints(self, qs):
         return qs.annotate(total_complaints=Count("complaints"))
 
+    def open_last_modified_including_mergees_before(self, cutoff):
+        """Work out the latest modified of a case along with all the cases
+        merged into it."""
+        query = self.raw(
+            """WITH RECURSIVE cte AS (
+                 SELECT
+                   ARRAY[c.id] AS path, c.id, c.modified, c.merged_into_id
+                 FROM
+                   cases_case c
+                 WHERE
+                   c.merged_into_id IS NULL
+                   AND NOT c.closed
+                 UNION
+                 SELECT
+                   array_append(cte.path, c.id) AS path, c.id, c.modified, cte.merged_into_id
+                 FROM
+                   cases_case c
+                   JOIN cte ON cte.id = c.merged_into_id
+               ),
+               modifieds AS (
+                 SELECT
+                   path[1] AS id, max(modified) AS modified
+                 FROM
+                   cte
+                 GROUP BY
+                   path[1]
+               )
+               SELECT id
+               FROM modifieds
+               WHERE modified < %s
+            """,
+            params=[cutoff],
+        )
+        return query
+
 
 class Case(AbstractModel):
     class LastUpdateTypes(models.TextChoices):

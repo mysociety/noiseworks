@@ -2,7 +2,6 @@ import datetime
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from django.db.models import Count
 from django.utils import timezone
 
 from cases.models import Action, ActionType, Case
@@ -25,13 +24,11 @@ class Command(BaseCommand):
         notes = "Automatically closed"
         cutoff = timezone.now() - datetime.timedelta(days=options["days"])
 
-        cases = Case.objects.annotate(Count("complaints"))
-        # Ignore any that have been merged into another case
-        cases = cases.exclude(merged_into__isnull=False)
-        # Ignore any that have had cases merged into them
-        cases = cases.exclude(mergee_records__isnull=False)
-        cases = cases.filter(complaints__count__lte=1, created__lt=cutoff, closed=False)
-        for case in cases:
+        query = Case.objects.open_last_modified_including_mergees_before(cutoff)
+        for entry in query:
+            case = Case.objects.get(id=entry.id)
+            if case.where != "business":
+                continue
             with transaction.atomic():
                 case.closed = True
                 # Creating the action will save the case via a signal
