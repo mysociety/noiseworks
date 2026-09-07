@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# abort on any errors
+set -e
+
+# treat unset variables as an error
+set -u
+
+# whole pipe fails if one thing in the pipe fails
+set -o pipefail
+
+# check that we are in the expected directory
+cd `dirname $0`/..
+
+source .env
+if [ "$DEVENV" == "docker" ] ; then
+    PREFIX=""
+else
+    PREFIX="poetry run"
+fi
+
+echo "==> Check imports are sorted..."
+
+$PREFIX isort . --check-only
+
+echo "==> Check format..."
+
+$PREFIX black . --check

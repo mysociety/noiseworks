@@ -88,7 +88,7 @@ Run `./manage.py shell -i python` to just use the normal python shell.
 
 ### Contributing
 
-* `black` is run for code tidying: `poetry run black .`
+* Run `script/format` for tidying code.
 
 * Static files are handled by django-compressor with django-libsass. SCSS files
   are automatically compiled and dealt with.
