@@ -55,6 +55,11 @@ jobs:
         poetry install --no-interaction --no-root
         (cd cobrand_hackney && npm install)
 
+    - name: Check format
+      run: |
+        isort . --check-only
+        black . --check
+
     - name: Set up database
       run: |
         createdb noiseworks
