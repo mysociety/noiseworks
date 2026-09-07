@@ -1,13 +1,13 @@
-from datetime import datetime
 import re
+from datetime import datetime
 
 from crispy_forms_gds.choices import Choice
 from crispy_forms_gds.fields import DateInputField
-from crispy_forms_gds.layout import Fieldset, Layout, HTML
+from crispy_forms_gds.layout import HTML, Fieldset, Layout
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.timezone import make_aware, now
-from django.core.exceptions import ValidationError
 from humanize import naturalsize
 
 from accounts.models import User
@@ -184,7 +184,7 @@ class BaseActionForm(GDSForm, forms.ModelForm):
         for f in files:
             upload_size_bytes += f.size
             if len(f.name) > 128:
-                raise ValidationError(f'Filename {f.name} too long, please rename')
+                raise ValidationError(f"Filename {f.name} too long, please rename")
         remaining_bytes = self.case.file_storage_remaining_bytes
         if upload_size_bytes > remaining_bytes:
             human_readable_remaining_space = naturalsize(remaining_bytes)

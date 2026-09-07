@@ -15,7 +15,6 @@ from cases.models import Case
 from .forms import CodeForm
 from .models import User
 
-
 pytestmark = pytest.mark.django_db
 
 

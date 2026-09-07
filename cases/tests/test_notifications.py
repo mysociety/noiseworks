@@ -1,9 +1,10 @@
-import pytest
 from http import HTTPStatus
 
-from accounts.models import User
+import pytest
 from django.contrib.auth.models import Permission
 from pytest_django.asserts import assertContains
+
+from accounts.models import User
 
 from ..models import ActionType, Case, Notification
 

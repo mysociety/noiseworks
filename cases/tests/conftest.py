@@ -5,11 +5,7 @@ from django.utils.timezone import localtime, make_aware, now
 
 from accounts.models import User
 
-from ..models import (
-    Action,
-    ActionType,
-    Case,
-)
+from ..models import Action, ActionType, Case
 
 ADDRESS = {
     "line1": "LINE 1",

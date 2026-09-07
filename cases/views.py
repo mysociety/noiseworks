@@ -20,7 +20,6 @@ from django.utils.decorators import method_decorator
 from formtools.wizard.views import NamedUrlSessionWizardView
 from humanize import naturalsize
 
-
 from accounts.models import User
 from noiseworks import cobrand
 from noiseworks.decorators import staff_member_required
@@ -659,9 +658,9 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
             )
             user.update_address_and_estate()
             address = user.address_display
-            kwargs[
-                "reporting_user"
-            ] = f"{data['first_name']} {data['last_name']}, {address}, {data['email']}, {data['phone']}"
+            kwargs["reporting_user"] = (
+                f"{data['first_name']} {data['last_name']}, {address}, {data['email']}, {data['phone']}"
+            )
 
         if self.steps.current == "summary":
             start, end = compile_dates(data)
@@ -840,9 +839,9 @@ class ReportingWizard(CaseWizard):
                 address = user.address_display
                 email = data.get("email") or "No email"
                 phone = data.get("phone") or "No phone"
-                kwargs[
-                    "reporting_user"
-                ] = f"{data['first_name']} {data['last_name']}, {address}, {email}, {phone}"
+                kwargs["reporting_user"] = (
+                    f"{data['first_name']} {data['last_name']}, {address}, {email}, {phone}"
+                )
 
         return super().get_context_data(**kwargs)
 
@@ -892,7 +891,7 @@ class ReportingWizard(CaseWizard):
                 return self.initial_dict["where-map"]
             data1 = self.storage.get_step_data("where-location") or {}
             data2 = {}
-            if 'where-geocode-results' in self.get_form_list():
+            if "where-geocode-results" in self.get_form_list():
                 data2 = self.get_cleaned_data_for_step("where-geocode-results") or {}
             initial = {
                 "radius": 30,

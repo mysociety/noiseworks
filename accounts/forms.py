@@ -122,7 +122,11 @@ class UserForm(GDSForm, forms.ModelForm):
         if email and email_verified:
             user = User.objects.filter(email=email, email_verified=True)
             user = user.exclude(pk=self.instance.pk)
-            if user.exists() and not self.instance.id and isinstance(self, EditStaffForm):
+            if (
+                user.exists()
+                and not self.instance.id
+                and isinstance(self, EditStaffForm)
+            ):
                 # Allow editing in add form to upgrade to staff
                 self.instance = user[0]
             elif user.exists():

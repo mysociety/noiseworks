@@ -7,7 +7,6 @@ import requests
 from django.conf import settings
 from requests_cache import CachedSession
 
-
 logger = logging.getLogger("noiseworks")
 
 
@@ -75,9 +74,9 @@ def _addresses_api(params):
             return {"error": "Sorry, did not recognise that postcode"}
         pages = data["data"].get(api["pageAttr"], 0)
         for address in data["data"]["address"]:
-            outofborough = address.get('outOfBoroughAddress')
-            gazetteer = address.get('gazetteer')
-            if gazetteer != 'Hackney' or outofborough:
+            outofborough = address.get("outOfBoroughAddress")
+            gazetteer = address.get("gazetteer")
+            if gazetteer != "Hackney" or outofborough:
                 outside = True
                 continue
             addresses.append(
@@ -274,9 +273,7 @@ def _distanceToLine(pt, start, end):
     if dx == 0 and dy == 0:
         along = 0
     else:
-        along = ((dx * (pt.x - start[0])) + (dy * (pt.y - start[1]))) / (
-            dx**2 + dy**2
-        )
+        along = ((dx * (pt.x - start[0])) + (dy * (pt.y - start[1]))) / (dx**2 + dy**2)
     along = max(0, min(1, along))
     fx = start[0] + along * dx
     fy = start[1] + along * dy

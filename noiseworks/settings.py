@@ -192,7 +192,7 @@ TIME_ZONE = "Europe/London"
 
 USE_I18N = True
 
-FORMAT_MODULE_PATH = 'noiseworks.formats'
+FORMAT_MODULE_PATH = "noiseworks.formats"
 
 FILTERS_EMPTY_CHOICE_LABEL = "Any"
 

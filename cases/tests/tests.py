@@ -1,6 +1,6 @@
 import datetime
-from http import HTTPStatus
 import re
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -11,16 +11,10 @@ from django.urls import reverse
 from django.utils.timezone import make_aware, now
 from pytest_django.asserts import assertContains, assertNotContains
 
-from .conftest import add_time_to_log_payload
 from ..forms import LogActionForm
-from ..models import (
-    Action,
-    ActionType,
-    Case,
-    CaseSettingsSingleton,
-    Complaint,
-)
+from ..models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
 from ..views import compile_dates
+from .conftest import add_time_to_log_payload
 
 pytestmark = pytest.mark.django_db
 

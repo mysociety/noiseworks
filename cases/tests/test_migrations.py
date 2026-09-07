@@ -1,6 +1,8 @@
-import pytest
 from importlib import import_module
+
+import pytest
 from django.utils import timezone
+
 from ..models import Action, ActionType, Case, Complaint, User
 
 # We can't use the standard import expression because migrations start
