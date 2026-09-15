@@ -6,7 +6,7 @@ from django.db.models import Q
 from phonenumber_field.phonenumber import to_python
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 
 from .forms import FilterForm
 from .models import Case
@@ -14,10 +14,10 @@ from .widgets import SearchWidget
 
 
 def get_wards():
-    wards = cobrand.api.wards()
+    wards = get_cobrand().api.wards()
     wards = {ward["gss"]: ward["name"] for ward in wards}
     wards["outside"] = "Outside Hackney"
-    for group in cobrand.api.ward_groups():
+    for group in get_cobrand().api.ward_groups():
         wards[group["id"]] = group["name"]
     return wards
 
@@ -169,7 +169,7 @@ class CaseFilter(django_filters.FilterSet):
 
     def ward_filter(self, queryset, name, value):
         for i, v in list(enumerate(value)):
-            for group in cobrand.api.ward_groups():
+            for group in get_cobrand().api.ward_groups():
                 if group["id"] == v:
                     value[i : i + 1] = group["wards"]
         return queryset.filter(ward__in=value)

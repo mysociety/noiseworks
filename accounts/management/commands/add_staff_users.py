@@ -4,11 +4,11 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand, CommandError
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 
 
 def ward_name_to_id(ward):
-    wards = cobrand.api.wards()
+    wards = get_cobrand().api.wards()
     wards = {ward["name"]: ward["gss"] for ward in wards}
     try:
         return wards[ward]

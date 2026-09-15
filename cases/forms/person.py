@@ -5,7 +5,7 @@ from django.utils.html import format_html, mark_safe
 from phonenumber_field.formfields import PhoneNumberField
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.forms import StepForm
 
 
@@ -85,7 +85,7 @@ class PersonPickForm(StepForm):
         pc = self.cleaned_data["postcode"]
         if not pc:
             return pc
-        addresses = cobrand.api.addresses_for_postcode(pc)
+        addresses = get_cobrand().api.addresses_for_postcode(pc)
         if "error" in addresses or not len(addresses.get("addresses", [])):
             raise forms.ValidationError("We could not recognise that postcode")
         choices = []

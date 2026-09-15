@@ -9,7 +9,7 @@ from django.utils.functional import cached_property
 from phonenumber_field.modelfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
 
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.message import send_email
 
 
@@ -134,13 +134,13 @@ class User(AbstractUser):
 
     def update_address_and_estate(self):
         if self.uprn and not (self.address and self.estate):
-            addr = cobrand.api.address_for_uprn(self.uprn)
+            addr = get_cobrand().api.address_for_uprn(self.uprn)
             if addr["string"]:
                 if not self.address:
                     self.address = addr["string"]
                 if not self.estate:
                     point = Point(addr["longitude"], addr["latitude"], srid=4326)
-                    estate = cobrand.api.in_an_estate(point)
+                    estate = get_cobrand().api.in_an_estate(point)
                     self.estate = "y" if estate else "n"
 
     def get_best_time_display(self):
@@ -169,7 +169,7 @@ class User(AbstractUser):
         if not wards and not principal_wards:
             return "No wards"
 
-        ward_mappings = cobrand.api.wards()
+        ward_mappings = get_cobrand().api.wards()
         ward_gss_to_name = {w["gss"]: w["name"] for w in ward_mappings}
 
         ward_principal_names = [

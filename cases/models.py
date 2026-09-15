@@ -14,12 +14,12 @@ from humanize import naturalsize
 from simple_history.models import HistoricalRecords
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.current_user import get_current_user
 
 
 def ward_name_to_id(ward):
-    wards = cobrand.api.wards()
+    wards = get_cobrand().api.wards()
     wards = {ward["name"]: ward["gss"] for ward in wards}
     return wards.get(ward, "outside")
 
@@ -407,7 +407,7 @@ class Case(AbstractModel):
         if self.location_cache:
             pass
         elif self.uprn:
-            addr = cobrand.api.address_for_uprn(self.uprn)
+            addr = get_cobrand().api.address_for_uprn(self.uprn)
             if addr["string"]:
                 self.location_cache = addr["string"]
                 self.point = Point(addr["longitude"], addr["latitude"], srid=4326)
@@ -424,11 +424,11 @@ class Case(AbstractModel):
                         ward = area["codes"]["gss"]
                 self.ward = ward
 
-            park = cobrand.api.in_a_park(self.point)
+            park = get_cobrand().api.in_a_park(self.point)
             if park:
                 desc = f"a point in {park['name']}"
             else:
-                roads = cobrand.api.nearest_roads(self.point)
+                roads = get_cobrand().api.nearest_roads(self.point)
                 if roads:
                     desc = f"a point near {roads}"
                 else:
@@ -438,7 +438,7 @@ class Case(AbstractModel):
         if self.estate:
             pass
         elif self.point:
-            estate = cobrand.api.in_an_estate(self.point)
+            estate = get_cobrand().api.in_an_estate(self.point)
             self.estate = "y" if estate else "n"
 
     @property
@@ -458,7 +458,7 @@ class Case(AbstractModel):
         return f"{p[1]:.6f},{p[0]:.6f}"
 
     def get_ward_display(self):
-        wards = cobrand.api.wards()
+        wards = get_cobrand().api.wards()
         wards = {ward["gss"]: ward["name"] for ward in wards}
         wards["outside"] = "Outside Hackney"
         return wards.get(self.ward, self.ward)

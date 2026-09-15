@@ -11,7 +11,7 @@ from django.utils.timezone import make_aware, now
 from humanize import naturalsize
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.forms import GDSForm
 
 from ..models import Action, ActionType, Case
@@ -495,7 +495,7 @@ class LocationForm(GDSForm, forms.ModelForm):
         widgets = {"point": forms.HiddenInput, "uprn": forms.HiddenInput}
 
     def address_choices(self, pc):
-        addresses = cobrand.api.addresses_for_postcode(pc)
+        addresses = get_cobrand().api.addresses_for_postcode(pc)
         if "error" in addresses:
             raise ValidationError("We could not recognise that postcode")
         choices = []

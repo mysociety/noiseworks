@@ -21,7 +21,7 @@ from formtools.wizard.views import NamedUrlSessionWizardView
 from humanize import naturalsize
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_email, send_sms
 
@@ -1108,7 +1108,7 @@ class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
 def send_emails(request, complaint, template):
     case = complaint.case
     subject = f"Noise {template}: {case.location_display}"
-    staff_dest = cobrand.email.case_destination(case)
+    staff_dest = get_cobrand().email.case_destination(case)
     url = request.build_absolute_uri(case.get_absolute_url())
     complainant = complaint.complainant
     send_email(

@@ -6,7 +6,7 @@ from phonenumber_field.formfields import PhoneNumberField
 from requests.exceptions import RequestException
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.forms import GDSForm, StepForm
 
 from ..models import Case
@@ -86,7 +86,7 @@ class PostcodeForm(StepForm):
 
     def clean_postcode(self):
         pc = self.cleaned_data["postcode"]
-        addresses = cobrand.api.addresses_for_postcode(pc)
+        addresses = get_cobrand().api.addresses_for_postcode(pc)
         if "error" in addresses or not len(addresses.get("addresses", [])):
             raise forms.ValidationError("We could not recognise that postcode")
         choices = []
@@ -175,7 +175,7 @@ class WhereLocationForm(StepForm):
 
         canon_postcode = canonical_postcode(search)
         if canon_postcode:
-            addresses = cobrand.api.addresses_for_postcode(canon_postcode)
+            addresses = get_cobrand().api.addresses_for_postcode(canon_postcode)
             if "error" in addresses or not len(addresses.get("addresses", [])):
                 raise forms.ValidationError("We could not recognise that postcode")
             choices = []
@@ -184,7 +184,7 @@ class WhereLocationForm(StepForm):
             self.to_store = {"postcode_results": choices}
         else:
             try:
-                results = cobrand.api.geocode(search)
+                results = get_cobrand().api.geocode(search)
             except RequestException:
                 raise forms.ValidationError(
                     "Sorry, address lookup by name is not working at the moment, please search by postcode instead"
