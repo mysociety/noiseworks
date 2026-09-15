@@ -68,6 +68,9 @@ jobs:
     - name: Create storage folder
       run: mkdir storage
 
+    - name: Check types
+      run: mypy
+
     - name: Run tests
       env:
         SECRET_KEY: 'secret'
