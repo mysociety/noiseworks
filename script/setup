@@ -9,7 +9,7 @@ cd `dirname $0`/..
 # This should contain commmands to reset the environment to a default state.
 # Some possible examples:
 # rm .env
-# (cd cobrand_hackney && rm -fr node_modules)
+# (cd cobrands/hackney && rm -fr node_modules)
 
 # Run the update script
 ./script/update

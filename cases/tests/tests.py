@@ -21,7 +21,7 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def case_other_uprn(db):
-    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
+    with patch("cobrands.hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {
             "string": "Flat 4, 2 Example Road, E8 2DP",
             "ward": "Hackney Central",
@@ -35,7 +35,7 @@ def case_other_uprn(db):
 
 @pytest.fixture
 def case_bad_uprn(db):
-    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
+    with patch("cobrands.hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {"string": "", "ward": ""}
         yield Case.objects.create(uprn="bad_uprn", kind="diy", estate="?")
 

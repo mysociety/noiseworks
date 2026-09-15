@@ -326,7 +326,7 @@ def test_edit_redirect_back_to_case(admin_client, staff_user):
 
 
 def test_address_display_uprn():
-    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
+    with patch("cobrands.hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {
             "string": "Flat 4, 2 Example Road, E8 2DP",
             "ward": "Hackney Central",
@@ -340,7 +340,7 @@ def test_address_display_uprn():
 
 
 def test_address_display_uprn_no_data():
-    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
+    with patch("cobrands.hackney.api.address_for_uprn") as address_for_uprn:
         address_for_uprn.return_value = {"string": "", "ward": ""}
         user = User.objects.create(first_name="Norma", last_name="User", uprn=10001)
         assert user.address_display == 10001

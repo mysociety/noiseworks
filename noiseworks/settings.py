@@ -77,7 +77,7 @@ INSTALLED_APPS = [
     "accounts",
     "oauth",
     "cases",
-    COBRAND,
+    f"cobrands.{COBRAND}",
     "crispy_forms_gds",
     "django_cleanup.apps.CleanupConfig",
 ]
@@ -224,7 +224,7 @@ LIBSASS_CUSTOM_FUNCTIONS = {
 }
 LIBSASS_ADDITIONAL_INCLUDE_PATHS = [
     "/opt/npmsetup",  # XXX For docker-compose
-    str(BASE_DIR / COBRAND),
+    str(BASE_DIR / "cobrands" / COBRAND),
 ]
 
 # Default primary key field type
