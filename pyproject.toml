@@ -43,6 +43,7 @@ python_files = ["tests.py", "test_*.py"]
 filterwarnings = [
     "ignore::django.utils.deprecation.RemovedInDjango50Warning",
 ]
+markers = ["cobrand(cls): install this cobrand class for the test"]
 
 [tool.coverage.run]
 omit = [

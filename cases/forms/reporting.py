@@ -6,11 +6,13 @@ from phonenumber_field.formfields import PhoneNumberField
 from requests.exceptions import RequestException
 
 from accounts.models import User
+from cobrands.interface import PlaceLookupError
 from cobrands.registry import get_cobrand
 from noiseworks.forms import GDSForm, StepForm
 
 from ..models import Case
 from ..widgets import MapWidget
+from .common import get_address_choices_for_postcode
 
 
 class ExistingForm(GDSForm, forms.Form):
@@ -86,12 +88,7 @@ class PostcodeForm(StepForm):
 
     def clean_postcode(self):
         pc = self.cleaned_data["postcode"]
-        addresses = get_cobrand().api.addresses_for_postcode(pc)
-        if "error" in addresses or not len(addresses.get("addresses", [])):
-            raise forms.ValidationError("We could not recognise that postcode")
-        choices = []
-        for addr in addresses["addresses"]:
-            choices.append((addr["value"], addr["label"]))
+        choices = get_address_choices_for_postcode(pc)
         self.to_store = {"postcode_results": choices}
         return pc
 
@@ -175,20 +172,23 @@ class WhereLocationForm(StepForm):
 
         canon_postcode = canonical_postcode(search)
         if canon_postcode:
-            addresses = get_cobrand().api.addresses_for_postcode(canon_postcode)
-            if "error" in addresses or not len(addresses.get("addresses", [])):
-                raise forms.ValidationError("We could not recognise that postcode")
-            choices = []
-            for addr in addresses["addresses"]:
-                choices.append((addr["value"], addr["label"]))
+            choices = get_address_choices_for_postcode(canon_postcode)
             self.to_store = {"postcode_results": choices}
         else:
             try:
-                results = get_cobrand().api.geocode(search)
-            except RequestException:
+                candidates = get_cobrand().location_candidates_for_string(search)
+            except PlaceLookupError:
                 raise forms.ValidationError(
                     "Sorry, address lookup by name is not working at the moment, please search by postcode instead"
                 )
+
+            results = []
+            for c in candidates:
+                p = c.point
+                p.transform(4326)
+                coord_string = f"{p.coords[0]},{p.coords[1]}"
+                results.append((coord_string, c.label))
+
             if len(results) > 1:
                 self.to_store = {"geocode_results": results}
             elif len(results) == 1:

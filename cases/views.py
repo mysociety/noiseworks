@@ -1108,7 +1108,7 @@ class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
 def send_emails(request, complaint, template):
     case = complaint.case
     subject = f"Noise {template}: {case.location_display}"
-    staff_dest = get_cobrand().email.case_destination(case)
+    staff_dest = get_cobrand().staff_destination_email_addresses_for_case(case)
     url = request.build_absolute_uri(case.get_absolute_url())
     complainant = complaint.complainant
     send_email(

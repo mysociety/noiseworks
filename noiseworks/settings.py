@@ -58,6 +58,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 # Application definition
 
 COBRAND = env("COBRAND")
+COBRAND_CLASS = env.str("COBRAND_CLASS", f"cobrands.{COBRAND}.cobrand.Cobrand")
 
 INSTALLED_APPS = [
     "noiseworks.apps.NWAdminConfig",

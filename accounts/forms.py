@@ -179,8 +179,7 @@ class EditUserForm(UserForm):
 
 
 def get_wards_as_choices():
-    wards = get_cobrand().api.wards()
-    wards = {ward["gss"]: ward["name"] for ward in wards}
+    wards = {ward.gss_code: ward.name for ward in get_cobrand().wards}
     return list(wards.items())
 
 
@@ -243,7 +242,7 @@ class EditStaffForm(UserForm):
                 ).all()
                 if len(existing_principals) > 0:
                     ward_mappings = {
-                        ward["gss"]: ward["name"] for ward in get_cobrand().api.wards()
+                        ward.gss_code: ward.name for ward in get_cobrand().wards
                     }
                     raise ValidationError(
                         f"{ward_mappings[w]} already has principal {existing_principals[0].email}."
