@@ -1,18 +1,69 @@
 import re
+from unittest.mock import patch
 
 import pytest
 from django.contrib.gis.geos import Point
-from pytest_django.asserts import assertContains
 
-from .api import (
-    address_for_uprn,
-    addresses_for_postcode,
-    addresses_for_string,
-    in_a_park,
-    nearest_roads,
-)
+from cases.models import Case
+
+from ..interface import AddressCandidate
+from ..interface import Cobrand as CobrandInterface
+from ..interface import PlaceLookupError
+from .cobrand import Cobrand
 
 pytestmark = pytest.mark.django_db
+
+cobrand = Cobrand()
+
+
+def test_cobrand_implements_cobrand() -> None:
+    _: CobrandInterface = cobrand
+
+
+def test_query_address_api_raises_place_lookup_error_on_invalid_or_missing_data(
+    requests_mock,
+):
+    requests_mock.get(re.compile("postcode=E81DY"), text="not json!")
+    with pytest.raises(PlaceLookupError) as e:
+        cobrand._query_address_api({"postcode": "E81DY"})
+
+    # No data field.
+    requests_mock.get(re.compile("postcode=E81DY"), json={})
+    with pytest.raises(PlaceLookupError) as e:
+        cobrand._query_address_api({"postcode": "E81DY"})
+
+    requests_mock.get(re.compile("postcode=E81DY"), status_code=503)
+    with pytest.raises(PlaceLookupError) as e:
+        cobrand._query_address_api({"postcode": "E81DY"})
+
+
+def test_query_address_api_returns_no_data_on_400(requests_mock):
+    requests_mock.get(re.compile("postcode=E81DY"), status_code=400)
+    data = cobrand._query_address_api({"postcode": "E81DY"})
+    assert data is None
+
+
+def test_wfs_lookups_handle_server_being_down(requests_mock):
+    requests_mock.get(re.compile("typename=test"), text="error")
+    cobrand._wfs_lookup("url", "test")
+
+
+def test_address_candidates_for_postcode_ignores_outside_results_and_400s(
+    requests_mock, make_address_api_result
+):
+    requests_mock.get(
+        re.compile("postcode=E81DY"), json=make_address_api_result(gazetteer="National")
+    )
+    assert cobrand.address_candidates_for_postcode("E81DY") == []
+
+    requests_mock.get(
+        re.compile("postcode=E81DY"), json=make_address_api_result(outof=True)
+    )
+    assert cobrand.address_candidates_for_postcode("E81DY") == []
+
+    requests_mock.get(re.compile("postcode=E81DY"), status_code=400)
+    assert cobrand.address_candidates_for_postcode("E81DY") == []
+
 
 ADDRESS = {
     "line1": "LINE 1",
@@ -32,7 +83,7 @@ ADDRESS = {
 
 
 @pytest.fixture
-def make_api_result():
+def make_address_api_result():
     def _make_api_result(line3="LINE 3", gazetteer="Hackney", outof=None):
         output = {
             "data": {
@@ -54,77 +105,187 @@ def make_api_result():
     return _make_api_result
 
 
-def test_with_client(admin_client):
-    response = admin_client.get("/cases")
-    assertContains(response, "Hackney")
-
-
-def test_addresses_api_only_outside(requests_mock, make_api_result):
-    requests_mock.get(
-        re.compile("postcode=E81DY"), json=make_api_result(gazetteer="National")
+def test_address_candidates_for_postcode(requests_mock, make_address_api_result):
+    requests_mock.get(re.compile("postcode=E81DY"), json=make_address_api_result())
+    candidates = cobrand.address_candidates_for_postcode("E81DY")
+    assert len(candidates) == 1
+    assert candidates[0] == AddressCandidate(
+        uprn=10008315925, label="Line 1, Line 2, Line 3"
     )
-    assert len(addresses_for_postcode("E81DY")) == 1
 
 
-def test_addresses_api(requests_mock, make_api_result):
+def test_address_detail_for_uprn_empty_on_no_results(requests_mock):
+    requests_mock.get(re.compile("uprn=10008315925"), json={"data": {"address": []}})
+    details = cobrand.address_detail_for_uprn("10008315925")
+    assert details is None
+
+
+def test_address_detail_for_uprn(requests_mock, make_address_api_result):
+    requests_mock.get(re.compile("uprn=10008315925"), json=make_address_api_result())
     requests_mock.get(
-        re.compile("postcode=E81DY"), json=make_api_result(line3="HACKNEY")
+        re.compile("housing/ows"), json={"features": [{"properties": "estate"}]}
     )
-    assert len(addresses_for_postcode("E81DY")) == 1
+    details = cobrand.address_detail_for_uprn("10008315925")
+
+    assert details is not None
+    assert details.label == "Line 1, Line 2, Line 3, E8 1DY"
+    assert details.ward_gss == "E05009372"
+    assert details.in_an_estate
 
 
-def test_addresses_api_error(requests_mock):
-    requests_mock.get(re.compile("uprn=1234"), text="Error")
-    assert address_for_uprn("1234") == {
-        "string": "",
-        "ward": "",
-    }
+def test_location_candidates_for_string_raises_exception_request_failure(requests_mock):
     requests_mock.get(
-        re.compile("uprn=missing"),
-        text='{"statusCode": 0, "error": { "isValid": false, "validationErrors": [] } }',
+        re.compile("search"),
+        status_code=503,
     )
-    assert address_for_uprn("missing") == {
-        "string": "",
-        "ward": "",
-    }
-    requests_mock.get(re.compile("postcode=1234"), text="Error")
-    assert "error" in addresses_for_postcode("1234")
+    with pytest.raises(PlaceLookupError) as e:
+        cobrand.location_candidates_for_string("woodberry down")
 
 
-def test_addresses_api_uprn_blank(requests_mock):
+def test_location_candidates_for_string(requests_mock):
+    display_name = (
+        "Woodberry Down, "
+        "Stoke Newington, "
+        "London Borough of Hackney, "
+        "Greater London, "
+        "England, "
+        "N4 1QR, "
+        "United Kingdom"
+    )
     requests_mock.get(
-        re.compile("uprn=1234"),
+        re.compile("openstreetmap"),
+        json=[
+            {
+                "display_name": display_name,
+                "lat": "51.5724915",
+                "lon": "-0.0906990",
+            },
+            {
+                "display_name": "North Pole",
+                "lat": "90",
+                "lon": "0",
+            },
+        ],
+    )
+    candidates = cobrand.location_candidates_for_string("woodberry down")
+    assert len(candidates) == 1
+    assert candidates[0].label == (
+        "Woodberry Down, Stoke Newington, Greater London, England, N4 1QR"
+    )
+
+
+def test_location_detail_for_point(requests_mock):
+    requests_mock.get(re.compile("greenspaces/ows"), json={})
+    requests_mock.get(re.compile("transport/ows"), json={})
+    requests_mock.get(
+        re.compile("housing/ows"), json={"features": [{"properties": "estate"}]}
+    )
+    requests_mock.get(
+        re.compile("mapit.mysociety.org"),
         json={
-            "data": {"address": [], "page_count": 1, "total_count": 0},
-            "statusCode": 200,
+            "2508": {"type": "LBO"},
+            "144397": {"type": "LBW", "codes": {"gss": "E05009385"}},
         },
     )
-    assert address_for_uprn("1234") == {
-        "string": "",
-        "ward": "",
+    details = cobrand.location_detail_for_point(Point(532414, 187685, srid=27700))
+    assert details is not None
+    assert details.description == "(532414,187685)"
+    assert details.ward_gss == "E05009385"
+    assert details.in_an_estate
+
+    requests_mock.get(
+        re.compile("transport/ows"),
+        json={
+            "features": [
+                {
+                    "geometry": {
+                        "type": "MultiLineString",
+                        "coordinates": [
+                            [
+                                [532413, 187685],
+                                [532414, 187685],
+                                [532415, 187685],
+                                [532415, 187685],
+                            ]
+                        ],
+                    },
+                    "properties": {
+                        "name": "Closer Road",
+                    },
+                },
+                {
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [
+                            [532413, 187686],
+                            [532414, 187686],
+                            [532415, 187686],
+                        ],
+                    },
+                    "properties": {
+                        "name": "Further Road",
+                    },
+                },
+                {
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [532419, 187689],
+                    },
+                    "properties": {
+                        "name": "Point Further Out",
+                    },
+                },
+            ]
+        },
+    )
+
+    details = cobrand.location_detail_for_point(Point(532414, 187685, srid=27700))
+    assert details is not None
+    assert details.description == "a point near Further Road / Closer Road"
+
+    requests_mock.get(
+        re.compile("greenspaces/ows"),
+        json={"features": [{"properties": {"name": "park"}}]},
+    )
+    details = cobrand.location_detail_for_point(Point(532414, 187685, srid=27700))
+    assert details is not None
+    assert details.description == "a point in park"
+
+
+def test_staff_destination_email_addresses_for_case(settings):
+    settings.COBRAND_SETTINGS["staff_destination"] = {
+        "outside": "outside@example.org",
+        "business": "business@example.org",
+        "hackney-housing": "hh@example.org,hh2@example.org",
+        "housing": "housing@example.org",
     }
+    assert cobrand.staff_destination_email_addresses_for_case(
+        Case.objects.create(ward="outside")
+    ) == ["outside@example.org"]
+    assert cobrand.staff_destination_email_addresses_for_case(
+        Case.objects.create(where="business")
+    ) == ["business@example.org"]
+    assert cobrand.staff_destination_email_addresses_for_case(
+        Case.objects.create(estate="y")
+    ) == ["hh@example.org", "hh2@example.org"]
+    assert cobrand.staff_destination_email_addresses_for_case(
+        Case.objects.create()
+    ) == ["housing@example.org"]
 
 
-def test_addresses_api_uprn(requests_mock, make_api_result):
-    requests_mock.get(re.compile("uprn=10008315925"), json=make_api_result())
-    data = ADDRESS.copy()
-    data["string"] = "Line 1, Line 2, Line 3, E8 1DY"
-    assert address_for_uprn("10008315925") == data
+def test_override_email_colours():
+    # The logo is only on the static path when the demo cobrand is installed.
+    with patch("cobrands.demo.cobrand.inline_image_html", return_value=b"logo"):
+        cobrand.override_email_colours()
 
 
-def test_addresses_api_street(requests_mock, make_api_result):
-    requests_mock.get(re.compile(r"street=test\+street"), json=make_api_result())
-    assert len(addresses_for_string("test street")) == 1
-
-
-def test_addresses_api_outofborough(requests_mock, make_api_result):
-    requests_mock.get(re.compile(r"postcode=SW1A1AA"), json=make_api_result(outof=True))
-    assert "error" in addresses_for_postcode("SW1A1AA")
-
-
-def test_wfs_server_down(requests_mock):
-    requests_mock.get(re.compile("greenspaces/ows"), text="Error")
-    requests_mock.get(re.compile("transport/ows"), text="Error")
-    pt = Point(1, 2, srid=27700)
-    in_a_park(pt)
-    nearest_roads(pt)
+def test_override_email_settings():
+    cobrand.override_email_settings(
+        {
+            "only_column_style": "",
+            "column_divider_color": "",
+            "primary_column_style": "",
+            "secondary_column_background_color": "",
+            "secondary_column_text_color": "",
+        }
+    )
