@@ -64,7 +64,7 @@ profile = "black"
 skip = ["migrations"]
 
 [tool.mypy]
-files = ["cobrands/tests.py"]
+files = ["cobrands/**/*.py"]
 ignore_missing_imports = true
 
 [build-system]
