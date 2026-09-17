@@ -9,6 +9,7 @@ from django.utils.functional import cached_property
 from phonenumber_field.modelfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
 
+from cobrands.interface import PlaceLookupError
 from cobrands.registry import get_cobrand
 from noiseworks.message import send_email
 
@@ -133,15 +134,21 @@ class User(AbstractUser):
         return super().save(*args, **kwargs)
 
     def update_address_and_estate(self):
-        if self.uprn and not (self.address and self.estate):
-            addr = get_cobrand().api.address_for_uprn(self.uprn)
-            if addr["string"]:
-                if not self.address:
-                    self.address = addr["string"]
-                if not self.estate:
-                    point = Point(addr["longitude"], addr["latitude"], srid=4326)
-                    estate = get_cobrand().api.in_an_estate(point)
-                    self.estate = "y" if estate else "n"
+        if not self.uprn or (self.address and self.estate):
+            return
+        try:
+            address_detail = get_cobrand().address_detail_for_uprn(self.uprn)
+        except PlaceLookupError:
+            return
+        if not address_detail:
+            return
+
+        if not self.address:
+            self.address = address_detail.label
+        self.point = address_detail.point
+        self.ward = address_detail.ward_gss
+        if address_detail.in_an_estate is not None:
+            self.estate = "y" if address_detail.in_an_estate else "n"
 
     def get_best_time_display(self):
         best_time = self.best_time or []
@@ -169,8 +176,7 @@ class User(AbstractUser):
         if not wards and not principal_wards:
             return "No wards"
 
-        ward_mappings = get_cobrand().api.wards()
-        ward_gss_to_name = {w["gss"]: w["name"] for w in ward_mappings}
+        ward_gss_to_name = {w.gss_code: w.name for w in get_cobrand().wards}
 
         ward_principal_names = [
             ward_gss_to_name.get(w) + " (principal)" for w in principal_wards

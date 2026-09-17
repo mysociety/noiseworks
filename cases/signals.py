@@ -22,8 +22,7 @@ def auto_assign_new_case(sender, case, case_absolute_url, **kwargs):
     case.assign(ward_principal, None)
     case.save()
 
-    wards = get_cobrand().api.wards()
-    ward_gss_to_name = {ward["gss"]: ward["name"] for ward in wards}
+    ward_gss_to_name = {ward.gss_code: ward.name for ward in get_cobrand().wards}
     ward_name = ward_gss_to_name.get(case.ward, case.ward)
     ward_principal.send_email(
         "You have been assigned",

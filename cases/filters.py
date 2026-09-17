@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 
 import django_filters
 from django import forms
@@ -14,11 +15,11 @@ from .widgets import SearchWidget
 
 
 def get_wards():
-    wards = get_cobrand().api.wards()
-    wards = {ward["gss"]: ward["name"] for ward in wards}
+    wards = {ward.gss_code: ward.name for ward in get_cobrand().wards}
     wards["outside"] = "Outside Hackney"
-    for group in get_cobrand().api.ward_groups():
-        wards[group["id"]] = group["name"]
+    groups = {w.group for w in get_cobrand().wards}
+    for group in groups:
+        wards[group] = group
     return wards
 
 
@@ -36,7 +37,7 @@ class CaseFilter(django_filters.FilterSet):
     )
     uprn = django_filters.CharFilter()
     ward = django_filters.MultipleChoiceFilter(
-        choices=list(get_wards().items()),
+        choices=[],
         label="Case location",
         widget=forms.CheckboxSelectMultiple,
         method="ward_filter",
@@ -100,6 +101,7 @@ class CaseFilter(django_filters.FilterSet):
         self.filters["kind"].label = "Noise type"
         self.filters["where"].label = "Noise location type"
         self.filters["estate"].label = "Hackney Estates property?"
+        self.filters["ward"].extra["choices"] = list(get_wards().items())
 
         assignees = (
             Case.objects.filter(assigned__isnull=False)
@@ -168,10 +170,13 @@ class CaseFilter(django_filters.FilterSet):
             return queryset.filter(assigned=value)
 
     def ward_filter(self, queryset, name, value):
+        wards_by_group = defaultdict(list)
+        for w in get_cobrand().wards:
+            wards_by_group[w.group].append(w.gss_code)
         for i, v in list(enumerate(value)):
-            for group in get_cobrand().api.ward_groups():
-                if group["id"] == v:
-                    value[i : i + 1] = group["wards"]
+            if wards := wards_by_group[v]:
+                # Replace the ward name value with the corresponding list of wards.
+                value[i : i + 1] = wards
         return queryset.filter(ward__in=value)
 
     def search_filter(self, queryset, name, value):

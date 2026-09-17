@@ -22,19 +22,21 @@ def send_email(to, subject, template, data):
         to = [to]
     body_text = render_to_string(f"{template}.txt", data)
     settings = email_colours()
-    settings.update(get_cobrand().email.override_colours())
+    settings.update(get_cobrand().override_email_colours())
     email_settings(settings)
-    settings.update(get_cobrand().email.override_settings(settings))
+    settings.update(get_cobrand().override_email_settings(settings))
     data.update(settings)
     body_html = render_to_string(f"{template}.html", data)
-
-    logo = MIMEImage(data["logo_inline"]["data"])
-    logo.add_header("Content-ID", f"<{data['logo_inline']['id']}>")
 
     message = EmailMultiAlternatives(subject, body_text, None, to)
     message.mixed_subtype = "related"
     message.attach_alternative(body_html, "text/html")
-    message.attach(logo)
+
+    if "logo_inline" in data:  # pragma: no cover
+        logo = MIMEImage(data["logo_inline"]["data"])
+        logo.add_header("Content-ID", f"<{data['logo_inline']['id']}>")
+        message.attach(logo)
+
     message.send()
 
 

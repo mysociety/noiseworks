@@ -8,8 +8,7 @@ from cobrands.registry import get_cobrand
 
 
 def ward_name_to_id(ward):
-    wards = get_cobrand().api.wards()
-    wards = {ward["name"]: ward["gss"] for ward in wards}
+    wards = {ward.name: ward.gss_code for ward in get_cobrand().wards}
     try:
         return wards[ward]
     except KeyError:
