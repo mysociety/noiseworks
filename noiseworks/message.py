@@ -20,6 +20,7 @@ def send_sms(to, text):
 def send_email(to, subject, template, data):
     if not isinstance(to, list):
         to = [to]
+    data["cobrand"] = get_cobrand()
     body_text = render_to_string(f"{template}.txt", data)
     settings = email_colours()
     settings.update(get_cobrand().override_email_colours())
