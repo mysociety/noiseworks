@@ -65,6 +65,11 @@ class Cobrand:
         Ward(gss_code="E05009386", name="Victoria", group="South"),
         Ward(gss_code="E05009387", name="Woodberry Down", group="North"),
     ]
+    reporting_kind_form_help_text: Optional[str] = (
+        "Please see <a href='https://hackney.gov.uk/noise' target='_blank'>"
+        "https://hackney.gov.uk/noise</a> "
+        "for the kinds of noise we can and can’t deal with."
+    )
 
     def _query_address_api(self, params: dict) -> Optional[dict]:
         """Queries the address API and returns the JSON under 'data' on

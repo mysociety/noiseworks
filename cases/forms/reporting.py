@@ -116,7 +116,7 @@ class ReportingKindForm(StepForm):
     kind = forms.ChoiceField(
         label="What kind of noise is it?",
         widget=forms.RadioSelect,
-        help_text="Please see <a href='https://hackney.gov.uk/noise' target='_blank'>https://hackney.gov.uk/noise</a> for the kinds of noise we can and can’t deal with.",
+        help_text=get_cobrand().reporting_kind_form_help_text,
         choices=Case.KIND_CHOICES,
     )
     kind_other = forms.CharField(label="Other", required=False, max_length=100)

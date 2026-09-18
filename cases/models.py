@@ -446,8 +446,9 @@ class Case(AbstractModel):
         return f"{p[1]:.6f},{p[0]:.6f}"
 
     def get_ward_display(self):
-        wards = {ward.gss_code: ward.name for ward in get_cobrand().wards}
-        wards["outside"] = "Outside Hackney"
+        cobrand = get_cobrand()
+        wards = {ward.gss_code: ward.name for ward in cobrand.wards}
+        wards["outside"] = f"Outside {cobrand.body_name}"
         return wards.get(self.ward, self.ward)
 
     def merge_into(self, other):

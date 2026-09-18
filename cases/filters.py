@@ -15,9 +15,10 @@ from .widgets import SearchWidget
 
 
 def get_wards():
-    wards = {ward.gss_code: ward.name for ward in get_cobrand().wards}
-    wards["outside"] = "Outside Hackney"
-    groups = {w.group for w in get_cobrand().wards}
+    cobrand = get_cobrand()
+    wards = {ward.gss_code: ward.name for ward in cobrand.wards}
+    wards["outside"] = f"Outside {cobrand.body_name}"
+    groups = {w.group for w in cobrand.wards}
     for group in groups:
         wards[group] = group
     return wards
@@ -100,7 +101,7 @@ class CaseFilter(django_filters.FilterSet):
         self.filters.move_to_end("search", last=False)
         self.filters["kind"].label = "Noise type"
         self.filters["where"].label = "Noise location type"
-        self.filters["estate"].label = "Hackney Estates property?"
+        self.filters["estate"].label = f"{get_cobrand().body_name} Estates property?"
         self.filters["ward"].extra["choices"] = list(get_wards().items())
 
         assignees = (
