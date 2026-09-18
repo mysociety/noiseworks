@@ -19,7 +19,7 @@ services:
     command: /app/script/server --development
     volumes:
       - .:/app
-      - node_modules:/app/cobrands/hackney/node_modules/
+      - node_modules:/app/node_modules/
       - storage:/${FILE_STORAGE_RELATIVE_PATH}
     ports:
       - "8000:8000"
