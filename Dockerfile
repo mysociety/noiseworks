@@ -18,7 +18,7 @@ RUN poetry install --no-root
 FROM node:14-bullseye AS builder-node
 ENV NPMSETUP_PATH="/opt/npmsetup"
 WORKDIR $NPMSETUP_PATH
-COPY cobrands/hackney/package.json cobrands/hackney/package-lock.json ./
+COPY package.json package-lock.json ./
 RUN npm install
 
 FROM python:3.9-slim
@@ -33,6 +33,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder $PYSETUP_PATH $PYSETUP_PATH
 WORKDIR /app
-COPY --from=builder-node $NPMSETUP_PATH cobrands/hackney/
+COPY --from=builder-node $NPMSETUP_PATH ./
 COPY . .
 #RUN ./manage.py collectstatic --no-input
