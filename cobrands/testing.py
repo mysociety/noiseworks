@@ -23,6 +23,7 @@ class TestCobrand:
         Ward(gss_code="GSS3", name="Ward 3", group="South"),
         Ward(gss_code="GSS4", name="Ward 4", group="South"),
     ]
+    reporting_kind_form_help_text: Optional[str] = None
 
     def address_candidates_for_postcode(self, postcode: str) -> List[AddressCandidate]:
         return []
