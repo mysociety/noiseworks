@@ -22,8 +22,8 @@ def test_home_staff(admin_client):
     assert response.url == "/cases"
 
 
-def test_home_unapproved_hackney(client, db):
-    user = User.objects.create(email="foo@hackney.gov.uk")
+def test_home_unapproved_staff(client, db):
+    user = User.objects.create(email="foo@body")
     client.force_login(user)
     response = client.get("/")
     assertContains(response, "Please contact")

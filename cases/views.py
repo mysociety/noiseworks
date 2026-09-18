@@ -35,7 +35,8 @@ def home(request):
     if request.user.is_staff:
         return redirect("cases")
     elif request.user.is_authenticated:
-        if "hackney.gov.uk" in request.user.email:
+        email_domain = request.user.email.split("@")[1]
+        if email_domain in get_cobrand().staff_email_domains:
             return render(request, "home_unapproved.html")
         else:
             return redirect("cases")
