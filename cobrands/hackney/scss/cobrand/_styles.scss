@@ -1,0 +1,14 @@
+// The NoiseWorks logo in the "powered by" strip.
+.noiseworks-footer .platform-logo {
+    vertical-align: -0.8em;
+    display: inline-block;
+    background-position: top left;
+    background-repeat: no-repeat;
+    background-size: auto 1.8em;
+    background-image: inline-image("noiseworks-logo-single-colour-light.png");
+    width: 7.8em;
+    height: 0;
+    padding-top: 2em;
+    overflow: hidden;
+    margin-left: 0.5em;
+}

@@ -1,3 +1,5 @@
+@import "cobrand/settings";
+
 $lbh-global-styles: true;
 $lbh-asset-path: "/static/lbh";
 //$lbh-safely-embed: true;
@@ -95,20 +97,6 @@ footer {
         @include govuk-media-query($from: tablet) {
             text-align: right;
         }
-    }
-
-    .platform-logo {
-        vertical-align: -0.8em;
-        display: inline-block;
-        background-position: top left;
-        background-repeat: no-repeat;
-        background-size: auto 1.8em;
-        background-image: inline-image("noiseworks-logo-single-colour-light.png");
-        width: 7.8em;
-        height: 0;
-        padding-top: 2em;
-        overflow: hidden;
-        margin-left: 0.5em;
     }
 }
 
@@ -280,3 +268,5 @@ ul.case-list-user li {
 }
 
 @import "print";
+
+@import "cobrand/styles";

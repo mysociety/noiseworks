@@ -228,6 +228,8 @@ LIBSASS_CUSTOM_FUNCTIONS = {
 LIBSASS_ADDITIONAL_INCLUDE_PATHS = [
     "/opt/npmsetup",  # XXX For docker-compose
     str(BASE_DIR),
+    str(BASE_DIR / "cobrands" / COBRAND / "scss"),
+    str(BASE_DIR / "cobrands" / "defaults" / "scss"),
 ]
 
 # Default primary key field type
