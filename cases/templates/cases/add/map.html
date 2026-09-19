@@ -111,7 +111,7 @@ var nw = nw || {};
         circle.setLatLng(e.latlng);
     });
 
-    var circle = L.circle(point, { radius: {{ radius|default:30 }}, color: '#00664f' });
+    var circle = L.circle(point, { radius: {{ radius|default:30 }}, color: nw.MAP_CIRCLE_COLOUR });
     circle.on('move', function(e) {
         document.getElementById('{{ id }}').value = 'POINT (' + e.latlng.lng + ' ' + e.latlng.lat + ')';
     });

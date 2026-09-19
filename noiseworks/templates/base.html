@@ -40,7 +40,10 @@
       document.body.className = document.body.className
         ? document.body.className + " js-enabled"
         : "js-enabled";
-      var nw = { MAP_TILE_URL: '{{ cobrand.map_tile_url|default_if_none:""|escapejs }}' };
+      var nw = {
+        MAP_TILE_URL: '{{ cobrand.map_tile_url|default_if_none:""|escapejs }}',
+        MAP_CIRCLE_COLOUR: getComputedStyle(document.documentElement).getPropertyValue('--nw-map-ciricle-colour').trim()
+      };
     </script>
 
     <a href="#content" class="govuk-skip-link lbh-skip-link"

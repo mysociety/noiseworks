@@ -247,7 +247,7 @@ var nw = nw || {};
     var marker = L.marker(point, { icon: mapIcon, interactive: false });
     map.addLayer(marker);
   {% else %}
-    var circle = L.circle(point, { radius: {{ case.radius }}, color: '#00664f' });
+    var circle = L.circle(point, { radius: {{ case.radius }}, color: nw.MAP_CIRCLE_COLOUR });
     map.addLayer(circle);
     map.fitBounds(circle.getBounds());
   {% endif %}

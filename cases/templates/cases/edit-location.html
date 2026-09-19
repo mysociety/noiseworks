@@ -112,7 +112,7 @@ document.querySelectorAll('.govuk-tabs__tab').forEach(function(tab) {
       iconAnchor: [24, 48]
     });
     var marker = L.marker(point, { icon: mapIcon, draggable: false });
-    var circle = L.circle(point, { radius: {{ case.radius|default:0 }}, color: '#00664f' });
+    var circle = L.circle(point, { radius: {{ case.radius|default:0 }}, color: nw.MAP_CIRCLE_COLOUR });
     circle.on('move', function(e) {
         e.latlng.lng;
         e.latlng.lat;

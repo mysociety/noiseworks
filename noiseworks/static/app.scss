@@ -126,6 +126,10 @@ dl.inline {
     }
 }
 
+:root {
+    --nw-map-circle-colour: #{lbh-colour("lbh-a01")};
+}
+
 // Case page
 
 .case-detail__map {
