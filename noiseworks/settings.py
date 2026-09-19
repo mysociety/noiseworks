@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "oauth",
     "cases",
     f"cobrands.{COBRAND}",
+    "cobrands.defaults",
     "crispy_forms_gds",
     "django_cleanup.apps.CleanupConfig",
 ]
