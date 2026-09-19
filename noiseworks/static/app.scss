@@ -1,4 +1,5 @@
 @import "cobrand/settings";
+@import "theme";
 
 $lbh-global-styles: true;
 $lbh-asset-path: "/static/lbh";
@@ -52,6 +53,14 @@ input[type=text]:disabled {
 
 span {
     font-family: $lbh-font-family;
+}
+
+// Header
+
+@if $nw-header-colour {
+    .lbh-header__main {
+        background: $nw-header-colour;
+    }
 }
 
 // Footer
