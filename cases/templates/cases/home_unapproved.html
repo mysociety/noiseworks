@@ -2,13 +2,13 @@
 
 {% block content %}
 
-<h1>NoiseWorks</h1>
+<h1>{{ cobrand.site_name }}</h1>
 
-<p>Only approved Hackney accounts can access this system.
+<p>Only approved {{ cobrand.body_name }} accounts can access this system.
 Please contact your manager if you require access.</p>
 
 <aside class="nw-staff-signin">
-    <a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a>
+    <a href="{% url "oauth:authenticate" %}">{{ cobrand.body_name }} Staff Sign-in</a>
 </aside>
 
 {% endblock %}
