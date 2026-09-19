@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block merging %}
   {% with request.session.merging_case as duplicate %}
@@ -240,7 +240,7 @@ var nw = nw || {};
 
   {% if case.uprn %}
     var mapIcon = L.icon({
-      iconUrl: "/static/hackney/images/contact/map-marker.svg",
+      iconUrl: "{% static "lbh/images/contact/map-marker.svg" %}",
       iconSize: [48, 48],
       iconAnchor: [24, 48]
     });
