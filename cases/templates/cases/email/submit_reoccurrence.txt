@@ -30,4 +30,4 @@ Case details:
 
 See full case details: {{ url }}
 
-NoiseWorks
+{{ cobrand.site_name }}
