@@ -18,4 +18,4 @@ Complaint details:
 
 See case details: {{ url }}
 
-NoiseWorks
+{{ cobrand.site_name }}
