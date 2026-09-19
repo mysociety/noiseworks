@@ -41,6 +41,7 @@ session.headers.update(
 class Cobrand:
     body_name = "Hackney"
     site_name = "NoiseWorks"
+    page_title_suffix = "Hackney Council"
     staff_email_domains = ["hackney.gov.uk"]
     wards = [
         Ward(gss_code="E05009367", name="Brownswood", group="North"),

@@ -49,6 +49,7 @@ class PlaceLookupError(Exception):
 class Cobrand(Protocol):
     body_name: str
     site_name: str
+    page_title_suffix: str
     staff_email_domains: List[str]
     wards: List[Ward]
     reporting_kind_form_help_text: Optional[str]
