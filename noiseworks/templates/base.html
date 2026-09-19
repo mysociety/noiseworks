@@ -40,7 +40,7 @@
       document.body.className = document.body.className
         ? document.body.className + " js-enabled"
         : "js-enabled";
-      var nw = { MAP_TYPE: 'osm' };
+      var nw = { MAP_TILE_URL: '{{ cobrand.map_tile_url|default_if_none:""|escapejs }}' };
     </script>
 
     <a href="#content" class="govuk-skip-link lbh-skip-link"

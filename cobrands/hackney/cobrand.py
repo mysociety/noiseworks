@@ -71,6 +71,9 @@ class Cobrand:
         "https://hackney.gov.uk/noise</a> "
         "for the kinds of noise we can and can’t deal with."
     )
+    # Fallback if OpenStreetMap tiles are unavailable:
+    # map_tile_url = "https://tilma.mysociety.org/os/hackney/Road_3857/{z}/{x}/{y}.png"
+    map_tile_url: Optional[str] = None
 
     def _query_address_api(self, params: dict) -> Optional[dict]:
         """Queries the address API and returns the JSON under 'data' on
