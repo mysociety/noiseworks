@@ -21,7 +21,7 @@ from formtools.wizard.views import NamedUrlSessionWizardView
 from humanize import naturalsize
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_email, send_sms
 
@@ -35,8 +35,9 @@ def home(request):
     if request.user.is_staff:
         return redirect("cases")
     elif request.user.is_authenticated:
-        if "hackney.gov.uk" in request.user.email:
-            return render(request, "home_unapproved.html")
+        email_domain = request.user.email.split("@")[1]
+        if email_domain in get_cobrand().staff_email_domains:
+            return render(request, "cases/home_unapproved.html")
         else:
             return redirect("cases")
     else:
@@ -1108,7 +1109,7 @@ class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
 def send_emails(request, complaint, template):
     case = complaint.case
     subject = f"Noise {template}: {case.location_display}"
-    staff_dest = cobrand.email.case_destination(case)
+    staff_dest = get_cobrand().staff_destination_email_addresses_for_case(case)
     url = request.build_absolute_uri(case.get_absolute_url())
     complainant = complaint.complainant
     send_email(

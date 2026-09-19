@@ -1,0 +1,132 @@
+{% load static compress %}
+<!DOCTYPE html>
+<html lang="en" class="govuk-template lbh-template">
+  <head>
+    <meta charset="utf-8" />
+    <title>{% if title %}{{ title }} | {% endif %}{{ cobrand.page_title_suffix }}</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0c0c" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    {% compress css %}
+        <link rel="stylesheet" type="text/x-scss" href="{% static 'app.scss' %}">
+    {% endcompress %}
+    <link rel="stylesheet" href="{% static 'vendor/leaflet.1.7.1.css' %}"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin=""/>
+    <link href="{% static 'vendor/filepond.4.30.4.min.css' %}" rel="stylesheet">
+
+    {% compress js inline %}
+    {% endcompress %}
+    <script src="{% static 'vendor/leaflet.1.7.1.js' %}"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script src="{% static 'vendor/dom-focus-lock.1.0.4.js' %}"></script>
+    <script src="{% static 'vendor/filepond.4.30.4.min.js' %}"></script>
+
+    {% include "cobrand/head_extra.html" %}
+
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:site_name" content="{{ cobrand.site_name }}">
+    <meta property="og:type" content="website">
+
+  </head>
+  <body class="govuk-template__body">
+    <script>
+      document.body.className = document.body.className
+        ? document.body.className + " js-enabled"
+        : "js-enabled";
+      var nw = { MAP_TILE_URL: '{{ cobrand.map_tile_url|default_if_none:""|escapejs }}' };
+    </script>
+
+    <a href="#content" class="govuk-skip-link lbh-skip-link"
+        >Skip to main content</a>
+
+    {% include "cobrand/cookie_banner.html" %}
+
+<header class="lbh-header nw-site-header">
+  <div class="lbh-header__main">
+    <div class="lbh-container lbh-header__wrapper lbh-header__wrapper--stacked">
+      <div class="lbh-header__title">
+        <a href="/" class="lbh-header__title-link">
+          {% include "cobrand/logo.html" %}
+          <span class="lbh-header__service-name">{{ cobrand.site_name }}</span>
+        </a>
+      </div>
+      <div class="lbh-header__links">
+        {% if request.user.is_staff %}
+          <a href="{% url "cases" %}">All cases</a>
+          <a href="{% url "cases" %}?assigned=me">My cases</a>
+        {% if request.user.wards %}
+          <a href="{% url "cases" %}{% for w in request.user.wards %}{% if forloop.first %}?{% else %}&amp;{% endif %}ward={{ w }}{% endfor %}">My ward{{ request.user.wards|length|pluralize }}</a>
+        {% endif %}
+          <a href="{% url "case-add" %}">New case</a>
+        {% else %}
+          <a href="{% url "cases" %}">My cases</a>
+          <a href="{% url "case-add-intro" %}">New case</a>
+        {% endif %}
+        {% if request.user.is_authenticated %}
+          <a href="{% url "accounts:sign-out" %}">Sign out</a>
+        {% endif %}
+        {% if request.user.is_staff and perms.cases.follow %}
+          {% with unreads=request.user.unread_notifications_count %}
+            <a href="{% url "notifications" %}">
+              <img
+                style="width:22px"
+                src={% if not unreads %}{% static 'notification-bell.png' %}{% else %}{% static 'notification-bell-pinging.png' %}{% endif %}
+                alt="{{ unreads }} notifications"
+              >
+            </a>
+          {% endwith %}
+        {% endif %}
+        {% if request.user.is_staff %}
+          <a href="{% url "accounts:staff-settings" %}">
+            <img
+              style="width:22px"
+              src={% static 'settings-cog.png' %}
+              alt="settings"
+            >
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+
+    <!-- Phase banner goes here -->
+    <!-- Announcements go here -->
+    <!-- Breadcrumbs go here -->
+
+    {% if messages %}
+    {% for message in messages %}
+    <section class="lbh-page-announcement lbh-page-announcement--info lbh-container" style="box-sizing: border-box; margin-bottom: 0;">
+      <h5 {% if message.tags %} class="lbh-page-announcement__title {{ message.tags }}" {% endif %} style="margin-bottom: 0;">{{ message }}</h5>
+    </section>
+    {% endfor %}
+    {% endif %}
+
+    <main class="lbh-main-wrapper " id="main-content" role="main">
+      {% block merging %}{% endblock %}
+      <div class="lbh-container">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    {% include "cobrand/footer.html" %}
+
+    {% include "cobrand/powered_by.html" %}
+
+    <!-- Put your path to the LBHFrontend JS File in the src attribute here -->
+    <!-- <script src=""></script> -->
+    {% compress js %}
+    <script src="{% static 'nw/app.js' %}"></script>
+    {% endcompress %}
+    <script>
+//      window.LBHFrontend.initAll();
+    </script>
+  </body>
+</html>

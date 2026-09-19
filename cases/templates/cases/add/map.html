@@ -66,7 +66,7 @@
         <input type="image" alt="Map tile"
             name="tile_{{ tile.x }}.{{ tile.y }}"
             src="{{ tile.url }}">
-        <img src="{% static "hackney/images/contact/map-marker.svg" %}"
+        <img src="{% static "lbh/images/contact/map-marker.svg" %}"
 			class="leaflet-marker-icon leaflet-zoom-animated"
 			style="margin-left: -24px; margin-top: -48px; width: 48px; height: 48px; transform: translate3d({{ pin.x }}px, {{ pin.y }}px, 0px); z-index: 200;"
 			alt="" tabindex="0">
@@ -95,13 +95,13 @@ var nw = nw || {};
     map.attributionControl.setPrefix('');
 
     var layer;
-    if (nw.MAP_TYPE === 'osm') {
+    if (!nw.MAP_TILE_URL) {
         layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         });
     } else {
-        layer = L.tileLayer('https://tilma.mysociety.org/os/hackney/Road_3857/{z}/{x}/{y}.png', {
+        layer = L.tileLayer(nw.MAP_TILE_URL, {
             maxZoom: 19
         });
     }

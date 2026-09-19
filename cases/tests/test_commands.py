@@ -9,9 +9,10 @@ from django.core.files.storage import FileSystemStorage
 from django.core.management import CommandError, call_command
 
 from cases.management.commands.export_data import client
+from cobrands.interface import AddressDetail, LocationDetail
+from cobrands.testing import TestCobrand
 
 from ..models import Action, ActionFile, Case, Notification, User
-from .conftest import ADDRESS
 
 
 @pytest.fixture
@@ -23,30 +24,43 @@ def call_params(db, capsys, monkeypatch):
 
 
 @pytest.fixture
-def mock_things(requests_mock):
-    requests_mock.get(
-        re.compile("uprn=[1-3]"),
-        json={"data": {"address": [ADDRESS]}},
-    )
-    requests_mock.get(
-        re.compile("uprn=4"),
-        json={"data": {"address": []}},
-    )
+def mock_ward_lookup(requests_mock):
     requests_mock.get(
         re.compile("mapit.mysociety.org"),
         json={
             "2508": {"type": "LBO"},
-            "144397": {"type": "LBW", "codes": {"gss": "E05009385"}},
+            "144397": {"type": "LBW", "codes": {"gss": "GSS1"}},
         },
     )
-    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
-    requests_mock.get(re.compile("transport/ows"), json={"features": []})
-    requests_mock.get(re.compile("housing/ows"), json={"features": []})
+
+
+class TestCobrandWithLookupData(TestCobrand):
+    def address_detail_for_uprn(self, uprn):
+        if uprn in [1, 2, 3]:
+            return AddressDetail(
+                uprn="10001",
+                point=None,
+                label="Address",
+                ward_gss="GSS1",
+                in_an_estate=True,
+            )
+        return None
+
+    def location_detail_for_point(self, point):
+        return LocationDetail(
+            point=point,
+            description="point description",
+            ward_gss="GSS1",
+            in_an_estate=False,
+        )
+
+
+pytestmark = pytest.mark.cobrand.with_args(TestCobrandWithLookupData)
 
 
 @pytest.fixture
 def case(db):
-    return Case.objects.create(kind="diy", ward="E05009373")
+    return Case.objects.create(kind="diy", ward="GSS1")
 
 
 @pytest.fixture
@@ -90,7 +104,7 @@ def test_random_command_bad_input(db, monkeypatch):
         call_command("add_random_cases", uprns="uprns.csv")
 
 
-def test_random_command_no_mapit(requests_mock, mock_things, db, call_params):
+def test_random_command_no_mapit(requests_mock, db, call_params):
     requests_mock.get(
         re.compile("mapit.mysociety.org"),
         json={"error": "There was an error"},
@@ -100,12 +114,12 @@ def test_random_command_no_mapit(requests_mock, mock_things, db, call_params):
     assert "Error calling MapIt" == str(excinfo.value)
 
 
-def test_random_command(mock_things, db, call_params):
+def test_random_command(mock_ward_lookup, db, call_params):
     # Calling without commit does still save some things to the database at present
     call_command("add_random_cases", number=12, **call_params)
 
 
-def test_random_command_commit(mock_things, db, call_params):
+def test_random_command_commit(mock_ward_lookup, db, call_params):
     # 71 is enough for the fixed random seed to return all possible values
     call_command("add_random_cases", number=71, commit=True, **call_params)
 
@@ -133,9 +147,9 @@ def test_close_cases_command_bad_input(case):
 
 
 def test_close_cases_command(call_params, case):
-    case2 = Case.objects.create(kind="diy", ward="E05009373")
-    case3 = Case.objects.create(kind="diy", ward="E05009373")
-    case4 = Case.objects.create(kind="diy", ward="E05009373")
+    case2 = Case.objects.create(kind="diy", ward="GSS1")
+    case3 = Case.objects.create(kind="diy", ward="GSS1")
+    case4 = Case.objects.create(kind="diy", ward="GSS1")
     case3.merge_into(case4)
     case3.save()
     Case.objects.filter(id__in=(case.id, case2.id, case4.id)).update(

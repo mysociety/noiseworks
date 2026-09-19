@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from accounts.models import User
 from cases.models import Action, ActionType, Case, Complaint
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 
 
 class Command(BaseCommand):
@@ -240,7 +240,7 @@ class Command(BaseCommand):
             },
         )
         staff_for_ward = {"outside": user}
-        wards = list(map(lambda x: x["gss"], cobrand.api.wards()))
+        wards = list(map(lambda x: x.gss_code, get_cobrand().wards))
         wards.append(None)  # This is so if wards uneven, last is included
         for pair in zip(wards[::2], wards[1::2]):
             pair = list(filter(None, pair))

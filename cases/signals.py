@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import Signal, receiver
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.message import send_email
 
 from .models import Action, Case, Complaint, MergeRecord
@@ -22,8 +22,7 @@ def auto_assign_new_case(sender, case, case_absolute_url, **kwargs):
     case.assign(ward_principal, None)
     case.save()
 
-    wards = cobrand.api.wards()
-    ward_gss_to_name = {ward["gss"]: ward["name"] for ward in wards}
+    ward_gss_to_name = {ward.gss_code: ward.name for ward in get_cobrand().wards}
     ward_name = ward_gss_to_name.get(case.ward, case.ward)
     ward_principal.send_email(
         "You have been assigned",

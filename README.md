@@ -75,6 +75,7 @@ If you are running inside Docker you will want to enter a shell in the `web` con
 ### Tests
 
 * `script/test` or `script/test --coverage` to run the tests (100% coverage at present).
+* `script/typecheck` to check types using mypy.
 
 Tests are written with pytest; the current examples should show uses of test
 client, fixtures, request mocking, settings override, and so on.
