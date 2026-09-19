@@ -5,6 +5,7 @@ from django.utils.module_loading import import_string
 from pytest_django.asserts import assertContains
 
 from accounts.models import User
+from noiseworks.views import server_error
 
 
 @pytest.fixture
@@ -53,3 +54,9 @@ def test_admin_access(staff_user, admin_user, client):
     client.force_login(admin_user)
     resp = client.get("/admin/")
     assertContains(resp, "Django site admin")
+
+
+def test_server_error_page_has_cobrand(rf):
+    response = server_error(rf.get("/"))
+    assert response.status_code == 500
+    assert b"<title>Body Site</title>" in response.content
