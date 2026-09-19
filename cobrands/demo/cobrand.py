@@ -40,6 +40,7 @@ class Cobrand:
     staff_email_domains = ["societyworks", "mysociety"]
     wards = hackney_cobrand.wards
     reporting_kind_form_help_text: Optional[str] = None
+    map_tile_url: Optional[str] = None
 
     def address_candidates_for_postcode(self, postcode: str) -> List[AddressCandidate]:
         return [
