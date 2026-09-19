@@ -37,7 +37,7 @@ def home(request):
     elif request.user.is_authenticated:
         email_domain = request.user.email.split("@")[1]
         if email_domain in get_cobrand().staff_email_domains:
-            return render(request, "home_unapproved.html")
+            return render(request, "cases/home_unapproved.html")
         else:
             return redirect("cases")
     else:
