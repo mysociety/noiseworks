@@ -3,7 +3,7 @@
 <html lang="en" class="govuk-template lbh-template">
   <head>
     <meta charset="utf-8" />
-    <title>{% if title %}{{ title }} | {% endif %}Hackney Council</title>
+    <title>{% if title %}{{ title }} | {% endif %}{{ cobrand.page_title_suffix }}</title>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -33,7 +33,7 @@
 
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:title" content="{{ title }}">
-    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:site_name" content="{{ cobrand.site_name }}">
     <meta property="og:type" content="website">
 
   </head>
@@ -81,7 +81,7 @@
       <div class="lbh-header__title">
         <a href="/" class="lbh-header__title-link">
           {% include "cobrand/logo.html" %}
-          <span class="lbh-header__service-name">NoiseWorks</span>
+          <span class="lbh-header__service-name">{{ cobrand.site_name }}</span>
         </a>
       </div>
       <div class="lbh-header__links">

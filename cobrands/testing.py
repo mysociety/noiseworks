@@ -16,6 +16,7 @@ from .interface import (
 class TestCobrand:
     body_name = "Body"
     site_name = "Site"
+    page_title_suffix = "Body Site"
     staff_email_domains: List[str] = ["body"]
     wards: List[Ward] = [
         Ward(gss_code="GSS1", name="Ward 1", group="North"),
