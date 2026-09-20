@@ -4,6 +4,7 @@ from unittest.mock import mock_open
 
 import pytest
 from botocore.stub import Stubber
+from django.contrib.gis.geos import Point
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.core.management import CommandError, call_command
@@ -28,7 +29,7 @@ class TestCobrandWithLookupData(TestCobrand):
         if uprn in ["1", "2", "3"]:
             return AddressDetail(
                 uprn="10001",
-                point=None,
+                point=Point(533000, 184000, srid=27700),
                 label="Address",
                 ward_gss="GSS1",
                 in_an_estate=True,

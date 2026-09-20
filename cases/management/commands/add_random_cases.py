@@ -189,10 +189,15 @@ class Command(BaseCommand):
             return "n"
 
     def _pick_location(self):
-        e = random.randint(531480, 537642)
-        n = random.randint(181839, 188327)
-        p = Point(e, n, srid=27700)
-        return p
+        while True:
+            detail = get_cobrand().address_detail_for_uprn(random.choice(self.uprns))
+            if detail and detail.point:
+                point = detail.point.transform(27700, clone=True)
+                return Point(
+                    point.x + random.randint(-300, 300),
+                    point.y + random.randint(-300, 300),
+                    srid=27700,
+                )
 
     def _pick_radius(self):
         r = random.randint(1, 10)
