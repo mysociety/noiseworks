@@ -1,6 +1,7 @@
 import csv
 import random
 import re
+from email.utils import make_msgid
 from functools import cache
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -8,6 +9,8 @@ from typing import Dict, List, Optional
 import requests
 from django.conf import settings
 from django.contrib.gis.geos import Point
+
+from noiseworks.sass import inline_image_html
 
 from ..hackney.cobrand import Cobrand as HackneyCobrand
 from ..interface import (
@@ -107,7 +110,29 @@ class Cobrand:
         return ["staff-dest@example.org"]
 
     def override_email_colours(self) -> dict:
-        return {}
+        color_black = "#000000"
+        color_white = "#FFFFFF"
+        color_purple = "#7B60B6"
+        color_purple_dark = "#624D92"
+        color_purple_pale = "#F4F1F9"
+
+        body_background_color = color_purple_pale
+        body_text_color = color_black
+        header_background_color = color_purple
+        header_text_color = color_white
+        secondary_column_background_color = color_white
+        button_background_color = color_purple_dark
+        button_text_color = color_white
+
+        logo_width = "200"  # pixel measurement, but without 'px' suffix
+        logo_height = "45"  # pixel measurement, but without 'px' suffix
+        logo_inline = {
+            "id": make_msgid(domain="example.org")[1:-1],
+            "data": inline_image_html("enviroworks-logo-white.png"),
+        }
+        header_padding = "20px 30px"
+
+        return locals()
 
     def override_email_settings(self, settings: dict) -> dict:
         return {}

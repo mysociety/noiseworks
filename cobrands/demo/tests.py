@@ -107,7 +107,11 @@ def test_example_uprns():
 
 
 def test_override_email_colours():
-    cobrand.override_email_colours()
+    # The logo is only on the static path when the demo cobrand is installed.
+    with patch("cobrands.demo.cobrand.inline_image_html", return_value=b"logo"):
+        colours = cobrand.override_email_colours()
+    assert colours["header_background_color"] == "#7B60B6"
+    assert colours["logo_inline"]["data"] == b"logo"
 
 
 def test_override_email_settings():
