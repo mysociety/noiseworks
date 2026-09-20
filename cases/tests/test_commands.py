@@ -141,6 +141,22 @@ def test_random_command_commit(db, call_params, action_types):
     call_command("add_random_cases", number=71, commit=True, **call_params)
 
 
+def test_random_command_empty(db, call_params, action_types, admin_user):
+    call_command("add_random_cases", number=4, commit=True, **call_params)
+    assert Case.objects.count() == 4
+    users = set(User.objects.filter(is_superuser=False).values_list("pk", flat=True))
+
+    call_command("add_random_cases", number=2, commit=True, empty=True, **call_params)
+    assert Case.objects.count() == 2
+    assert not User.objects.filter(pk__in=users).exists()
+    assert User.objects.filter(pk=admin_user.pk).exists()
+
+
+def test_random_command_empty_needs_commit(db, call_params, action_types):
+    with pytest.raises(CommandError):
+        call_command("add_random_cases", number=1, empty=True, **call_params)
+
+
 def test_export_data_file_command(case, db, tmpdir):
     with pytest.raises(CommandError):
         call_command("export_data")

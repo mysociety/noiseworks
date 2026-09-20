@@ -21,6 +21,11 @@ class Command(BaseCommand):
             "--uprns",
             help="File of UPRNs to use, needed only if the cobrand lists none",
         )
+        parser.add_argument(
+            "--empty",
+            action="store_true",
+            help="Delete existing cases and non-superuser users first",
+        )
 
     def handle(self, *args, **options):
         if options["uprns"]:
@@ -34,6 +39,10 @@ class Command(BaseCommand):
         if not N:
             raise CommandError("Please specify a number of cases to create")
         self.commit = options["commit"]
+        if options["empty"]:
+            if not self.commit:
+                raise CommandError("Please pass --commit to empty the database")
+            self.empty()
         if options["fixed"]:  # pragma: no cover
             random.seed(44)
 
@@ -316,6 +325,10 @@ class Command(BaseCommand):
             action.save()
 
     # Helpers
+
+    def empty(self):
+        Case.objects.all().delete()
+        User.objects.filter(is_superuser=False).delete()
 
     def load_uprns(self, uprns_file):
         return [line.strip() for line in open(uprns_file)]
