@@ -102,8 +102,8 @@ def test_location_detail_for_point(requests_mock):
     assert details.in_an_estate is None
 
 
-def test_location_detail_for_point():
-    cobrand.location_detail_for_point(Point(0, 0, srid=43266))
+def test_example_uprns():
+    assert cobrand.example_uprns() == ["9000000001", "9000000002", "9000000003"]
 
 
 def test_override_email_colours():

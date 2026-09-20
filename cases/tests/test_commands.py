@@ -25,7 +25,7 @@ def call_params(db, capsys, monkeypatch):
 
 class TestCobrandWithLookupData(TestCobrand):
     def address_detail_for_uprn(self, uprn):
-        if uprn in [1, 2, 3]:
+        if uprn in ["1", "2", "3"]:
             return AddressDetail(
                 uprn="10001",
                 point=None,
@@ -42,6 +42,9 @@ class TestCobrandWithLookupData(TestCobrand):
             ward_gss="GSS1",
             in_an_estate=False,
         )
+
+    def example_uprns(self):
+        return ["1", "2", "3"]
 
 
 pytestmark = pytest.mark.cobrand.with_args(TestCobrandWithLookupData)
@@ -122,9 +125,14 @@ def test_random_command_bad_input(db, monkeypatch):
         call_command("add_random_cases", uprns="uprns.csv")
 
 
-def test_random_command(db, call_params, action_types):
+def test_random_command_with_uprn_file(db, call_params, action_types):
     # Calling without commit does still save some things to the database at present
     call_command("add_random_cases", number=12, **call_params)
+
+
+def test_random_command_with_cobrand_example_uprns(db, action_types):
+    # Calling without commit does still save soGme things to the database at present
+    call_command("add_random_cases", number=12)
 
 
 def test_random_command_commit(db, call_params, action_types):

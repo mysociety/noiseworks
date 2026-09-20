@@ -12,18 +12,24 @@ from cobrands.registry import get_cobrand
 
 class Command(BaseCommand):
     help = "Create a number of random cases in the database"
-    _uprns = None
 
     def add_arguments(self, parser):
         parser.add_argument("--number", type=int)
         parser.add_argument("--commit", action="store_true")
         parser.add_argument("--fixed", action="store_true")
-        parser.add_argument("--uprns", help="File containing list of UPRNs to use")
+        parser.add_argument(
+            "--uprns",
+            help="File of UPRNs to use, needed only if the cobrand lists none",
+        )
 
     def handle(self, *args, **options):
-        if not options["uprns"]:
-            raise CommandError("Please specify a filename to a list of UPRNs")
-        self.load_uprns(options["uprns"])
+        if options["uprns"]:
+            self.uprns = self.load_uprns(options["uprns"])
+        else:
+            self.uprns = get_cobrand().example_uprns()
+        if not self.uprns:
+            raise CommandError("Please specify a filename to a list of URPNs")
+
         N = options["number"]
         if not N:
             raise CommandError("Please specify a number of cases to create")
@@ -306,15 +312,8 @@ class Command(BaseCommand):
 
     # Helpers
 
-    @property
-    def uprns(self):
-        return self._uprns
-
-    def load_uprns(self, uprns_file=None):
-        uprns = []
-        for line in open(uprns_file):
-            uprns.append(int(line))
-        self._uprns = uprns
+    def load_uprns(self, uprns_file):
+        return [line.strip() for line in open(uprns_file)]
 
     def create(self, model, defaults=None, **kwargs):
         if self.commit:

@@ -43,5 +43,8 @@ class TestCobrand:
     def override_email_settings(self, settings: dict) -> dict:
         return {}
 
+    def example_uprns(self) -> List[str]:
+        return []
+
     def staff_destination_email_addresses_for_case(self, case: Case) -> List[str]:
         return ["destination@body"]

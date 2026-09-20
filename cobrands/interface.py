@@ -78,6 +78,10 @@ class Cobrand(Protocol):
         the settings to override."""
         ...
 
+    def example_uprns(self) -> List[str]:
+        """UPRNs to use for test data."""
+        ...
+
     def staff_destination_email_addresses_for_case(self, case) -> List[str]:
         """Returns one or more email addresses to send new case and reoccurence emails to."""
         ...

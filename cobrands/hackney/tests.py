@@ -273,6 +273,10 @@ def test_staff_destination_email_addresses_for_case(settings):
     ) == ["housing@example.org"]
 
 
+def test_example_uprns():
+    assert cobrand.example_uprns() == []
+
+
 def test_override_email_colours():
     # The logo is only on the static path when the demo cobrand is installed.
     with patch("cobrands.demo.cobrand.inline_image_html", return_value=b"logo"):

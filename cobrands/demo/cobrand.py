@@ -99,6 +99,9 @@ class Cobrand:
             in_an_estate=None,
         )
 
+    def example_uprns(self) -> List[str]:
+        return [row["uprn"] for row in addresses()]
+
     def staff_destination_email_addresses_for_case(self, case) -> List[str]:
         return ["staff-dest@example.org"]
 

@@ -332,6 +332,9 @@ class Cobrand:
             in_an_estate=estate,
         )
 
+    def example_uprns(self) -> List[str]:
+        return []
+
     def staff_destination_email_addresses_for_case(self, case) -> List[str]:
         email_config = settings.COBRAND_SETTINGS["staff_destination"]
         if case.ward == "outside":
