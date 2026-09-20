@@ -9,6 +9,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.management import CommandError, call_command
 
 from cases.management.commands.export_data import client
+from cases.models import ActionType
 from cobrands.interface import AddressDetail, LocationDetail
 from cobrands.testing import TestCobrand
 
@@ -17,7 +18,6 @@ from ..models import Action, ActionFile, Case, Notification, User
 
 @pytest.fixture
 def call_params(db, capsys, monkeypatch):
-    call_command("loaddata", "action_types_hackney")
     uprns = "1\n2\n3\n4"
     monkeypatch.setattr("builtins.open", lambda x: mock_open(read_data=uprns)())
     return {"uprns": "uprns.csv", "fixed": True}
@@ -74,6 +74,35 @@ def action_file_without_file(db, action):
 
 
 @pytest.fixture
+def action_types(db):
+    ActionType.objects.create(
+        name="Case closed",
+        common=False,
+        visibility="staff",
+    )
+    ActionType.objects.create(
+        name="Contacted complainant",
+        common=True,
+        visibility="public",
+    )
+    ActionType.objects.create(
+        name="Edit case",
+        common=False,
+        visibility="internal",
+    )
+    ActionType.objects.create(
+        name="Action 1",
+        common=True,
+        visibility="public",
+    )
+    ActionType.objects.create(
+        name="Action 2",
+        common=False,
+        visibility="internal",
+    )
+
+
+@pytest.fixture
 def temp_dir_path():
     with tempfile.TemporaryDirectory() as path:
         yield path
@@ -114,12 +143,12 @@ def test_random_command_no_mapit(requests_mock, db, call_params):
     assert "Error calling MapIt" == str(excinfo.value)
 
 
-def test_random_command(mock_ward_lookup, db, call_params):
+def test_random_command(mock_ward_lookup, db, call_params, action_types):
     # Calling without commit does still save some things to the database at present
     call_command("add_random_cases", number=12, **call_params)
 
 
-def test_random_command_commit(mock_ward_lookup, db, call_params):
+def test_random_command_commit(mock_ward_lookup, db, call_params, action_types):
     # 71 is enough for the fixed random seed to return all possible values
     call_command("add_random_cases", number=71, commit=True, **call_params)
 
@@ -146,7 +175,7 @@ def test_close_cases_command_bad_input(case):
     assert "Please specify a number of days" == str(excinfo.value)
 
 
-def test_close_cases_command(call_params, case):
+def test_close_cases_command(call_params, case, action_types):
     case2 = Case.objects.create(kind="diy", ward="GSS1")
     case3 = Case.objects.create(kind="diy", ward="GSS1")
     case4 = Case.objects.create(kind="diy", ward="GSS1")
