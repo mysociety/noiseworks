@@ -104,7 +104,7 @@ class Command(BaseCommand):
             if not user or random.randint(1, 4) != 1:
                 id += 1
                 user = User(
-                    email=f"madeup-{id}@noiseworks",
+                    email=f"madeup-{id}@user",
                     username=f"user-{id}",
                     first_name="User",
                     last_name=f"{id}",
@@ -218,9 +218,9 @@ class Command(BaseCommand):
     def set_up_staff_users(self):
         user = self.create(
             User,
-            username="auto-staff-outside@noiseworks",
+            username="auto-staff-outside@staff",
             defaults={
-                "email": "auto-staff-outside@noiseworks",
+                "email": "auto-staff-outside@staff",
                 "first_name": "Staff User",
                 "last_name": "Outside",
                 "email_verified": 1,
@@ -235,9 +235,9 @@ class Command(BaseCommand):
             last_name = "".join(map(lambda x: x[-2:], pair))
             user = self.create(
                 User,
-                username=f"auto-staff-{pair[0]}@noiseworks",
+                username=f"auto-staff-{pair[0]}@staff",
                 defaults={
-                    "email": f"auto-staff-{pair[0]}@noiseworks",
+                    "email": f"auto-staff-{pair[0]}@staff",
                     "first_name": "Staff User",
                     "last_name": last_name,
                     "email_verified": 1,
