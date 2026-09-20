@@ -1,8 +1,6 @@
 import random
 from datetime import timedelta
 
-import requests
-from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
@@ -63,9 +61,10 @@ class Command(BaseCommand):
 
             if random.randint(0, 2) == 0:
                 # Location
-                case.point, case.ward = self._pick_location()
+                case.point = self._pick_location()
                 case.radius = self._pick_radius()
-                case.location_display
+                # Populate ward without requiring a save.
+                case.update_location_cache()
             else:
                 self._pick_uprn(case)
 
@@ -184,21 +183,10 @@ class Command(BaseCommand):
             return "n"
 
     def _pick_location(self):
-        while True:
-            e = random.randint(531480, 537642)
-            n = random.randint(181839, 188327)
-            p = Point(e, n, srid=27700)
-            data = self._mapit_call(e, n)
-            if "error" in data.keys():
-                raise Exception("Error calling MapIt")
-            if "2508" in data.keys():
-                ward = None
-                for area in data.values():
-                    if area["type"] == "LBW":
-                        ward = area["codes"]["gss"]
-                return p, ward
-            if random.randint(1, 99) == 1:  # pragma: no cover
-                return p, "outside"
+        e = random.randint(531480, 537642)
+        n = random.randint(181839, 188327)
+        p = Point(e, n, srid=27700)
+        return p
 
     def _pick_radius(self):
         r = random.randint(1, 10)
@@ -327,13 +315,6 @@ class Command(BaseCommand):
         for line in open(uprns_file):
             uprns.append(int(line))
         self._uprns = uprns
-
-    def _mapit_call(self, e, n):
-        key = settings.MAPIT_API_KEY
-        d = requests.get(
-            f"https://mapit.mysociety.org/point/27700/{e},{n}?api_key={key}"
-        ).json()
-        return d
 
     def create(self, model, defaults=None, **kwargs):
         if self.commit:

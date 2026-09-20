@@ -23,17 +23,6 @@ def call_params(db, capsys, monkeypatch):
     return {"uprns": "uprns.csv", "fixed": True}
 
 
-@pytest.fixture
-def mock_ward_lookup(requests_mock):
-    requests_mock.get(
-        re.compile("mapit.mysociety.org"),
-        json={
-            "2508": {"type": "LBO"},
-            "144397": {"type": "LBW", "codes": {"gss": "GSS1"}},
-        },
-    )
-
-
 class TestCobrandWithLookupData(TestCobrand):
     def address_detail_for_uprn(self, uprn):
         if uprn in [1, 2, 3]:
@@ -133,22 +122,12 @@ def test_random_command_bad_input(db, monkeypatch):
         call_command("add_random_cases", uprns="uprns.csv")
 
 
-def test_random_command_no_mapit(requests_mock, db, call_params):
-    requests_mock.get(
-        re.compile("mapit.mysociety.org"),
-        json={"error": "There was an error"},
-    )
-    with pytest.raises(Exception) as excinfo:
-        call_command("add_random_cases", number=1, **call_params)
-    assert "Error calling MapIt" == str(excinfo.value)
-
-
-def test_random_command(mock_ward_lookup, db, call_params, action_types):
+def test_random_command(db, call_params, action_types):
     # Calling without commit does still save some things to the database at present
     call_command("add_random_cases", number=12, **call_params)
 
 
-def test_random_command_commit(mock_ward_lookup, db, call_params, action_types):
+def test_random_command_commit(db, call_params, action_types):
     # 71 is enough for the fixed random seed to return all possible values
     call_command("add_random_cases", number=71, commit=True, **call_params)
 
