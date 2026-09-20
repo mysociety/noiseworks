@@ -19,6 +19,7 @@ from ..interface import (
 
 hackney_cobrand = HackneyCobrand()
 
+# See the 'generate_addresses' command.
 ADDRESS_FILE = Path(__file__).resolve().parent / "addresses.csv"
 
 
