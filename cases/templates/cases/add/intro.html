@@ -2,8 +2,6 @@
 
 {% block content %}
 
-<h1 class="govuk-heading-l">Report unwelcome noise</h1>
-
 {% include "cobrand/report_intro.html" %}
 
 <form action="{% url "case-report-existing-qn" %}" method="post">{% csrf_token %}
