@@ -8,5 +8,5 @@ cd `dirname $0`/..
 
 script/bootstrap
 
-(cd cobrand_hackney && npm install)
+npm install
 poetry install --no-root

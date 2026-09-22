@@ -11,10 +11,10 @@ from django.utils.timezone import make_aware, now
 from humanize import naturalsize
 
 from accounts.models import User
-from noiseworks import cobrand
 from noiseworks.forms import GDSForm
 
 from ..models import Action, ActionType, Case
+from .common import get_address_choices_for_postcode
 from .widgets import TimeWidget
 
 
@@ -495,13 +495,7 @@ class LocationForm(GDSForm, forms.ModelForm):
         widgets = {"point": forms.HiddenInput, "uprn": forms.HiddenInput}
 
     def address_choices(self, pc):
-        addresses = cobrand.api.addresses_for_postcode(pc)
-        if "error" in addresses:
-            raise ValidationError("We could not recognise that postcode")
-        choices = []
-        for addr in addresses["addresses"]:
-            choices.append((addr["value"], addr["label"]))
-        return choices
+        return get_address_choices_for_postcode(pc)
 
     def clean(self):
         if self.cleaned_data.get("addresses"):

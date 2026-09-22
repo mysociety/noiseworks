@@ -1,4 +1,4 @@
-Your Hackney NoiseWorks sign in token is {{ signature }}
+Your {{ cobrand.body_name }} {{ cobrand.site_name }} sign in token is {{ signature }}
 
 Alternatively, you can sign in on this device by following this link:
 

@@ -37,11 +37,11 @@ def case_1(db, staff_user, normal_user):
     return Case.objects.create(
         kind="other",
         kind_other="Fireworks",
-        location_cache="123 High Street, Hackney",
+        location_cache="123 High Street, Place",
         estate="?",
         assigned=staff_user,
         created_by=normal_user,
-        ward="E05009373",
+        ward="GSS1",
     )
 
 
@@ -50,11 +50,11 @@ def case_2(db, staff_user, normal_user):
     return Case.objects.create(
         kind="other",
         kind_other="Fireworks",
-        location_cache="123 High Street, Hackney",
+        location_cache="123 High Street, Place",
         estate="?",
         assigned=staff_user,
         created_by=normal_user,
-        ward="E05009373",
+        ward="GSS1",
     )
 
 
@@ -115,13 +115,13 @@ def test_assigned_filter_not_assigned_anything(
 
 
 def test_ward_filter(admin_client, admin_user, case_1):
-    admin_user.wards = ["E05009374"]
+    admin_user.wards = ["GSS3"]
     admin_user.save()
     response = admin_client.get(
         "/cases?" + "&".join(f"ward={ward}" for ward in admin_user.wards)
     )
     assertNotContains(response, f"/cases/{case_1.id}")
-    admin_user.wards = ["E05009372", case_1.ward]
+    admin_user.wards = ["GSS2", case_1.ward]
     admin_user.save()
     response = admin_client.get(
         "/cases?" + "&".join(f"ward={ward}" for ward in admin_user.wards)
@@ -130,9 +130,9 @@ def test_ward_filter(admin_client, admin_user, case_1):
 
 
 def test_ward_group_filter(admin_client, admin_user, case_1):
-    response = admin_client.get("/cases?ward=south")
+    response = admin_client.get("/cases?ward=South")
     assertNotContains(response, f"/cases/{case_1.id}")
-    response = admin_client.get("/cases?ward=north")
+    response = admin_client.get("/cases?ward=North")
     assertContains(response, f"/cases/{case_1.id}")
 
 
@@ -167,14 +167,14 @@ def test_search_name(admin_client, case_1):
 def test_search_merged_case(admin_client):
     c1 = Case.objects.create(
         kind="diy",
-        ward="E05009373",
+        ward="GSS1",
         location_cache="Combined case",
         estate="?",
         point=Point(470267, 122766),
     )
     c2 = Case.objects.create(
         kind="diy",
-        ward="E05009373",
+        ward="GSS1",
         location_cache="Merged case",
         estate="?",
         point=Point(470267, 122766),
