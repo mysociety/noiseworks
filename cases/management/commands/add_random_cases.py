@@ -168,8 +168,13 @@ class Command(BaseCommand):
 
     def _pick_kind(self):
         r = random.randint(1, 20)
+        music_choices = [
+            "music-pub",
+            "music-club",
+            "music-other",
+        ]
         if r <= 10:
-            return "music"
+            return random.choice(music_choices)
         elif r <= 15:
             return "other"
         elif r <= 17:
@@ -178,7 +183,7 @@ class Command(BaseCommand):
             choices = [
                 c[0]
                 for c in Case.KIND_CHOICES
-                if c[0] not in ("music", "other", "shouting")
+                if c[0] not in ("other", "shouting", *music_choices)
             ]
             return random.choice(choices)
 
