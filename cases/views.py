@@ -867,6 +867,9 @@ class ReportingWizard(CaseWizard):
         elif step == "confirmation":
             data = self.storage.get_step_data("summary") or {}
             return {"token": data.get("token")}
+        elif step == "kind":
+            data = self.storage.get_step_data("kind_group") or {}
+            return {"group": data.get("group")}
         return super().get_form_kwargs(step)
 
     def get_form_initial(self, step):
@@ -938,6 +941,7 @@ class ReportingWizard(CaseWizard):
         ("best_time", forms.BestTimeForm),
         ("postcode", forms.PostcodeForm),
         ("address", forms.AddressForm),
+        ("kind_group", forms.ReportingKindGroupForm),
         ("kind", forms.ReportingKindForm),
         ("where", forms.WhereForm),
         ("where-location", forms.WhereLocationForm),

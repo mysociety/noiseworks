@@ -99,8 +99,8 @@ class CaseFilter(django_filters.FilterSet):
         super().__init__(data, *args, **kwargs)
 
         self.filters.move_to_end("search", last=False)
-        self.filters["kind"].label = "Noise type"
-        self.filters["where"].label = "Noise location type"
+        self.filters["kind"].label = "Type"
+        self.filters["where"].label = "Location type"
         self.filters["estate"].label = f"{get_cobrand().body_name} Estates property?"
         self.filters["ward"].extra["choices"] = list(get_wards().items())
 
