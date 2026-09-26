@@ -111,8 +111,17 @@ class AddressForm(StepForm):
         self.fields["address_uprn"].choices = choices
 
 
+class ReportingKindGroupForm(StepForm):
+    title = "About the problem"
+    group = forms.ChoiceField(
+        label="What type of problem is it?",
+        choices=Case.KIND_GROUP_CHOICES,
+        widget=forms.RadioSelect,
+    )
+
+
 class ReportingKindForm(StepForm):
-    title = "About the noise"
+    title = "About the problem"
     kind = forms.ChoiceField(
         label="What kind of noise is it?",
         widget=forms.RadioSelect,
@@ -122,6 +131,8 @@ class ReportingKindForm(StepForm):
     kind_other = forms.CharField(label="Other", required=False, max_length=100)
 
     def clean(self):
+        if self.kind_group == "asb":
+            self.add_error(None, "Sorry, ASB reporting is still being worked on!")
         kind = self.cleaned_data.get("kind")
         other = self.cleaned_data.get("kind_other")
         if kind == "other" and not other:
@@ -129,13 +140,20 @@ class ReportingKindForm(StepForm):
                 "kind_other", forms.ValidationError("Please specify the type of noise")
             )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, group, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.radios_small = True
         kind = self.fields["kind"]
-        kind.choices[-2] = Choice(
-            kind.choices[-2][0], kind.choices[-2][1], divider="or"
-        )
+        choice_ids = Case.KIND_GROUP_MAPPING[group]
+        choices = [c for c in Case.KIND_CHOICES if c[0] in choice_ids]
+        kind.choices = choices
+        if kind.choices[-1][0] == "other":
+            kind.choices[-2] = Choice(
+                kind.choices[-2][0], kind.choices[-2][1], divider="or"
+            )
+        if group == "asb":
+            kind.label = "What kind of anti-social behaviour problem is it?"
+        self.kind_group = group
 
 
 class WhereForm(StepForm):
