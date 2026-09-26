@@ -282,6 +282,43 @@ class Case(AbstractModel):
         COMPLAINT = "CO", "Complaint"
         MERGE = "MR", "Merge"
 
+    KIND_GROUP_CHOICES = [
+        ("noise", "Noise"),
+        ("asb", "Anti-social behaviour"),
+    ]
+
+    KIND_GROUP_MAPPING = {
+        "noise": [
+            "animal",
+            "buskers",
+            "car",
+            "construction",
+            "deliveries",
+            "diy",
+            "alarm",
+            "music-pub",
+            "music-club",
+            "music-other",
+            "festival",
+            "roadworks",
+            "road",
+            "plant-machinery",
+            "plant-street",
+            "shouting",
+            "tv",
+            "other",
+        ],
+        "asb": [
+            "rowdy",
+            "littering",
+            "fireworks",
+            "drinking",
+            "trespassing",
+            "vehicle",
+            "other",
+        ],
+    }
+
     KIND_CHOICES = [
         ("animal", "Animal noise"),
         ("buskers", "Buskers"),
@@ -300,6 +337,12 @@ class Case(AbstractModel):
         ("plant-street", "Plant noise - machinery on street"),
         ("shouting", "Shouting"),
         ("tv", "TV"),
+        ("rowdy", "Rowdy or inconsiderate behaviour"),
+        ("littering", "Littering and drug paraphernalia"),
+        ("fireworks", "Misuse of fireforks"),
+        ("drinking", "Street drinking"),
+        ("trespassing", "Trespassing"),
+        ("vehicle", "Vehicle nuisance"),
         ("other", "Other"),
     ]
     WHERE_CHOICES = [
@@ -767,6 +810,13 @@ class Case(AbstractModel):
         return self.closed or any(
             [Case.objects.get(pk=m["id"]).closed for m in self.merged_into_list]
         )
+
+    @property
+    def group(self):
+        for group, kinds in self.KIND_GROUP_MAPPING.items():
+            if self.kind in kinds:
+                return group
+        return None
 
 
 class Complaint(AbstractModel):
