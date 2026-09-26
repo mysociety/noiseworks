@@ -7,6 +7,7 @@
     <dt class="govuk-summary-list__key">Complainant
     <dd class="govuk-summary-list__value">{{ complaint.complainant }}
   </div>
+  {% if case.group == 'noise' %}
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Noise started</dt>
     <dd class="govuk-summary-list__value">{{ complaint.start }}</dd>
@@ -32,4 +33,5 @@
     <dt class="govuk-summary-list__key">Effect of noise
     <dd class="govuk-summary-list__value">{{ complaint.effect }}
   </div>
+  {% endif %}
 </dl>
