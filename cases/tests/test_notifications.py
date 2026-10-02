@@ -505,7 +505,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    resonse = client.post(
+    response = client.post(
         f"/cases/{case.id}/complaint/add/describe",
         {
             f"recurrence_wizard_{case.id}-current_step": "describe",
@@ -518,6 +518,13 @@ def test_case_recurrence_notifications(
         {
             f"recurrence_wizard_{case.id}-current_step": "effect",
             "effect-effect": "effect",
+        },
+        follow=True,
+    )
+    response = client.post(
+        f"/cases/{case.id}/complaint/add/attachments",
+        {
+            f"recurrence_wizard_{case.id}-current_step": "attachments",
         },
         follow=True,
     )

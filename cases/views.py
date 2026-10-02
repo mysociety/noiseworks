@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import BadRequest, PermissionDenied, ValidationError
+from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.http.response import FileResponse
@@ -27,7 +28,16 @@ from noiseworks.message import send_email, send_sms
 
 from . import forms, map_utils
 from .filters import CaseFilter
-from .models import Action, ActionFile, ActionType, Case, Complaint, Notification
+from .forms.storage import MultiFileSessionStorage
+from .models import (
+    Action,
+    ActionFile,
+    ActionType,
+    Case,
+    Complaint,
+    ComplaintFile,
+    Notification,
+)
 from .signals import new_case_reported
 
 
@@ -481,8 +491,7 @@ def priority(request, pk):
     return redirect(case)
 
 
-@login_required
-def complaint(request, pk, complaint):
+def can_view_complaint(request, pk, complaint):
     if request.user.is_staff:
         case = get_object_or_404(Case, pk=pk)
     else:
@@ -490,7 +499,7 @@ def complaint(request, pk, complaint):
             qs = Case.objects.by_complainant(request.user)
             case = get_object_or_404(qs, pk=pk)
         else:
-            return redirect("/")
+            raise BadRequest("/")
 
     complaint = get_object_or_404(
         Complaint.objects.select_related("case"), pk=complaint
@@ -498,12 +507,31 @@ def complaint(request, pk, complaint):
     merge_map = case.merge_map
     case_ids = merge_map.keys()
     if complaint.case.id not in case_ids:
-        return redirect(case)
+        raise BadRequest(case)
+    return case, complaint
+
+
+@login_required
+def complaint(request, pk, complaint):
+    try:
+        case, complaint = can_view_complaint(request, pk, complaint)
+    except BadRequest as e:
+        return redirect(e.args[0])
     return render(
         request,
         "cases/complaint_detail.html",
         context={"case": case, "complaint": complaint},
     )
+
+
+@login_required
+def complaint_file(request, pk, complaint, file_pk):
+    try:
+        case, complaint = can_view_complaint(request, pk, complaint)
+    except BadRequest as e:
+        return redirect(e)
+    file = get_object_or_404(ComplaintFile, pk=file_pk, complaint=complaint).file
+    return FileResponse(file)
 
 
 # Conditionals for form step display
@@ -532,6 +560,11 @@ def show_happening_now_form(wizard):
 
 def show_not_happening_now_form(wizard):
     return not show_happening_now_form(wizard)
+
+
+def show_attachments_form(wizard):
+    # TODO This will depend upon the kind, for now, always show it
+    return True
 
 
 def show_user_form(wizard):
@@ -573,6 +606,9 @@ def compile_dates(data):
 
 
 class CaseWizard(NamedUrlSessionWizardView):
+    storage_name = MultiFileSessionStorage.storage_name
+    file_storage = FileSystemStorage()
+
     def get(self, *args, **kwargs):
         """Always reset if begin page visited."""
         step_url = kwargs.get("step", None)
@@ -589,6 +625,11 @@ class CaseWizard(NamedUrlSessionWizardView):
             return redirect(self.get_step_url(self.steps.first))
 
         return super().get(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        if self.steps.current == "attachments":
+            kwargs["can_upload_files"] = True
+        return super().get_context_data(**kwargs)
 
     def person_save(self, data):
         if data["user"]:
@@ -629,6 +670,15 @@ class PerCaseWizard(CaseWizard):
     def get_context_data(self, **kwargs):
         kwargs["case"] = self.object
         return super().get_context_data(**kwargs)
+
+
+def _save_complaint_files(files, complaint):
+    for f in files:
+        ComplaintFile.objects.create(
+            complaint=complaint,
+            file=f,
+            original_name=f.name,
+        )
 
 
 class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
@@ -690,6 +740,7 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
         ("rooms", forms.RoomsAffectedForm),
         ("describe", forms.DescribeNoiseForm),
         ("effect", forms.EffectForm),
+        ("attachments", forms.AttachmentsForm),
         ("user_search", forms.RecurrencePersonSearchForm),
         ("user_pick", forms.PersonPickForm),
         ("user_address", forms.PersonAddressForm),
@@ -699,6 +750,7 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
     condition_dict = {
         "isnow": show_happening_now_form,
         "notnow": show_not_happening_now_form,
+        "attachments": show_attachments_form,
         "user_search": show_user_form,
         "user_pick": show_user_form,
         "user_address": show_user_address_form,
@@ -725,6 +777,7 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
             effect=data["effect"],
         )
         complaint.save()
+        _save_complaint_files(data["files"], complaint)
         send_emails(self.request, complaint, "reoccurrence")
         self.object.notify_followers(
             "Recurrence added.", triggered_by=self.request.user
@@ -950,6 +1003,7 @@ class ReportingWizard(CaseWizard):
         ("rooms", forms.RoomsAffectedForm),
         ("describe", forms.DescribeNoiseForm),
         ("effect", forms.EffectForm),
+        ("attachments", forms.AttachmentsForm),
         ("internal-flags", forms.InternalFlagsForm),
         ("summary", forms.SummaryForm),
         ("confirmation", forms.ConfirmationForm),
@@ -967,6 +1021,7 @@ class ReportingWizard(CaseWizard):
         "where-map": show_map_form,
         "isnow": show_happening_now_form,
         "notnow": show_not_happening_now_form,
+        "attachments": show_attachments_form,
         "internal-flags": show_internal_flags_form,
         "confirmation": show_confirmation_step,
     }
@@ -1051,6 +1106,7 @@ class ReportingWizard(CaseWizard):
 
         with transaction.atomic():
             complaint = self.create_data(form_dict, data)
+        _save_complaint_files(data["files"], complaint)
         send_emails(self.request, complaint, "report")
         return render(
             self.request,
