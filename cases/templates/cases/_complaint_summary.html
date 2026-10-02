@@ -33,3 +33,15 @@
     <dd class="govuk-summary-list__value">{{ complaint.effect }}
   </div>
 </dl>
+
+{% if complaint.files %}
+    <ul style="list-style-type: none">
+        {% for file in complaint.files.all %}
+            <li>
+                <a class="nw-link--no-visited-state lbh-body-s" href="{% url "complaint-file" complaint.case.id complaint.id file.id %}">
+                    {{ file.original_name }} ({{file.human_readable_size}})
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

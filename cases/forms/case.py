@@ -14,7 +14,7 @@ from accounts.models import User
 from noiseworks.forms import GDSForm
 
 from ..models import Action, ActionType, Case
-from .common import get_address_choices_for_postcode
+from .common import MultipleFileField, get_address_choices_for_postcode
 from .widgets import TimeWidget
 
 
@@ -137,24 +137,6 @@ def combine_date_and_time(date, action_time):
         action_time,
     )
     return make_aware(combined_unaware)
-
-
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class MultipleFileField(forms.FileField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        single_file_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            result = [single_file_clean(d, initial) for d in data]
-        else:
-            result = [single_file_clean(data, initial)]
-        return result
 
 
 class BaseActionForm(GDSForm, forms.ModelForm):

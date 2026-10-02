@@ -85,6 +85,7 @@ def test_add_complaint_now_existing_user(admin_client, case_1, normal_user):
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
     post_step("effect", {"effect": "Effect"})
+    post_step("attachments", {})
 
     post_step("user_search", {"search": "Normal User"})
     resp = post_step(
@@ -133,6 +134,7 @@ def _test_add_complaint_not_now_new_user(
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
     post_step("effect", {"effect": "Effect"})
+    post_step("attachments", {})
 
     post_step("user_search", {"search": "Normal"})
 
@@ -212,7 +214,8 @@ def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
 
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
-    resp = post_step("effect", {"effect": "Effect"}, follow=True)
+    post_step("effect", {"effect": "Effect"})
+    resp = post_step("attachments", {}, follow=True)
 
     assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
     assertContains(resp, "Sat, 13 Nov 2021, 1 a.m.")
