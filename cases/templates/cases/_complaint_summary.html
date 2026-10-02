@@ -7,6 +7,7 @@
     <dt class="govuk-summary-list__key">Complainant
     <dd class="govuk-summary-list__value">{{ complaint.complainant }}
   </div>
+  {% if complaint.case.group == 'noise' %}
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Noise started</dt>
     <dd class="govuk-summary-list__value">{{ complaint.start }}</dd>
@@ -32,4 +33,17 @@
     <dt class="govuk-summary-list__key">Effect of noise
     <dd class="govuk-summary-list__value">{{ complaint.effect }}
   </div>
+  {% endif %}
 </dl>
+
+{% if complaint.files %}
+    <ul style="list-style-type: none">
+        {% for file in complaint.files.all %}
+            <li>
+                <a class="nw-link--no-visited-state lbh-body-s" href="{% url "complaint-file" complaint.case.id complaint.id file.id %}">
+                    {{ file.original_name }} ({{file.human_readable_size}})
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

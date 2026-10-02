@@ -10,7 +10,7 @@ from django.core.validators import validate_email
 from phonenumber_field.phonenumber import PhoneNumber, to_python
 from sesame.utils import get_user
 
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.base32 import base32_to_bytes
 from noiseworks.forms import GDSForm
 
@@ -179,8 +179,7 @@ class EditUserForm(UserForm):
 
 
 def get_wards_as_choices():
-    wards = cobrand.api.wards()
-    wards = {ward["gss"]: ward["name"] for ward in wards}
+    wards = {ward.gss_code: ward.name for ward in get_cobrand().wards}
     return list(wards.items())
 
 
@@ -243,7 +242,7 @@ class EditStaffForm(UserForm):
                 ).all()
                 if len(existing_principals) > 0:
                     ward_mappings = {
-                        ward["gss"]: ward["name"] for ward in cobrand.api.wards()
+                        ward.gss_code: ward.name for ward in get_cobrand().wards
                     }
                     raise ValidationError(
                         f"{ward_mappings[w]} already has principal {existing_principals[0].email}."

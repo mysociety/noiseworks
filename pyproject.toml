@@ -31,10 +31,11 @@ django-cleanup = "^9.0.0"
 [tool.poetry.group.dev.dependencies]
 black = "^26.3.1"
 pytest-django = "^4.11.1"
-django-debug-toolbar = "^3.8.1"
+django-debug-toolbar = "^6.3.0"
 coverage = {extras = ["toml"], version = "^6.5.0"}
 requests-mock = "^1.12.1"
 ptpython = "^3.0.32"
+mypy = "^2.3.1"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "noiseworks.settings"
@@ -42,9 +43,17 @@ python_files = ["tests.py", "test_*.py"]
 filterwarnings = [
     "ignore::django.utils.deprecation.RemovedInDjango50Warning",
 ]
+markers = ["cobrand(cls): install this cobrand class for the test"]
 
 [tool.coverage.run]
-omit = ['*/asgi.py', '*/wsgi.py', 'manage.py', '*/migrations/*']
+omit = [
+  '*/asgi.py',
+  '*/wsgi.py',
+  'manage.py',
+  '*/migrations/*',
+  'cobrands/interface.py',
+  'cobrands/testing.py',
+]
 
 [tool.black]
 exclude = '''/(
@@ -54,6 +63,12 @@ exclude = '''/(
 [tool.isort]
 profile = "black"
 skip = ["migrations"]
+
+[tool.mypy]
+files = ["cobrands/**/*.py"]
+ignore_missing_imports = true
+# Only report errors in the files above, not in the site code they import.
+follow_imports = "silent"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -73,7 +73,7 @@ def normal_user(db):
 @pytest.fixture
 def case_1(db, staff_user_1, normal_user):
     return Case.objects.create(
-        kind="diy", assigned=staff_user_1, created_by=normal_user, ward="E05009373"
+        kind="diy", assigned=staff_user_1, created_by=normal_user, ward="GSS1"
     )
 
 
@@ -94,7 +94,7 @@ def test_reassign_success(case_1, staff_user_2):
 
 
 def test_reassign_ward_list(admin_client, case_1, staff_user_1, staff_user_2):
-    staff_user_2.wards = ["E05009372", case_1.ward]
+    staff_user_2.wards = ["GSS2", case_1.ward]
     staff_user_2.save()
     response = admin_client.get(f"/cases/{case_1.id}/reassign")
     assert re.search(

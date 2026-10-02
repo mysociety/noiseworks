@@ -6,6 +6,7 @@ from django import forms
 
 from noiseworks.forms import GDSForm, StepForm
 
+from .common import MultipleFileField
 from .widgets import TimeWidget
 
 
@@ -71,6 +72,18 @@ class EffectForm(StepForm):
     effect = forms.CharField(
         widget=forms.Textarea, label="What effect has the noise had on you?"
     )
+
+
+class AttachmentsForm(StepForm):
+    title = "Audio/Photo/Video"
+    files = MultipleFileField(label="Attachments", required=True)
+
+    def clean_files(self):
+        files = self.cleaned_data["files"]
+        for f in files:
+            if len(f.name) > 128:
+                raise ValidationError(f"Filename {f.name} too long, please rename")
+        return files
 
 
 class InternalFlagsForm(StepForm):

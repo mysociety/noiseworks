@@ -6,11 +6,13 @@ from phonenumber_field.formfields import PhoneNumberField
 from requests.exceptions import RequestException
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.interface import PlaceLookupError
+from cobrands.registry import get_cobrand
 from noiseworks.forms import GDSForm, StepForm
 
 from ..models import Case
 from ..widgets import MapWidget
+from .common import get_address_choices_for_postcode
 
 
 class ExistingForm(GDSForm, forms.Form):
@@ -86,12 +88,7 @@ class PostcodeForm(StepForm):
 
     def clean_postcode(self):
         pc = self.cleaned_data["postcode"]
-        addresses = cobrand.api.addresses_for_postcode(pc)
-        if "error" in addresses or not len(addresses.get("addresses", [])):
-            raise forms.ValidationError("We could not recognise that postcode")
-        choices = []
-        for addr in addresses["addresses"]:
-            choices.append((addr["value"], addr["label"]))
+        choices = get_address_choices_for_postcode(pc)
         self.to_store = {"postcode_results": choices}
         return pc
 
@@ -114,17 +111,28 @@ class AddressForm(StepForm):
         self.fields["address_uprn"].choices = choices
 
 
+class ReportingKindGroupForm(StepForm):
+    title = "About the problem"
+    group = forms.ChoiceField(
+        label="What type of problem is it?",
+        choices=Case.KIND_GROUP_CHOICES,
+        widget=forms.RadioSelect,
+    )
+
+
 class ReportingKindForm(StepForm):
-    title = "About the noise"
+    title = "About the problem"
     kind = forms.ChoiceField(
         label="What kind of noise is it?",
         widget=forms.RadioSelect,
-        help_text="Please see <a href='https://hackney.gov.uk/noise' target='_blank'>https://hackney.gov.uk/noise</a> for the kinds of noise we can and can’t deal with.",
+        help_text=get_cobrand().reporting_kind_form_help_text,
         choices=Case.KIND_CHOICES,
     )
     kind_other = forms.CharField(label="Other", required=False, max_length=100)
 
     def clean(self):
+        if self.kind_group == "asb":
+            self.add_error(None, "Sorry, ASB reporting is still being worked on!")
         kind = self.cleaned_data.get("kind")
         other = self.cleaned_data.get("kind_other")
         if kind == "other" and not other:
@@ -132,13 +140,20 @@ class ReportingKindForm(StepForm):
                 "kind_other", forms.ValidationError("Please specify the type of noise")
             )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, group, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper.radios_small = True
         kind = self.fields["kind"]
-        kind.choices[-2] = Choice(
-            kind.choices[-2][0], kind.choices[-2][1], divider="or"
-        )
+        choice_ids = Case.KIND_GROUP_MAPPING[group]
+        choices = [c for c in Case.KIND_CHOICES if c[0] in choice_ids]
+        kind.choices = choices
+        if kind.choices[-1][0] == "other":
+            kind.choices[-2] = Choice(
+                kind.choices[-2][0], kind.choices[-2][1], divider="or"
+            )
+        if group == "asb":
+            kind.label = "What kind of anti-social behaviour problem is it?"
+        self.kind_group = group
 
 
 class WhereForm(StepForm):
@@ -175,20 +190,23 @@ class WhereLocationForm(StepForm):
 
         canon_postcode = canonical_postcode(search)
         if canon_postcode:
-            addresses = cobrand.api.addresses_for_postcode(canon_postcode)
-            if "error" in addresses or not len(addresses.get("addresses", [])):
-                raise forms.ValidationError("We could not recognise that postcode")
-            choices = []
-            for addr in addresses["addresses"]:
-                choices.append((addr["value"], addr["label"]))
+            choices = get_address_choices_for_postcode(canon_postcode)
             self.to_store = {"postcode_results": choices}
         else:
             try:
-                results = cobrand.api.geocode(search)
-            except RequestException:
+                candidates = get_cobrand().location_candidates_for_string(search)
+            except PlaceLookupError:
                 raise forms.ValidationError(
                     "Sorry, address lookup by name is not working at the moment, please search by postcode instead"
                 )
+
+            results = []
+            for c in candidates:
+                p = c.point
+                p.transform(4326)
+                coord_string = f"{p.coords[0]},{p.coords[1]}"
+                results.append((coord_string, c.label))
+
             if len(results) > 1:
                 self.to_store = {"geocode_results": results}
             elif len(results) == 1:

@@ -19,7 +19,7 @@ services:
     command: /app/script/server --development
     volumes:
       - .:/app
-      - node_modules:/app/cobrand_hackney/node_modules/
+      - node_modules:/app/node_modules/
       - storage:/${FILE_STORAGE_RELATIVE_PATH}
     ports:
       - "8000:8000"
@@ -31,7 +31,7 @@ services:
       SECRET_KEY: 'secret'
       DEBUG: 1
       DATABASE_URL: 'postgis://postgres:password@db/noiseworks'
-      COBRAND: cobrand_hackney
+      COBRAND: hackney
       EMAIL_HOST: email.svc
       FILE_STORAGE_RELATIVE_PATH: storage
   mailhog:

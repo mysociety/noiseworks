@@ -47,7 +47,7 @@ def case_1(db, normal_user):
         kind="diy",
         location_cache="Entered location",
         created_by=normal_user,
-        ward="E05009373",
+        ward="GSS1",
     )
 
 
