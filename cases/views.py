@@ -548,6 +548,10 @@ def show_about_form(wizard):
     return not show_user_form(wizard)
 
 
+def show_kind_group_form(wizard):
+    return not get_cobrand().default_kind_group
+
+
 def show_internal_flags_form(wizard):
     user = wizard.request.user
     return user.is_active and user.is_staff
@@ -868,8 +872,11 @@ class ReportingWizard(CaseWizard):
             data = self.storage.get_step_data("summary") or {}
             return {"token": data.get("token")}
         elif step == "kind":
-            data = self.storage.get_step_data("kind_group") or {}
-            return {"group": data.get("group")}
+            group = get_cobrand().default_kind_group
+            if not group:
+                data = self.storage.get_step_data("kind_group") or {}
+                group = data.get("kind_group-group")
+            return {"group": group}
         return super().get_form_kwargs(step)
 
     def get_form_initial(self, step):
@@ -966,6 +973,7 @@ class ReportingWizard(CaseWizard):
         "about": show_about_form,
         "postcode": show_about_form,
         "address": show_about_form,
+        "kind_group": show_kind_group_form,
         "where-postcode-results": show_postcode_results_form,
         "where-geocode-results": show_geocode_results_form,
         "where-map": show_map_form,

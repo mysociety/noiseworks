@@ -315,7 +315,6 @@ class Case(AbstractModel):
             "drinking",
             "trespassing",
             "vehicle",
-            "other",
         ],
     }
 

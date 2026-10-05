@@ -74,6 +74,7 @@ class Cobrand:
     map_tile_url: Optional[str] = (
         "https://tilma.mysociety.org/os/hackney/Road_3857/{z}/{x}/{y}.png"
     )
+    default_kind_group: Optional[str] = "noise"
 
     def _query_address_api(self, params: dict) -> Optional[dict]:
         """Queries the address API and returns the JSON under 'data' on

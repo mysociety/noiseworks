@@ -119,9 +119,6 @@ class ReportingKindGroupForm(StepForm):
         widget=forms.RadioSelect,
     )
 
-    def clean(self):
-        self.to_store = {"group": self.cleaned_data.get("group")}
-
 
 class ReportingKindForm(StepForm):
     title = "About the problem"
@@ -150,9 +147,10 @@ class ReportingKindForm(StepForm):
         choice_ids = Case.KIND_GROUP_MAPPING[group]
         choices = [c for c in Case.KIND_CHOICES if c[0] in choice_ids]
         kind.choices = choices
-        kind.choices[-2] = Choice(
-            kind.choices[-2][0], kind.choices[-2][1], divider="or"
-        )
+        if kind.choices[-1][0] == "other":
+            kind.choices[-2] = Choice(
+                kind.choices[-2][0], kind.choices[-2][1], divider="or"
+            )
         if group == "asb":
             kind.label = "What kind of anti-social behaviour problem is it?"
         self.kind_group = group
