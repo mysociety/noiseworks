@@ -27,6 +27,33 @@ class TestCobrand:
     reporting_kind_form_help_text: Optional[str] = None
     map_tile_url: Optional[str] = None
     default_kind_group: Optional[str] = "noise"
+    form_labels: dict = {}
+    kinds = [
+        {
+            "label": "Noise",
+            "value": "noise",
+            "kinds": {
+                "animal": "Animal noise",
+                "buskers": "Buskers",
+                "car": "Car alarm",
+                "construction": "Construction site noise",
+                "deliveries": "Deliveries",
+                "diy": "DIY",
+                "alarm": "House / intruder alarm",
+                "music-pub": "Music from pub",
+                "music-club": "Music from club/bar",
+                "music-other": "Music - other",
+                "festival": "Noise caused by Religious Festivals",
+                "roadworks": "Noise from roadworks",
+                "road": "Noise on the road",
+                "plant-machinery": "Plant noise - machinery",
+                "plant-street": "Plant noise - machinery on street",
+                "shouting": "Shouting",
+                "tv": "TV",
+                "other": "Other",
+            },
+        }
+    ]
 
     def address_candidates_for_postcode(self, postcode: str) -> List[AddressCandidate]:
         return []

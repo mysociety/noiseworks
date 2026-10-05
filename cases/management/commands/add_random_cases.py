@@ -167,10 +167,9 @@ class Command(BaseCommand):
                 break
 
     def _pick_kind(self):
-        if random.randint(0, 1):
-            return random.choice(Case.KIND_GROUP_MAPPING["noise"])
-        else:
-            return random.choice(Case.KIND_GROUP_MAPPING["asb"])
+        cobrand = get_cobrand()
+        group = random.choice(cobrand.kinds)
+        return random.choice(list(group["kinds"].keys()))
 
     def _pick_where(self):
         if random.randint(1, 6) == 1:

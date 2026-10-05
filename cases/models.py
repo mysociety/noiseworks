@@ -282,68 +282,6 @@ class Case(AbstractModel):
         COMPLAINT = "CO", "Complaint"
         MERGE = "MR", "Merge"
 
-    KIND_GROUP_CHOICES = [
-        ("noise", "Noise"),
-        ("asb", "Anti-social behaviour"),
-    ]
-
-    KIND_GROUP_MAPPING = {
-        "noise": [
-            "animal",
-            "buskers",
-            "car",
-            "construction",
-            "deliveries",
-            "diy",
-            "alarm",
-            "music-pub",
-            "music-club",
-            "music-other",
-            "festival",
-            "roadworks",
-            "road",
-            "plant-machinery",
-            "plant-street",
-            "shouting",
-            "tv",
-            "other",
-        ],
-        "asb": [
-            "rowdy",
-            "littering",
-            "fireworks",
-            "drinking",
-            "trespassing",
-            "vehicle",
-        ],
-    }
-
-    KIND_CHOICES = [
-        ("animal", "Animal noise"),
-        ("buskers", "Buskers"),
-        ("car", "Car alarm"),
-        ("construction", "Construction site noise"),
-        ("deliveries", "Deliveries"),
-        ("diy", "DIY"),
-        ("alarm", "House / intruder alarm"),
-        ("music-pub", "Music from pub"),
-        ("music-club", "Music from club/bar"),
-        ("music-other", "Music - other"),
-        ("festival", "Noise caused by Religious Festivals"),
-        ("roadworks", "Noise from roadworks"),
-        ("road", "Noise on the road"),
-        ("plant-machinery", "Plant noise - machinery"),
-        ("plant-street", "Plant noise - machinery on street"),
-        ("shouting", "Shouting"),
-        ("tv", "TV"),
-        ("rowdy", "Rowdy or inconsiderate behaviour"),
-        ("littering", "Littering and drug paraphernalia"),
-        ("fireworks", "Misuse of fireworks"),
-        ("drinking", "Street drinking"),
-        ("trespassing", "Trespassing"),
-        ("vehicle", "Vehicle nuisance"),
-        ("other", "Other"),
-    ]
     WHERE_CHOICES = [
         (
             "business",
@@ -368,7 +306,7 @@ class Case(AbstractModel):
     )
 
     # Type
-    kind = models.CharField("Type", max_length=15, choices=KIND_CHOICES)
+    kind = models.CharField("Type", max_length=15)
     kind_other = models.CharField("Other type", max_length=100, blank=True)
 
     # Location
@@ -470,6 +408,12 @@ class Case(AbstractModel):
             pass
         elif estate is not None:
             self.estate = "y" if estate else "n"
+
+    def get_kind_display(self):
+        cobrand = get_cobrand()
+        for group in cobrand.kinds:
+            if k := group["kinds"].get(self.kind):
+                return k
 
     @property
     def kind_display(self):
@@ -812,10 +756,16 @@ class Case(AbstractModel):
 
     @property
     def group(self):
-        for group, kinds in self.KIND_GROUP_MAPPING.items():
-            if self.kind in kinds:
-                return group
-        return None
+        cobrand = get_cobrand()
+        for group in cobrand.kinds:
+            if group["kinds"].get(self.kind):
+                return group["value"]
+
+    def get_group_display(self):
+        cobrand = get_cobrand()
+        for group in cobrand.kinds:
+            if group["kinds"].get(self.kind):
+                return group["label"]
 
 
 class Complaint(AbstractModel):

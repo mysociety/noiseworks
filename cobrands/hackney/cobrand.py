@@ -76,6 +76,44 @@ class Cobrand:
     )
     default_kind_group: Optional[str] = "noise"
 
+    form_labels = {
+        "noise": {
+            "source": "The source of the noise",
+            "where": "Where is the noise coming from?",
+            "details": "Details of the noise",
+            "describe_help": "Please include as much detail as possible e.g. if the Noise is about a car alarm include the car’s colour, car registration etc",
+            "describe": "Can you describe the noise?",
+            "effect": "What effect has the noise had on you?",
+        },
+    }
+
+    kinds = [
+        {
+            "label": "Noise",
+            "value": "noise",
+            "kinds": {
+                "animal": "Animal noise",
+                "buskers": "Buskers",
+                "car": "Car alarm",
+                "construction": "Construction site noise",
+                "deliveries": "Deliveries",
+                "diy": "DIY",
+                "alarm": "House / intruder alarm",
+                "music-pub": "Music from pub",
+                "music-club": "Music from club/bar",
+                "music-other": "Music - other",
+                "festival": "Noise caused by Religious Festivals",
+                "roadworks": "Noise from roadworks",
+                "road": "Noise on the road",
+                "plant-machinery": "Plant noise - machinery",
+                "plant-street": "Plant noise - machinery on street",
+                "shouting": "Shouting",
+                "tv": "TV",
+                "other": "Other",
+            },
+        }
+    ]
+
     def _query_address_api(self, params: dict) -> Optional[dict]:
         """Queries the address API and returns the JSON under 'data' on
         success.

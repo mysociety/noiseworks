@@ -7,9 +7,9 @@
     <dt class="govuk-summary-list__key">Complainant
     <dd class="govuk-summary-list__value">{{ complaint.complainant }}
   </div>
-  {% if complaint.case.group == 'noise' %}
+  {% if complaint.start %}
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Noise started</dt>
+    <dt class="govuk-summary-list__key">Started</dt>
     <dd class="govuk-summary-list__value">{{ complaint.start }}</dd>
   </div>
   <div class="govuk-summary-list__row">

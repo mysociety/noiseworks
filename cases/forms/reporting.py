@@ -115,24 +115,25 @@ class ReportingKindGroupForm(StepForm):
     title = "About the problem"
     group = forms.ChoiceField(
         label="What type of problem is it?",
-        choices=Case.KIND_GROUP_CHOICES,
         widget=forms.RadioSelect,
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        group = self.fields["group"]
+        cobrand = get_cobrand()
+        group.choices = [(c["value"], c["label"]) for c in cobrand.kinds]
 
 
 class ReportingKindForm(StepForm):
     title = "About the problem"
     kind = forms.ChoiceField(
-        label="What kind of noise is it?",
         widget=forms.RadioSelect,
         help_text=get_cobrand().reporting_kind_form_help_text,
-        choices=Case.KIND_CHOICES,
     )
     kind_other = forms.CharField(label="Other", required=False, max_length=100)
 
     def clean(self):
-        if self.kind_group == "asb":
-            self.add_error(None, "Sorry, ASB reporting is still being worked on!")
         kind = self.cleaned_data.get("kind")
         other = self.cleaned_data.get("kind_other")
         if kind == "other" and not other:
@@ -144,25 +145,37 @@ class ReportingKindForm(StepForm):
         super().__init__(*args, **kwargs)
         self.helper.radios_small = True
         kind = self.fields["kind"]
-        choice_ids = Case.KIND_GROUP_MAPPING[group]
-        choices = [c for c in Case.KIND_CHOICES if c[0] in choice_ids]
-        kind.choices = choices
+        cobrand = get_cobrand()
+        for g in cobrand.kinds:
+            if g["value"] == group:
+                group_name = g["label"]
+                kind.choices = [(k, v) for k, v in g["kinds"].items()]
         if kind.choices[-1][0] == "other":
             kind.choices[-2] = Choice(
                 kind.choices[-2][0], kind.choices[-2][1], divider="or"
             )
-        if group == "asb":
-            kind.label = "What kind of anti-social behaviour problem is it?"
+        kind.label = f"What kind of {group_name.lower()} problem?"
         self.kind_group = group
 
 
-class WhereForm(StepForm):
-    title = "Where is the noise coming from?"
+class WhereForms(StepForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = self.form_label_lookup(
+            kwargs, "The location of the issue", "source"
+        )
+
+
+class WhereForm(WhereForms):
     where = forms.ChoiceField(
-        label="Where is the noise coming from?",
         widget=forms.RadioSelect,
         choices=Case.WHERE_CHOICES,
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        where = self.fields["where"]
+        where.label = self.form_label_lookup(kwargs, "Where is it coming from?")
 
 
 def canonical_postcode(pc):
@@ -178,8 +191,7 @@ def canonical_postcode(pc):
     return None
 
 
-class WhereLocationForm(StepForm):
-    title = "Where is the noise coming from?"
+class WhereLocationForm(WhereForms):
     search = forms.CharField(
         label="Postcode, or street name and area of the source",
         help_text="If you know the postcode please use that",
@@ -216,8 +228,7 @@ class WhereLocationForm(StepForm):
         return search
 
 
-class WherePostcodeResultsForm(StepForm):
-    title = "The source of the noise"
+class WherePostcodeResultsForm(WhereForms):
     source_uprn = forms.ChoiceField(
         widget=forms.RadioSelect, label="Please pick the address"
     )
@@ -234,8 +245,7 @@ class WherePostcodeResultsForm(StepForm):
         self.fields["source_uprn"].choices = choices
 
 
-class WhereGeocodeResultsForm(StepForm):
-    title = "The source of the noise"
+class WhereGeocodeResultsForm(WhereForms):
     geocode_result = forms.ChoiceField(
         widget=forms.RadioSelect, label="Please pick a match"
     )
@@ -246,10 +256,9 @@ class WhereGeocodeResultsForm(StepForm):
             self.fields["geocode_result"].choices = geocode_choices
 
 
-class WhereMapForm(StepForm):
-    title = "The source of the noise"
+class WhereMapForm(WhereForms):
     point = forms.PointField(
-        srid=27700, widget=MapWidget, label="Click the map at the source of the noise"
+        srid=27700, widget=MapWidget, label="Click the map at the source of the issue"
     )
     zoom = forms.IntegerField(widget=forms.HiddenInput)
     radius = forms.TypedChoiceField(
@@ -261,7 +270,7 @@ class WhereMapForm(StepForm):
             (800, "Large (half a mile / 800m)"),
         ),
         label="Area size",
-        help_text="Adjust the area size to indicate roughly where you believe the noise source to be",
+        help_text="Adjust the area size to indicate roughly where you believe the source to be",
     )
 
     def __init__(self, *args, **kwargs):
