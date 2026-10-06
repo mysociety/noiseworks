@@ -24,9 +24,21 @@ def get_wards():
     return wards
 
 
+def get_kinds():
+    cobrand = get_cobrand()
+    out = []
+    for g in cobrand.kinds:
+        for k in g["kinds"]:
+            out.append((k, g["kinds"][k]))
+    return out
+
+
 class CaseFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(
         label="", method="search_filter", widget=SearchWidget
+    )
+    kind = django_filters.ChoiceFilter(
+        choices=get_kinds(),
     )
     assigned = django_filters.ChoiceFilter(
         choices=[
