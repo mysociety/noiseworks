@@ -4,8 +4,10 @@ import datetime
 from crispy_forms_gds.fields import DateInputField
 from django import forms
 
+from cobrands.registry import get_cobrand
 from noiseworks.forms import GDSForm, StepForm
 
+from .common import MultipleFileField
 from .widgets import TimeWidget
 
 
@@ -21,7 +23,7 @@ class IsItHappeningNowForm(StepForm):
         choices=((1, "Yes"), (0, "No")),
         widget=forms.RadioSelect,
         coerce=int,
-        label="Is the noise happening right now?",
+        label="Is the issue happening right now?",
     )
 
 
@@ -29,7 +31,7 @@ class HappeningNowForm(StepForm):
     start_date = forms.TypedChoiceField(
         choices=(("today", "Today"), ("yesterday", "Yesterday")),
         widget=forms.RadioSelect,
-        label="When did today’s noise start?",
+        label="When did today’s problem start?",
         coerce=coerce_to_date,
     )
     start_time = forms.TimeField(
@@ -50,27 +52,51 @@ class NotHappeningNowForm(StepForm):
     )
 
 
-class RoomsAffectedForm(StepForm):
-    title = "Details of the noise"
+class DetailForms(StepForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = self.form_label_lookup(kwargs, "Details of the issue", "details")
+
+
+class RoomsAffectedForm(DetailForms):
     rooms = forms.CharField(
         widget=forms.Textarea, label="Which rooms in your property are affected?"
     )
 
 
-class DescribeNoiseForm(StepForm):
-    title = "Details of the noise"
-    description = forms.CharField(
-        widget=forms.Textarea,
-        label="Can you describe the noise?",
-        help_text="Please include as much detail as possible e.g. if the Noise is about a car alarm include the car’s colour, car registration etc",
-    )
+class DescribeForm(DetailForms):
+    description = forms.CharField(widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        desc = self.fields["description"]
+        desc.label = self.form_label_lookup(kwargs, "Can you describe the problem?")
+        desc.help_text = self.form_label_lookup(
+            kwargs, "Please include as much detail as possible", "describe_help"
+        )
 
 
-class EffectForm(StepForm):
-    title = "Details of the noise"
-    effect = forms.CharField(
-        widget=forms.Textarea, label="What effect has the noise had on you?"
-    )
+class EffectForm(DetailForms):
+    effect = forms.CharField(widget=forms.Textarea)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        effect = self.fields["effect"]
+        effect.label = self.form_label_lookup(
+            kwargs, "What effect has the issue had on you?"
+        )
+
+
+class AttachmentsForm(StepForm):
+    title = "Audio/Photo/Video"
+    files = MultipleFileField(label="Attachments", required=True)
+
+    def clean_files(self):
+        files = self.cleaned_data["files"]
+        for f in files:
+            if len(f.name) > 128:
+                raise ValidationError(f"Filename {f.name} too long, please rename")
+        return files
 
 
 class InternalFlagsForm(StepForm):

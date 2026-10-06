@@ -31,37 +31,40 @@
   </div>
 
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Type of noise</dt>
-    <dd class="govuk-summary-list__value">{{ case.get_kind_display }}</dd>
+    <dt class="govuk-summary-list__key">Type of issue</dt>
+    <dd class="govuk-summary-list__value">
+        {{ case.get_group_display }} &gt; {{ case.get_kind_display }}
+    </dd>
     <dd class="govuk-summary-list__actions">
     <a class="nw-link--no-visited-state" href="kind">
-        Change<span class="govuk-visually-hidden"> type of noise</span>
+        Change<span class="govuk-visually-hidden"> type of issue</span>
       </a>
     </dd>
   </div>
 
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Where is the noise coming from?</dt>
+    <dt class="govuk-summary-list__key">Where is the problem coming from?</dt>
     <dd class="govuk-summary-list__value">{{ case.get_where_display }}</dd>
     <dd class="govuk-summary-list__actions">
     <a class="nw-link--no-visited-state" href="where">
-        Change<span class="govuk-visually-hidden"> where noise is coming from</span>
+        Change<span class="govuk-visually-hidden"> where problem is coming from</span>
       </a>
     </dd>
   </div>
 
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Source of the noise</dt>
+    <dt class="govuk-summary-list__key">Source of the problem</dt>
     <dd class="govuk-summary-list__value">{{ case.location_display }}</dd>
     <dd class="govuk-summary-list__actions">
     <a class="nw-link--no-visited-state" href="where-location">
-        Change<span class="govuk-visually-hidden"> noise source</span>
+        Change<span class="govuk-visually-hidden"> source</span>
       </a>
     </dd>
   </div>
 
+  {% if data.start_date %}
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Noise started</dt>
+    <dt class="govuk-summary-list__key">Started</dt>
     <dd class="govuk-summary-list__value">{{ data.start_date }}, {{ data.start_time }}</dd>
     <dd class="govuk-summary-list__actions">
     <a class="nw-link--no-visited-state" href="isitnow">
@@ -70,7 +73,7 @@
     </dd>
   </div>
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Noise ended</dt>
+    <dt class="govuk-summary-list__key">Ended</dt>
     <dd class="govuk-summary-list__value">
      {% if data.happening_now %}
      Still ongoing at {% now "P, D j M Y" %}
@@ -84,6 +87,8 @@
       </a>
     </dd>
   </div>
+  {% endif %}
+
   <div class="govuk-summary-list__row">
     <dt class="govuk-summary-list__key">Rooms affected</dt>
     <dd class="govuk-summary-list__value">{{ data.rooms }}</dd>
@@ -94,7 +99,7 @@
     </dd>
   </div>
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Noise description</dt>
+    <dt class="govuk-summary-list__key">Description</dt>
     <dd class="govuk-summary-list__value">{{ data.description }}</dd>
     <dd class="govuk-summary-list__actions">
       <a class="nw-link--no-visited-state" href="describe">

@@ -9,7 +9,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import BadRequest, PermissionDenied, ValidationError
+from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.http.response import FileResponse
@@ -21,13 +22,22 @@ from formtools.wizard.views import NamedUrlSessionWizardView
 from humanize import naturalsize
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_email, send_sms
 
 from . import forms, map_utils
 from .filters import CaseFilter
-from .models import Action, ActionFile, ActionType, Case, Complaint, Notification
+from .forms.storage import MultiFileSessionStorage
+from .models import (
+    Action,
+    ActionFile,
+    ActionType,
+    Case,
+    Complaint,
+    ComplaintFile,
+    Notification,
+)
 from .signals import new_case_reported
 
 
@@ -35,8 +45,9 @@ def home(request):
     if request.user.is_staff:
         return redirect("cases")
     elif request.user.is_authenticated:
-        if "hackney.gov.uk" in request.user.email:
-            return render(request, "home_unapproved.html")
+        email_domain = request.user.email.split("@")[1]
+        if email_domain in get_cobrand().staff_email_domains:
+            return render(request, "cases/home_unapproved.html")
         else:
             return redirect("cases")
     else:
@@ -480,8 +491,7 @@ def priority(request, pk):
     return redirect(case)
 
 
-@login_required
-def complaint(request, pk, complaint):
+def can_view_complaint(request, pk, complaint):
     if request.user.is_staff:
         case = get_object_or_404(Case, pk=pk)
     else:
@@ -489,7 +499,7 @@ def complaint(request, pk, complaint):
             qs = Case.objects.by_complainant(request.user)
             case = get_object_or_404(qs, pk=pk)
         else:
-            return redirect("/")
+            raise BadRequest("/")
 
     complaint = get_object_or_404(
         Complaint.objects.select_related("case"), pk=complaint
@@ -497,12 +507,31 @@ def complaint(request, pk, complaint):
     merge_map = case.merge_map
     case_ids = merge_map.keys()
     if complaint.case.id not in case_ids:
-        return redirect(case)
+        raise BadRequest(case)
+    return case, complaint
+
+
+@login_required
+def complaint(request, pk, complaint):
+    try:
+        case, complaint = can_view_complaint(request, pk, complaint)
+    except BadRequest as e:
+        return redirect(e.args[0])
     return render(
         request,
         "cases/complaint_detail.html",
         context={"case": case, "complaint": complaint},
     )
+
+
+@login_required
+def complaint_file(request, pk, complaint, file_pk):
+    try:
+        case, complaint = can_view_complaint(request, pk, complaint)
+    except BadRequest as e:
+        return redirect(e)
+    file = get_object_or_404(ComplaintFile, pk=file_pk, complaint=complaint).file
+    return FileResponse(file)
 
 
 # Conditionals for form step display
@@ -524,13 +553,38 @@ def show_map_form(wizard):
     return data1.get("geocode_result") or data2.get("geocode_result")
 
 
+def show_isitnow_form(wizard):
+    group = get_cobrand().default_kind_group
+    if not group:
+        data = wizard.get_cleaned_data_for_step("kind_group") or {}
+        group = data.get("group")
+    return group in ("noise", "dust", "smoke", "light", "asb")
+
+
 def show_happening_now_form(wizard):
+    if not show_isitnow_form(wizard):
+        return False
     data = wizard.get_cleaned_data_for_step("isitnow") or {}
     return data.get("happening_now")
 
 
 def show_not_happening_now_form(wizard):
+    if not show_isitnow_form(wizard):
+        return False
     return not show_happening_now_form(wizard)
+
+
+def show_rooms_form(wizard):
+    group = get_cobrand().default_kind_group
+    if not group:
+        data = wizard.get_cleaned_data_for_step("kind_group") or {}
+        group = data.get("group")
+    return group in ("noise", "dust", "smoke", "light", "pest")
+
+
+def show_attachments_form(wizard):
+    # TODO This will depend upon the kind, for now, always show it
+    return True
 
 
 def show_user_form(wizard):
@@ -547,6 +601,10 @@ def show_about_form(wizard):
     return not show_user_form(wizard)
 
 
+def show_kind_group_form(wizard):
+    return not get_cobrand().default_kind_group
+
+
 def show_internal_flags_form(wizard):
     user = wizard.request.user
     return user.is_active and user.is_staff
@@ -558,6 +616,9 @@ def show_confirmation_step(wizard):
 
 
 def compile_dates(data):
+    if "start_date" not in data:
+        return None, None
+
     start = datetime.datetime.combine(data["start_date"], data["start_time"])
     start = timezone.make_aware(start)
 
@@ -572,6 +633,9 @@ def compile_dates(data):
 
 
 class CaseWizard(NamedUrlSessionWizardView):
+    storage_name = MultiFileSessionStorage.storage_name
+    file_storage = FileSystemStorage()
+
     def get(self, *args, **kwargs):
         """Always reset if begin page visited."""
         step_url = kwargs.get("step", None)
@@ -588,6 +652,11 @@ class CaseWizard(NamedUrlSessionWizardView):
             return redirect(self.get_step_url(self.steps.first))
 
         return super().get(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        if self.steps.current == "attachments":
+            kwargs["can_upload_files"] = True
+        return super().get_context_data(**kwargs)
 
     def person_save(self, data):
         if data["user"]:
@@ -630,6 +699,36 @@ class PerCaseWizard(CaseWizard):
         return super().get_context_data(**kwargs)
 
 
+SHARED_CONDITION_DICT = {
+    "isitnow": show_isitnow_form,
+    "isnow": show_happening_now_form,
+    "notnow": show_not_happening_now_form,
+    "attachments": show_attachments_form,
+    "rooms": show_rooms_form,
+    "user_search": show_user_form,
+    "user_pick": show_user_form,
+    "user_address": show_user_address_form,
+}
+COMPLAINT_FORM_LIST = [
+    ("isitnow", forms.IsItHappeningNowForm),
+    ("isnow", forms.HappeningNowForm),
+    ("notnow", forms.NotHappeningNowForm),
+    ("rooms", forms.RoomsAffectedForm),
+    ("describe", forms.DescribeForm),
+    ("effect", forms.EffectForm),
+    ("attachments", forms.AttachmentsForm),
+]
+
+
+def _save_complaint_files(files, complaint):
+    for f in files:
+        ComplaintFile.objects.create(
+            complaint=complaint,
+            file=f,
+            original_name=f.name,
+        )
+
+
 class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
     template_name = "cases/complaint_add.html"
     summary_check_page = "isitnow"
@@ -669,10 +768,18 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
         return super().get_context_data(**kwargs)
 
     def get_form_kwargs(self, step):
+        kwargs = super().get_form_kwargs(step)
+        kwargs["step"] = step
+        kwargs["kind"] = self.object.kind
+        for g in get_cobrand().kinds:
+            for k in g["kinds"].keys():
+                if k == self.object.kind:
+                    kwargs["group"] = g["value"]
+
         if step == "user_address":
             data = self.storage.get_step_data("user_pick") or {}
-            return {"address_choices": data["postcode_results"]}
-        return super().get_form_kwargs(step)
+            kwargs["address_choices"] = data["postcode_results"]
+        return kwargs
 
     def get_form_initial(self, step):
         """The user pick form needs the search query passed to it"""
@@ -682,26 +789,14 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
                 return {"search": data["search"]}
         return super().get_form_initial(step)
 
-    form_list = [
-        ("isitnow", forms.IsItHappeningNowForm),
-        ("isnow", forms.HappeningNowForm),
-        ("notnow", forms.NotHappeningNowForm),
-        ("rooms", forms.RoomsAffectedForm),
-        ("describe", forms.DescribeNoiseForm),
-        ("effect", forms.EffectForm),
+    form_list = COMPLAINT_FORM_LIST + [
         ("user_search", forms.RecurrencePersonSearchForm),
         ("user_pick", forms.PersonPickForm),
         ("user_address", forms.PersonAddressForm),
         ("summary", forms.SummaryForm),
     ]
 
-    condition_dict = {
-        "isnow": show_happening_now_form,
-        "notnow": show_not_happening_now_form,
-        "user_search": show_user_form,
-        "user_pick": show_user_form,
-        "user_address": show_user_address_form,
-    }
+    condition_dict = SHARED_CONDITION_DICT
 
     def done(self, form_list, form_dict, **kwargs):
         data = self.get_all_cleaned_data()
@@ -724,6 +819,7 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
             effect=data["effect"],
         )
         complaint.save()
+        _save_complaint_files(data["files"], complaint)
         send_emails(self.request, complaint, "reoccurrence")
         self.object.notify_followers(
             "Recurrence added.", triggered_by=self.request.user
@@ -846,27 +942,42 @@ class ReportingWizard(CaseWizard):
         return super().get_context_data(**kwargs)
 
     def get_form_kwargs(self, step):
+        kwargs = super().get_form_kwargs(step)
+        kwargs["step"] = step
+
+        # Put kind on every form so they can customise if need be
+        data = self.storage.get_step_data("kind") or {}
+        kwargs["kind"] = data.get("kind-kind")
+        data = self.storage.get_step_data("kind_group") or {}
+        kwargs["group"] = data.get("kind_group-group")
+
         if step == "where-postcode-results":
             data = self.storage.get_step_data("where-location") or {}
-            return {"address_choices": data["postcode_results"]}
+            kwargs["address_choices"] = data["postcode_results"]
         elif step == "where-geocode-results":
             data = self.storage.get_step_data("where-location") or {}
             if data.get("geocode_results"):
-                return {"geocode_choices": data["geocode_results"]}
+                kwargs["geocode_choices"] = data["geocode_results"]
         elif step == "best_time":
-            return {"staff": self.request.user.is_active and self.request.user.is_staff}
+            kwargs["staff"] = self.request.user.is_active and self.request.user.is_staff
         elif step == "about":
-            return {"user": self.request.user.is_authenticated and self.request.user}
+            kwargs["user"] = self.request.user.is_authenticated and self.request.user
         elif step == "address":
             data = self.storage.get_step_data("postcode") or {}
-            return {"address_choices": data["postcode_results"]}
+            kwargs["address_choices"] = data["postcode_results"]
         elif step == "user_address":
             data = self.storage.get_step_data("user_pick") or {}
-            return {"address_choices": data["postcode_results"]}
+            kwargs["address_choices"] = data["postcode_results"]
         elif step == "confirmation":
             data = self.storage.get_step_data("summary") or {}
-            return {"token": data.get("token")}
-        return super().get_form_kwargs(step)
+            kwargs["token"] = data.get("token")
+        elif step == "kind":
+            group = get_cobrand().default_kind_group
+            if not group:
+                data = self.storage.get_step_data("kind_group") or {}
+                group = data.get("kind_group-group")
+            kwargs["group"] = group
+        return kwargs
 
     def get_form_initial(self, step):
         """The user pick form needs the search query passed to it"""
@@ -929,43 +1040,39 @@ class ReportingWizard(CaseWizard):
 
         return data
 
-    form_list = [
-        ("user_search", forms.RecurrencePersonSearchForm),
-        ("user_pick", forms.PersonPickForm),
-        ("user_address", forms.PersonAddressForm),
-        ("about", forms.AboutYouForm),
-        ("best_time", forms.BestTimeForm),
-        ("postcode", forms.PostcodeForm),
-        ("address", forms.AddressForm),
-        ("kind", forms.ReportingKindForm),
-        ("where", forms.WhereForm),
-        ("where-location", forms.WhereLocationForm),
-        ("where-postcode-results", forms.WherePostcodeResultsForm),
-        ("where-geocode-results", forms.WhereGeocodeResultsForm),
-        ("where-map", forms.WhereMapForm),
-        ("isitnow", forms.IsItHappeningNowForm),
-        ("isnow", forms.HappeningNowForm),
-        ("notnow", forms.NotHappeningNowForm),
-        ("rooms", forms.RoomsAffectedForm),
-        ("describe", forms.DescribeNoiseForm),
-        ("effect", forms.EffectForm),
-        ("internal-flags", forms.InternalFlagsForm),
-        ("summary", forms.SummaryForm),
-        ("confirmation", forms.ConfirmationForm),
-    ]
+    form_list = (
+        [
+            ("user_search", forms.RecurrencePersonSearchForm),
+            ("user_pick", forms.PersonPickForm),
+            ("user_address", forms.PersonAddressForm),
+            ("about", forms.AboutYouForm),
+            ("best_time", forms.BestTimeForm),
+            ("postcode", forms.PostcodeForm),
+            ("address", forms.AddressForm),
+            ("kind_group", forms.ReportingKindGroupForm),
+            ("kind", forms.ReportingKindForm),
+            ("where", forms.WhereForm),
+            ("where-location", forms.WhereLocationForm),
+            ("where-postcode-results", forms.WherePostcodeResultsForm),
+            ("where-geocode-results", forms.WhereGeocodeResultsForm),
+            ("where-map", forms.WhereMapForm),
+        ]
+        + COMPLAINT_FORM_LIST
+        + [
+            ("internal-flags", forms.InternalFlagsForm),
+            ("summary", forms.SummaryForm),
+            ("confirmation", forms.ConfirmationForm),
+        ]
+    )
 
-    condition_dict = {
-        "user_search": show_user_form,
-        "user_pick": show_user_form,
-        "user_address": show_user_address_form,
+    condition_dict = SHARED_CONDITION_DICT | {
         "about": show_about_form,
         "postcode": show_about_form,
         "address": show_about_form,
+        "kind_group": show_kind_group_form,
         "where-postcode-results": show_postcode_results_form,
         "where-geocode-results": show_geocode_results_form,
         "where-map": show_map_form,
-        "isnow": show_happening_now_form,
-        "notnow": show_not_happening_now_form,
         "internal-flags": show_internal_flags_form,
         "confirmation": show_confirmation_step,
     }
@@ -1050,6 +1157,7 @@ class ReportingWizard(CaseWizard):
 
         with transaction.atomic():
             complaint = self.create_data(form_dict, data)
+        _save_complaint_files(data["files"], complaint)
         send_emails(self.request, complaint, "report")
         return render(
             self.request,
@@ -1108,7 +1216,7 @@ class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
 def send_emails(request, complaint, template):
     case = complaint.case
     subject = f"Noise {template}: {case.location_display}"
-    staff_dest = cobrand.email.case_destination(case)
+    staff_dest = get_cobrand().staff_destination_email_addresses_for_case(case)
     url = request.build_absolute_uri(case.get_absolute_url())
     complainant = complaint.complainant
     send_email(

@@ -24,6 +24,11 @@ urlpatterns = [
         "/<int:pk>/complaint/add/<step>", recurrence_wizard, name="complaint-add-step"
     ),
     path("/<int:pk>/complaint/<int:complaint>", views.complaint, name="complaint"),
+    path(
+        "/<int:pk>/complaint/<int:complaint>/files/<int:file_pk>",
+        views.complaint_file,
+        name="complaint-file",
+    ),
     path("/<int:pk>/edit-kind", views.edit_kind, name="case-edit-kind"),
     path("/<int:pk>/edit-location", views.edit_location, name="case-edit-location"),
     path(

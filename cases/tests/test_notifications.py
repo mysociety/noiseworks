@@ -5,6 +5,8 @@ from django.contrib.auth.models import Permission
 from pytest_django.asserts import assertContains
 
 from accounts.models import User
+from cobrands.interface import AddressCandidate, AddressDetail
+from cobrands.testing import TestCobrand
 
 from ..models import ActionType, Case, Notification
 
@@ -52,7 +54,7 @@ def case(db, staff_user, normal_user):
         kind="diy",
         assigned=staff_user,
         created_by=normal_user,
-        ward="E05009373",
+        ward="GSS1",
     )
 
 
@@ -62,7 +64,7 @@ def case_2(db, staff_user, normal_user):
         kind="diy",
         assigned=staff_user,
         created_by=normal_user,
-        ward="E05009373",
+        ward="GSS1",
     )
 
 
@@ -317,16 +319,30 @@ def test_case_kind_changed_notifications(case, staff_user, staff_user_2, client)
     )
 
 
-def test_case_location_changed_notifications(
-    case, staff_user, staff_user_2, client, address_lookup
-):
+class TestCobrandWithLookupData(TestCobrand):
+    def address_candidates_for_postcode(self, postcode):
+        return [
+            AddressCandidate(
+                uprn="1001",
+                label="label",
+            )
+        ]
+
+    def address_detail_for_uprn(self, uprn):
+        return AddressDetail(
+            label="label", uprn=uprn, point=None, in_an_estate=None, ward_gss="GSS1"
+        )
+
+
+@pytest.mark.cobrand.with_args(TestCobrandWithLookupData)
+def test_case_location_changed_notifications(case, staff_user, staff_user_2, client):
     case.followers.set([staff_user])
     client.force_login(staff_user_2)
     client.post(
         f"/cases/{case.id}/edit-location",
         {
-            "postcode": "E8 3DY",
-            "addresses": "10008315925",
+            "postcode": "VALID",
+            "addresses": "1001",
             "where": "residence",
         },
     )
@@ -489,7 +505,7 @@ def test_case_recurrence_notifications(
         },
         follow=True,
     )
-    resonse = client.post(
+    response = client.post(
         f"/cases/{case.id}/complaint/add/describe",
         {
             f"recurrence_wizard_{case.id}-current_step": "describe",
@@ -502,6 +518,13 @@ def test_case_recurrence_notifications(
         {
             f"recurrence_wizard_{case.id}-current_step": "effect",
             "effect-effect": "effect",
+        },
+        follow=True,
+    )
+    response = client.post(
+        f"/cases/{case.id}/complaint/add/attachments",
+        {
+            f"recurrence_wizard_{case.id}-current_step": "attachments",
         },
         follow=True,
     )

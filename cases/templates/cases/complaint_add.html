@@ -30,7 +30,7 @@
 
 <dl class="nw-summary-list govuk-!-margin-bottom-8">
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Noise started again</dt>
+    <dt class="govuk-summary-list__key">Started again</dt>
     <dd class="govuk-summary-list__value">{{ data.start_date }}, {{ data.start_time }}</dd>
     <dd class="govuk-summary-list__actions">
     <a class="nw-link--no-visited-state" href="isitnow">
@@ -39,7 +39,7 @@
     </dd>
   </div>
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Noise ended</dt>
+    <dt class="govuk-summary-list__key">Ended</dt>
     <dd class="govuk-summary-list__value">
      {% if data.happening_now %}
      Still ongoing at {% now "P, D j M Y" %}
@@ -63,7 +63,7 @@
     </dd>
   </div>
   <div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">Noise description</dt>
+    <dt class="govuk-summary-list__key">Description</dt>
     <dd class="govuk-summary-list__value">{{ data.description }}</dd>
     <dd class="govuk-summary-list__actions">
       <a class="nw-link--no-visited-state" href="describe">
@@ -102,5 +102,11 @@
 <p><a href="{% url "complaint-add" case.id %}">Cancel</a></p>
 
 </form>
+
+<script>
+(function(){
+    {% include "cases/_file_upload.js" %}
+})();
+</script>
 
 {% endblock %}

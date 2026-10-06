@@ -6,8 +6,15 @@ import pytest
 from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains
 
+from cobrands.interface import (
+    AddressCandidate,
+    AddressDetail,
+    LocationDetail,
+    PlaceLookupError,
+)
+from cobrands.testing import TestCobrand
+
 from ..models import Case
-from .conftest import ADDRESS
 
 pytestmark = pytest.mark.django_db
 
@@ -39,155 +46,75 @@ def form_defaults():
     }
 
 
-def test_edit_location(requests_mock, admin_client, form_defaults):
-    requests_mock.get(re.compile("postcode=BAD"), json={})
-    requests_mock.get(
-        re.compile("postcode=SW1A1AA"),
-        json={"data": {"address": [{**ADDRESS, "gazetteer": "National"}]}},
-    )
-    requests_mock.get(
-        re.compile("point/27700"),
-        json={
-            "2508": {"type": "LBO", "name": "Hackney"},
-            "144391": {
-                "type": "LBW",
-                "codes": {"gss": "E05009378"},
-                "name": "Hoxton West",
-            },
-        },
-    )
-    requests_mock.get(re.compile("housing/ows"), json={"features": []})
-    requests_mock.get(
-        re.compile("greenspaces/ows"),
-        json={
-            "features": [
-                {
-                    "type": "Feature",
-                    "id": "hackney_park.1",
-                    "properties": {
-                        "park_id": "P37",
-                        "name": "Shepherdess Walk",
-                        "new_ward": "Hoxton West",
-                    },
-                }
+class TestCobrandWithLookupData(TestCobrand):
+    def address_candidates_for_postcode(self, postcode):
+        if postcode == "ERROR":
+            raise PlaceLookupError()
+        elif postcode == "VALID":
+            return [
+                AddressCandidate(
+                    uprn="1001",
+                    label="label",
+                )
             ]
-        },
-    )
+        return []
 
+    def address_detail_for_uprn(self, uprn):
+        return AddressDetail(
+            label="label", uprn=uprn, point=None, in_an_estate=None, ward_gss="GSS1"
+        )
+
+    def location_detail_for_point(self, point):
+        return LocationDetail(
+            point=point,
+            description="description",
+            ward_gss="GSS1",
+            in_an_estate=False,
+        )
+
+
+@pytest.mark.cobrand.with_args(TestCobrandWithLookupData)
+def test_edit_location(admin_client, form_defaults):
     case = Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
-    assert case.location_display == "800m around a point in Shepherdess Walk"
+    assert case.location_display == "800m around description"
 
     admin_client.get(f"/cases/{case.id}/edit-location")
 
     # Post with no changes
     resp = admin_client.post(f"/cases/{case.id}/edit-location", form_defaults)
-    # Post with a bad postcode
+    # Post and get an error
     resp = admin_client.post(
         f"/cases/{case.id}/edit-location",
-        {**form_defaults, "postcode": "BAD"},
+        {**form_defaults, "postcode": "ERROR"},
     )
+    assertContains(resp, "something went wrong")
     # Post with an outside postcode
     resp = admin_client.post(
         f"/cases/{case.id}/edit-location",
-        {**form_defaults, "postcode": "SW1A1AA"},
+        {**form_defaults, "postcode": "UNKNOWN"},
     )
     assertContains(resp, "could not recognise that postcode")
 
 
-def test_edit_location_to_uprn(
-    requests_mock, admin_client, form_defaults, address_lookup
-):
-    requests_mock.get(
-        re.compile("point/27700"),
-        json={
-            "2508": {"type": "LBO", "name": "Hackney"},
-            "144391": {
-                "type": "LBW",
-                "codes": {"gss": "E05009378"},
-                "name": "Hoxton West",
-            },
-        },
-    )
-    # Mock a road
-    requests_mock.get(
-        re.compile("transport/ows"),
-        json={
-            "features": [
-                {
-                    "type": "Feature",
-                    "id": "os_highways_street.1695",
-                    "geometry": {
-                        "type": "MultiLineString",
-                        "coordinates": [
-                            [
-                                [533338, 182414],
-                                [533337, 182440],
-                                [533337, 182440],
-                                [533337, 182459],
-                            ]
-                        ],
-                    },
-                    "properties": {
-                        "usrn": 20900732,
-                        "authority_name": "Hackeny",
-                        "name": "NEW INN STREET",
-                    },
-                },
-                {
-                    "type": "Feature",
-                    "id": "os_highways_street.1695",
-                    "geometry": {
-                        "type": "LineString",
-                        "coordinates": [
-                            [533338, 182414],
-                            [533337, 182440],
-                            [533337, 182440],
-                            [533337, 182459],
-                        ],
-                    },
-                    "properties": {
-                        "usrn": 20900732,
-                        "authority_name": "Hackeny",
-                        "name": "NEW INN STREET",
-                    },
-                },
-                {
-                    "type": "Feature",
-                    "id": "os_highways_street.1695",
-                    "geometry": {
-                        "type": "Point",
-                        "coordinates": [533338, 182414],
-                    },
-                    "properties": {
-                        "usrn": 20900732,
-                        "authority_name": "Hackeny",
-                        "name": "NEW INN STREET",
-                    },
-                },
-            ]
-        },
-    )
-
+@pytest.mark.cobrand.with_args(TestCobrandWithLookupData)
+def test_edit_location_to_uprn(admin_client, form_defaults):
     case = Case.objects.create(kind="diy", point=Point(470267, 122766), radius=800)
-    assert (
-        case.location_display
-        == "800m around a point near New Inn Street / New Inn Street"
-    )
+    assert case.location_display == "800m around description"
 
     # Post with a postcode
     resp = admin_client.post(
         f"/cases/{case.id}/edit-location",
-        {**form_defaults, "postcode": "E8 3DY"},
+        {**form_defaults, "postcode": "VALID"},
     )
-    assertContains(resp, 'value="10008315925"')
+    assertContains(resp, 'value="1001"')
     # Post with a UPRN
     resp = admin_client.post(
         f"/cases/{case.id}/edit-location",
-        {**form_defaults, "postcode": "E8 3DY", "addresses": "10008315925"},
+        {**form_defaults, "postcode": "VALID", "addresses": "1001"},
     )
     case = Case.objects.get(id=case.id)
-    assert case.location_display == "Line 1, Line 2, Line 3, E8 1DY"
-    assert case.uprn == "10008315925"
+    assert case.location_display == "label"
+    assert case.uprn == "1001"
 
 
 def test_edit_priority(admin_client):

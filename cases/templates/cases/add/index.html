@@ -20,7 +20,7 @@ or arrange a visit to listen to the noise ourselves.</p>
 then create a new case.</p>
 {% endif %}
 
-<form action="" method="post">
+<form action="" method="post"{% if wizard.form.is_multipart %} enctype="multipart/form-data"{% endif %}>
 {{ wizard.management_form }}
 {% crispy wizard.form %}
 
@@ -30,6 +30,7 @@ then create a new case.</p>
 
 <script>
 (function(){
+    {% include "cases/_file_upload.js" %}
     var radius = document.querySelectorAll('input[type=radio][name=where-map-radius]');
     radius.forEach(function(r) {
         r.addEventListener('change', nw.react);

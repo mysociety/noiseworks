@@ -14,14 +14,9 @@ from humanize import naturalsize
 from simple_history.models import HistoricalRecords
 
 from accounts.models import User
-from noiseworks import cobrand
+from cobrands.interface import PlaceLookupError
+from cobrands.registry import get_cobrand
 from noiseworks.current_user import get_current_user
-
-
-def ward_name_to_id(ward):
-    wards = cobrand.api.wards()
-    wards = {ward["name"]: ward["gss"] for ward in wards}
-    return wards.get(ward, "outside")
 
 
 class AbstractModel(models.Model):
@@ -287,26 +282,6 @@ class Case(AbstractModel):
         COMPLAINT = "CO", "Complaint"
         MERGE = "MR", "Merge"
 
-    KIND_CHOICES = [
-        ("animal", "Animal noise"),
-        ("buskers", "Buskers"),
-        ("car", "Car alarm"),
-        ("construction", "Construction site noise"),
-        ("deliveries", "Deliveries"),
-        ("diy", "DIY"),
-        ("alarm", "House / intruder alarm"),
-        ("music-pub", "Music from pub"),
-        ("music-club", "Music from club/bar"),
-        ("music-other", "Music - other"),
-        ("festival", "Noise caused by Religious Festivals"),
-        ("roadworks", "Noise from roadworks"),
-        ("road", "Noise on the road"),
-        ("plant-machinery", "Plant noise - machinery"),
-        ("plant-street", "Plant noise - machinery on street"),
-        ("shouting", "Shouting"),
-        ("tv", "TV"),
-        ("other", "Other"),
-    ]
     WHERE_CHOICES = [
         (
             "business",
@@ -331,7 +306,7 @@ class Case(AbstractModel):
     )
 
     # Type
-    kind = models.CharField("Type", max_length=15, choices=KIND_CHOICES)
+    kind = models.CharField("Type", max_length=15)
     kind_other = models.CharField("Other type", max_length=100, blank=True)
 
     # Location
@@ -404,42 +379,41 @@ class Case(AbstractModel):
         return case
 
     def update_location_cache(self):
+        estate = None
         if self.location_cache:
             pass
         elif self.uprn:
-            addr = cobrand.api.address_for_uprn(self.uprn)
-            if addr["string"]:
-                self.location_cache = addr["string"]
-                self.point = Point(addr["longitude"], addr["latitude"], srid=4326)
-                self.ward = ward_name_to_id(addr["ward"])
+            try:
+                address_detail = get_cobrand().address_detail_for_uprn(self.uprn)
+            except PlaceLookupError:
+                return
+            if not address_detail:
+                return
+            self.location_cache = address_detail.label
+            self.point = address_detail.point
+            self.ward = address_detail.ward_gss
+            estate = address_detail.in_an_estate
         elif self.point:
-            key = settings.MAPIT_API_KEY
-            data = requests.get(
-                f"https://mapit.mysociety.org/point/27700/{self.point.x},{self.point.y}?api_key={key}"
-            ).json()
-            if "2508" in data.keys():
-                ward = ""
-                for area in data.values():
-                    if area["type"] == "LBW":
-                        ward = area["codes"]["gss"]
-                self.ward = ward
-
-            park = cobrand.api.in_a_park(self.point)
-            if park:
-                desc = f"a point in {park['name']}"
-            else:
-                roads = cobrand.api.nearest_roads(self.point)
-                if roads:
-                    desc = f"a point near {roads}"
-                else:
-                    desc = f"({self.point.x:.0f},{self.point.y:.0f})"
-            self.location_cache = f"{self.radius}m around {desc}"
+            try:
+                location_detail = get_cobrand().location_detail_for_point(self.point)
+            except PlaceLookupError:
+                return
+            if not location_detail:
+                return
+            self.location_cache = f"{self.radius}m around {location_detail.description}"
+            self.ward = location_detail.ward_gss
+            estate = location_detail.in_an_estate
 
         if self.estate:
             pass
-        elif self.point:
-            estate = cobrand.api.in_an_estate(self.point)
+        elif estate is not None:
             self.estate = "y" if estate else "n"
+
+    def get_kind_display(self):
+        cobrand = get_cobrand()
+        for group in cobrand.kinds:
+            if k := group["kinds"].get(self.kind):
+                return k
 
     @property
     def kind_display(self):
@@ -458,9 +432,9 @@ class Case(AbstractModel):
         return f"{p[1]:.6f},{p[0]:.6f}"
 
     def get_ward_display(self):
-        wards = cobrand.api.wards()
-        wards = {ward["gss"]: ward["name"] for ward in wards}
-        wards["outside"] = "Outside Hackney"
+        cobrand = get_cobrand()
+        wards = {ward.gss_code: ward.name for ward in cobrand.wards}
+        wards["outside"] = f"Outside {cobrand.body_name}"
         return wards.get(self.ward, self.ward)
 
     def merge_into(self, other):
@@ -780,6 +754,19 @@ class Case(AbstractModel):
             [Case.objects.get(pk=m["id"]).closed for m in self.merged_into_list]
         )
 
+    @property
+    def group(self):
+        cobrand = get_cobrand()
+        for group in cobrand.kinds:
+            if group["kinds"].get(self.kind):
+                return group["value"]
+
+    def get_group_display(self):
+        cobrand = get_cobrand()
+        for group in cobrand.kinds:
+            if group["kinds"].get(self.kind):
+                return group["label"]
+
 
 class Complaint(AbstractModel):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="complaints")
@@ -901,6 +888,26 @@ class ActionFile(AbstractModel):
     def get_absolute_url(self):
         return reverse(
             "action-file", args=[self.action.case.pk, self.action.pk, self.pk]
+        )
+
+
+class ComplaintFile(AbstractModel):
+    complaint = models.ForeignKey(
+        Complaint, on_delete=models.CASCADE, related_name="files"
+    )
+    file = models.FileField()
+    original_name = models.CharField(max_length=128)
+
+    @property
+    def human_readable_size(self):
+        return naturalsize(self.file.size)
+
+    def can_delete(self, user):
+        return user == self.created_by
+
+    def get_absolute_url(self):
+        return reverse(
+            "complaint-file", args=[self.action.case.pk, self.action.pk, self.pk]
         )
 
 

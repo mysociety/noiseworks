@@ -11,6 +11,8 @@ from pytest_django.asserts import assertContains, assertNotContains
 from sesame.tokens import create_token
 
 from cases.models import Case
+from cobrands.interface import AddressDetail, PlaceLookupError
+from cobrands.testing import TestCobrand
 
 from .forms import CodeForm
 from .models import User
@@ -31,14 +33,14 @@ def normal_user(db):
 @pytest.fixture
 def staff_user(db):
     return User.objects.create_user(
-        is_staff=True, email="foo@example.org", wards=["E05009374"]
+        is_staff=True, email="foo@example.org", wards=["GSS1"]
     )
 
 
 @pytest.fixture
 def staff_user_2(db):
     return User.objects.create_user(
-        is_staff=True, email="foo2@example.org", wards=["E05009374"]
+        is_staff=True, email="foo2@example.org", wards=["GSS1"]
     )
 
 
@@ -183,7 +185,7 @@ def test_user_adding(client, staff_user, case_workers):
             "first_name": "New",
             "last_name": "User",
             "email": "foo2@example.org",
-            "wards": ["E05009378", "E05009374"],
+            "wards": ["GSS1", "GSS2"],
             "case_worker": True,
         },
     )
@@ -239,7 +241,7 @@ def test_staff_user_editing(client, staff_user, case_workers):
             "first_name": "Staff",
             "last_name": "User",
             "email": "foo@example.org",
-            "wards": ["E05009378", "E05009374"],
+            "wards": ["GSS1", "GSS2"],
             "case_worker": True,
             "is_staff": True,
         },
@@ -255,7 +257,7 @@ def test_staff_user_editing(client, staff_user, case_workers):
             "first_name": "Staff",
             "last_name": "User",
             "email": "foo@example.org",
-            "wards": ["E05009378", "E05009374"],
+            "wards": ["GSS1", "GSS2"],
         },
     )
     user.refresh_from_db()
@@ -283,7 +285,7 @@ def test_user_upgrading(admin_client, normal_user):
             "first_name": "Normal",
             "last_name": "User",
             "email": normal_user.email,
-            "wards": ["E05009378", "E05009374"],
+            "wards": ["GSS1", "GSS2"],
             "case_worker": True,
         },
     )
@@ -317,7 +319,7 @@ def test_edit_redirect_back_to_case(admin_client, staff_user):
             "first_name": "Staff",
             "last_name": "User",
             "email": "foo@example.org",
-            "wards": ["E05009378", "E05009374"],
+            "wards": ["GSS1", "GSS2"],
             "case_worker": True,
         },
     )
@@ -325,46 +327,45 @@ def test_edit_redirect_back_to_case(admin_client, staff_user):
     assert response.url == "/cases/123"
 
 
-def test_address_display_uprn():
-    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
-        address_for_uprn.return_value = {
-            "string": "Flat 4, 2 Example Road, E8 2DP",
-            "ward": "Hackney Central",
-            "latitude": 51,
-            "longitude": -0.1,
-        }
-        user = User.objects.create(
-            first_name="Norma", last_name="User", uprn=10001, estate="?"
+def test_address_display_shows_uprn_on_no_data():
+    user = User.objects.create(first_name="Norma", last_name="User", uprn=10001)
+    assert user.address_display == 10001
+
+
+class TestCobrandWithAddressLookupError(TestCobrand):
+    def address_detail_for_uprn(self, uprn):
+        raise PlaceLookupError()
+
+
+@pytest.mark.cobrand.with_args(TestCobrandWithAddressLookupError)
+def test_address_display_shows_uprn_failed_lookup():
+    user = User.objects.create(first_name="Norma", last_name="User", uprn=10001)
+    assert user.address_display == 10001
+
+
+class TestCobrandWithUPRNLookup(TestCobrand):
+    def address_detail_for_uprn(self, uprn):
+        return AddressDetail(
+            uprn="10001",
+            point=None,
+            label="Address",
+            ward_gss="GSS1",
+            in_an_estate=True,
         )
-        assert user.address_display == "Flat 4, 2 Example Road, E8 2DP"
 
 
-def test_address_display_uprn_no_data():
-    with patch("cobrand_hackney.api.address_for_uprn") as address_for_uprn:
-        address_for_uprn.return_value = {"string": "", "ward": ""}
-        user = User.objects.create(first_name="Norma", last_name="User", uprn=10001)
-        assert user.address_display == 10001
-
-
-def test_address_display_address(requests_mock):
-    requests_mock.get(re.compile(r"housing/ows"), json={"features": []})
-    requests_mock.get(
-        re.compile(r"uprn=10001"),
-        json={
-            "data": {
-                "address": [
-                    {
-                        "line1": "An address",
-                        "line2": "Hackney",
-                        "line3": "London",
-                        "postcode": "Postcode",
-                        "longitude": -0.0575203934113829,
-                        "latitude": 51.5449668465297,
-                    }
-                ]
-            }
-        },
+@pytest.mark.cobrand.with_args(TestCobrandWithUPRNLookup)
+def test_address_populated_for_uprn_when_empty():
+    user = User.objects.create(
+        first_name="Norma", last_name="User", uprn=10001, estate="?"
     )
+    assert user.address_display == "Address"
+    assert user.estate == "y"
+    assert str(user) == "Norma User, Address"
+
+
+@pytest.mark.cobrand.with_args(TestCobrandWithUPRNLookup)
+def test_address_unchanged_when_already_set():
     user = User.objects.create(
         first_name="Norma",
         last_name="User",
@@ -372,7 +373,7 @@ def test_address_display_address(requests_mock):
         uprn=10001,
     )
     assert user.address_display == "Other address"
-    assert user.estate == "n"
+    assert user.estate == "y"
     assert str(user) == "Norma User, Other address"
 
 
@@ -387,9 +388,9 @@ def test_add_staff_command(db, case_workers, capsys, monkeypatch):
 
     data_dict = {
         "bad.csv": "Name,Email,Wards\nTest Test,test1@example.org,Bad Ward\n",
-        "good.csv": "Name,Email,Wards\nTest Test,test2@example.org\nTester McTest,test3@example.org,Hackney Central|Victoria",
+        "good.csv": "Name,Email,Wards\nTest Test,test2@example.org\nTester McTest,test3@example.org,Ward 1|Ward 2",
         "goodmap.csv": "Name,Email,Wards\nTest Test,test2@example.org\nTest Test,test4@example.org,North",
-        "mapping.csv": "Name,Ward\nNorth,Hackney Central\nNorth,Stoke Newington",
+        "mapping.csv": "Name,Ward\nNorth,Ward 3\nNorth,Ward 4",
     }
 
     def open_side_effect(name):
@@ -405,7 +406,7 @@ def test_add_staff_command(db, case_workers, capsys, monkeypatch):
     call_command("add_staff_users", csv_file="good.csv", case_workers=True, commit=True)
     user = User.objects.get(email="test2@example.org")
     user = User.objects.get(email="test3@example.org")
-    assert user.wards == ["E05009372", "E05009386"]
+    assert user.wards == ["GSS1", "GSS2"]
     assert case_workers in user.groups.all()
 
     call_command(
@@ -418,7 +419,7 @@ def test_add_staff_command(db, case_workers, capsys, monkeypatch):
     assert "test2@example.org already exists" in output.out
     assert "test4@example.org" in output.out
     user = User.objects.get(email="test4@example.org")
-    assert user.wards == ["E05009372", "E05009385"]
+    assert user.wards == ["GSS3", "GSS4"]
 
 
 def test_staff_settings(staff_user, client):
@@ -459,7 +460,7 @@ def test_set_staff_as_ward_principal(admin_client, staff_user, staff_user_2):
             "last_name": "User",
             "email": "foo@example.org",
             "wards": [],
-            "principal_wards": ["E05009378"],
+            "principal_wards": ["GSS1"],
             "case_worker": True,
             "is_staff": True,
         },
@@ -467,8 +468,8 @@ def test_set_staff_as_ward_principal(admin_client, staff_user, staff_user_2):
     )
     assert resp.status_code == HTTPStatus.OK
     staff_user.refresh_from_db()
-    assert staff_user.wards == ["E05009378"]
-    assert staff_user.principal_wards == ["E05009378"]
+    assert staff_user.wards == ["GSS1"]
+    assert staff_user.principal_wards == ["GSS1"]
     resp = admin_client.post(
         f"/a/{staff_user_2.id}/edit",
         {
@@ -476,14 +477,14 @@ def test_set_staff_as_ward_principal(admin_client, staff_user, staff_user_2):
             "last_name": "User",
             "email": "foo2@example.org",
             "wards": [],
-            "principal_wards": ["E05009378"],
+            "principal_wards": ["GSS1"],
             "case_worker": True,
             "is_staff": True,
         },
     )
     assert resp.status_code == HTTPStatus.OK
     expected_error = (
-        f"Hoxton West already has principal {staff_user.email}. "
+        f"Ward 1 already has principal {staff_user.email}. "
         + "This user must be unassigned as principal before a new principal can be assigned."
     )
     assert expected_error in resp.content.decode("utf-8")

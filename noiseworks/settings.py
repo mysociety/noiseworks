@@ -58,6 +58,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 # Application definition
 
 COBRAND = env("COBRAND")
+COBRAND_CLASS = env.str("COBRAND_CLASS", f"cobrands.{COBRAND}.cobrand.Cobrand")
 
 INSTALLED_APPS = [
     "noiseworks.apps.NWAdminConfig",
@@ -77,7 +78,8 @@ INSTALLED_APPS = [
     "accounts",
     "oauth",
     "cases",
-    COBRAND,
+    f"cobrands.{COBRAND}",
+    "cobrands.defaults",
     "crispy_forms_gds",
     "django_cleanup.apps.CleanupConfig",
 ]
@@ -124,6 +126,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "cobrands.context_processors.cobrand",
             ],
         },
     },
@@ -224,7 +227,9 @@ LIBSASS_CUSTOM_FUNCTIONS = {
 }
 LIBSASS_ADDITIONAL_INCLUDE_PATHS = [
     "/opt/npmsetup",  # XXX For docker-compose
-    str(BASE_DIR / COBRAND),
+    str(BASE_DIR),
+    str(BASE_DIR / "cobrands" / COBRAND / "scss"),
+    str(BASE_DIR / "cobrands" / "defaults" / "scss"),
 ]
 
 # Default primary key field type
