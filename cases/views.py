@@ -197,7 +197,7 @@ def edit_kind(request, pk):
     if form.is_valid():
         form.save()
         case.notify_followers(
-            f"Set kind to {form.cleaned_data['kind']}.", triggered_by=request.user
+            f"Changed type to {case.kind_display}.", triggered_by=request.user
         )
         return redirect(case)
     return render(
