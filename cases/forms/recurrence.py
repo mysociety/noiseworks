@@ -2,6 +2,7 @@ import datetime
 
 # from django.core.exceptions import ValidationError
 from crispy_forms_gds.fields import DateInputField
+from crispy_forms_gds.layout import Field, Layout
 from django import forms
 
 from noiseworks.forms import GDSForm, StepForm
@@ -75,8 +76,15 @@ class EffectForm(StepForm):
 
 
 class AttachmentsForm(StepForm):
-    title = "Audio/Photo/Video"
-    files = MultipleFileField(label="Attachments", required=True)
+    title = "Photo or video evidence"
+    intro = "Photos or videos are optional, but can help us understand the problem. Do not put yourself in danger when taking photos or videos. Please also try to consider other people’s privacy."
+    files = MultipleFileField(label="Choose files to upload", required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            Field("files", context={"label_size": "govuk-visually-hidden"})
+        )
 
     def clean_files(self):
         files = self.cleaned_data["files"]
