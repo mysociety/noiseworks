@@ -31,6 +31,9 @@ services:
     environment:
       DATABASE_URL: 'postgis://postgres:password@db/noiseworks'
       EMAIL_HOST: email.svc
+      DJANGO_SUPERUSER_EMAIL: admin@example.com
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: password
   mailhog:
     image: mailhog/mailhog:v1.0.1
     restart: always

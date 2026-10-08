@@ -57,6 +57,16 @@ image was last built, you’ll need to rebuild the image:
     docker-compose build
     script/server  # Outside docker
 
+### Creating an admin user
+
+You can create your first admin user via `./manage.py createsuperuser`. It will prompt you for the new user’s details.
+
+`DJANGO_SUPERUSER_*` environment variables are included in the `web` Docker container so, if you’re using that, you can do it in a single command with no further input:
+
+    docker compose exec web ./manage.py createsuperuser
+
+You can then log in to the user’s account via the Django `/admin` page.
+
 ### Adding fake data
 
 1. Get hold of a text file of UPRNs, one UPRN per line.
