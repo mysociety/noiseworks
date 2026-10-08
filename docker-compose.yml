@@ -27,11 +27,9 @@ services:
       db:
         condition: service_healthy
     tty: true
+    # Django reads these env vars first, then falls back to content of /app/.env
     environment:
-      SECRET_KEY: 'secret'
-      DEBUG: 1
       DATABASE_URL: 'postgis://postgres:password@db/noiseworks'
-      COBRAND: hackney
       EMAIL_HOST: email.svc
       FILE_STORAGE_RELATIVE_PATH: storage
   mailhog:
