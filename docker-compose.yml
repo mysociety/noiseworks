@@ -20,7 +20,7 @@ services:
     volumes:
       - .:/app
       - node_modules:/app/node_modules/
-      - storage:/${FILE_STORAGE_RELATIVE_PATH}
+      - storage:/app/${FILE_STORAGE_RELATIVE_PATH:-storage}
     ports:
       - "8000:8000"
     depends_on:
@@ -31,7 +31,6 @@ services:
     environment:
       DATABASE_URL: 'postgis://postgres:password@db/noiseworks'
       EMAIL_HOST: email.svc
-      FILE_STORAGE_RELATIVE_PATH: storage
   mailhog:
     image: mailhog/mailhog:v1.0.1
     restart: always
