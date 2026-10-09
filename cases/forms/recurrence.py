@@ -2,10 +2,12 @@ import datetime
 
 # from django.core.exceptions import ValidationError
 from crispy_forms_gds.fields import DateInputField
+from crispy_forms_gds.layout import Field, Layout
 from django import forms
 
 from noiseworks.forms import GDSForm, StepForm
 
+from .common import MultipleFileField
 from .widgets import TimeWidget
 
 
@@ -71,6 +73,25 @@ class EffectForm(StepForm):
     effect = forms.CharField(
         widget=forms.Textarea, label="What effect has the noise had on you?"
     )
+
+
+class AttachmentsForm(StepForm):
+    title = "Photo or video evidence"
+    intro = "Photos or videos are optional, but can help us understand the problem. Do not put yourself in danger when taking photos or videos. Please also try to consider other people’s privacy."
+    files = MultipleFileField(label="Choose files to upload", required=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper.layout = Layout(
+            Field("files", context={"label_size": "govuk-visually-hidden"})
+        )
+
+    def clean_files(self):
+        files = self.cleaned_data["files"]
+        for f in files:
+            if len(f.name) > 128:
+                raise ValidationError(f"Filename {f.name} too long, please rename")
+        return files
 
 
 class InternalFlagsForm(StepForm):

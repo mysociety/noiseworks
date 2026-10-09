@@ -892,6 +892,26 @@ class ActionFile(AbstractModel):
         )
 
 
+class ComplaintFile(AbstractModel):
+    complaint = models.ForeignKey(
+        Complaint, on_delete=models.CASCADE, related_name="files"
+    )
+    file = models.FileField()
+    original_name = models.CharField(max_length=128)
+
+    @property
+    def human_readable_size(self):
+        return naturalsize(self.file.size)
+
+    def can_delete(self, user):
+        return user == self.created_by
+
+    def get_absolute_url(self):
+        return reverse(
+            "complaint-file", args=[self.action.case.pk, self.action.pk, self.pk]
+        )
+
+
 class MergeRecord(AbstractModel):
     mergee = models.ForeignKey(
         Case, on_delete=models.CASCADE, related_name="merge_records"

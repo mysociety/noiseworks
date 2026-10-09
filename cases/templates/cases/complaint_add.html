@@ -93,6 +93,12 @@
 {% endif %}
 </dl>
 
+{% else %}
+
+{% if wizard.form.intro %}
+<p>{{ wizard.form.intro }}</p>
+{% endif %}
+
 {% endif %}
 
 <form action="" method="post">
@@ -102,5 +108,11 @@
 <p><a href="{% url "complaint-add" case.id %}">Cancel</a></p>
 
 </form>
+
+<script>
+(function(){
+    {% include "cases/_file_upload.js" %}
+})();
+</script>
 
 {% endblock %}

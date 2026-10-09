@@ -139,7 +139,8 @@ def test_staff_case_creation(admin_client, normal_user):
     post_step("isnow", {"start_date": "today", "start_time": "9pm"})
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
-    post_step("effect", {"effect": "Effect"}, follow=True)
+    post_step("effect", {"effect": "Effect"})
+    post_step("attachments", {})
     resp = post_step(
         "internal-flags",
         {
@@ -225,6 +226,7 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user)
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
     post_step("effect", {"effect": "Effect"})
+    post_step("attachments", {})
     resp = post_step("internal-flags", {"priority": True}, follow=True)
     assertContains(resp, "Different User, address label")
     assertContains(resp, "weekday, by email")
@@ -313,7 +315,8 @@ def test_user_case_creation(
     post_step("isnow", {"start_date": "today", "start_time": "9pm"})
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
-    resp = post_step("effect", {"effect": "Effect"}, follow=True)
+    post_step("effect", {"effect": "Effect"})
+    resp = post_step("attachments", {}, follow=True)
     assertContains(
         resp,
         "Normal User, address label, normal@example.org, +447900000000",
@@ -324,6 +327,7 @@ def test_user_case_creation(
     assertContains(resp, "180m around location description")
     today = datetime.date.today()
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
+    post_step("attachments", {})
     resp = post_step("summary", {"true_statement": 1}, follow=True)
     if not logged_in:
         m = re.search(r"confirmation token is (\d+)", mail.outbox[-1].body)
@@ -404,6 +408,7 @@ def test_incorrect_staff_case_creation(client, settings):
     post_step("rooms", {"rooms": "Room"})
     post_step("describe", {"description": "Desc"})
     post_step("effect", {"effect": "Effect"})
+    post_step("attachments", {})
     resp = post_step("summary", {"true_statement": 1}, follow=True)
     assertContains(resp, "Thank you for reporting")
 
