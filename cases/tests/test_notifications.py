@@ -294,15 +294,10 @@ def test_case_kind_changed_notifications(case, staff_user, staff_user_2, client)
     case.followers.set([staff_user])
 
     def _set_kind_and_check_for_notification(
-        triggerer, kind, expected_recipient, expected_message
+        triggerer, data, expected_recipient, expected_message
     ):
         client.force_login(triggerer)
-        client.post(
-            f"/cases/{case.id}/edit-kind",
-            {
-                "kind": kind,
-            },
-        )
+        client.post(f"/cases/{case.id}/edit-kind", data)
         matching = Notification.objects.filter(
             triggered_by=triggerer,
             recipient=expected_recipient,
@@ -313,9 +308,15 @@ def test_case_kind_changed_notifications(case, staff_user, staff_user_2, client)
 
     _set_kind_and_check_for_notification(
         staff_user_2,
-        "diy",
+        {"kind": "tv"},
         staff_user,
-        "Set kind to diy.",
+        "Changed type to TV.",
+    )
+    _set_kind_and_check_for_notification(
+        staff_user_2,
+        {"kind": "other", "kind_other": "Leaf blower"},
+        staff_user,
+        "Changed type to Leaf blower.",
     )
 
 

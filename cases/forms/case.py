@@ -11,6 +11,7 @@ from django.utils.timezone import make_aware, now
 from humanize import naturalsize
 
 from accounts.models import User
+from cobrands.registry import get_cobrand
 from noiseworks.forms import GDSForm
 
 from ..models import Action, ActionType, Case
@@ -117,8 +118,17 @@ class KindForm(GDSForm, forms.ModelForm):
     kind = forms.ChoiceField(
         label="Type",
         widget=forms.RadioSelect,
-        choices=Case.KIND_CHOICES,
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        kind = self.fields["kind"]
+        cobrand = get_cobrand()
+        # XXX Hmm, not ideal
+        for g in cobrand.kinds:
+            for k in g["kinds"].keys():
+                if k == self.instance.kind:
+                    kind.choices = [(k, v) for k, v in g["kinds"].items()]
 
 
 def action_notes_field():
