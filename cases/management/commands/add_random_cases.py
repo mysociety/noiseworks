@@ -1,35 +1,48 @@
 import random
 from datetime import timedelta
 
-import requests
-from django.conf import settings
 from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from accounts.models import User
 from cases.models import Action, ActionType, Case, Complaint
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 
 
 class Command(BaseCommand):
     help = "Create a number of random cases in the database"
-    _uprns = None
 
     def add_arguments(self, parser):
         parser.add_argument("--number", type=int)
         parser.add_argument("--commit", action="store_true")
         parser.add_argument("--fixed", action="store_true")
-        parser.add_argument("--uprns", help="File containing list of UPRNs to use")
+        parser.add_argument(
+            "--uprns",
+            help="File of UPRNs to use, needed only if the cobrand lists none",
+        )
+        parser.add_argument(
+            "--empty",
+            action="store_true",
+            help="Delete existing cases and non-superuser users first",
+        )
 
     def handle(self, *args, **options):
-        if not options["uprns"]:
-            raise CommandError("Please specify a filename to a list of UPRNs")
-        self.load_uprns(options["uprns"])
+        if options["uprns"]:
+            self.uprns = self.load_uprns(options["uprns"])
+        else:
+            self.uprns = get_cobrand().example_uprns()
+        if not self.uprns:
+            raise CommandError("Please specify a filename to a list of URPNs")
+
         N = options["number"]
         if not N:
             raise CommandError("Please specify a number of cases to create")
         self.commit = options["commit"]
+        if options["empty"]:
+            if not self.commit:
+                raise CommandError("Please pass --commit to empty the database")
+            self.empty()
         if options["fixed"]:  # pragma: no cover
             random.seed(44)
 
@@ -63,9 +76,10 @@ class Command(BaseCommand):
 
             if random.randint(0, 2) == 0:
                 # Location
-                case.point, case.ward = self._pick_location()
+                case.point = self._pick_location()
                 case.radius = self._pick_radius()
-                case.location_display
+                # Populate ward without requiring a save.
+                case.update_location_cache()
             else:
                 self._pick_uprn(case)
 
@@ -105,7 +119,7 @@ class Command(BaseCommand):
             if not user or random.randint(1, 4) != 1:
                 id += 1
                 user = User(
-                    email=f"madeup-{id}@noiseworks",
+                    email=f"madeup-{id}@user",
                     username=f"user-{id}",
                     first_name="User",
                     last_name=f"{id}",
@@ -154,8 +168,13 @@ class Command(BaseCommand):
 
     def _pick_kind(self):
         r = random.randint(1, 20)
+        music_choices = [
+            "music-pub",
+            "music-club",
+            "music-other",
+        ]
         if r <= 10:
-            return "music"
+            return random.choice(music_choices)
         elif r <= 15:
             return "other"
         elif r <= 17:
@@ -164,7 +183,7 @@ class Command(BaseCommand):
             choices = [
                 c[0]
                 for c in Case.KIND_CHOICES
-                if c[0] not in ("music", "other", "shouting")
+                if c[0] not in ("other", "shouting", *music_choices)
             ]
             return random.choice(choices)
 
@@ -185,20 +204,14 @@ class Command(BaseCommand):
 
     def _pick_location(self):
         while True:
-            e = random.randint(531480, 537642)
-            n = random.randint(181839, 188327)
-            p = Point(e, n, srid=27700)
-            data = self._mapit_call(e, n)
-            if "error" in data.keys():
-                raise Exception("Error calling MapIt")
-            if "2508" in data.keys():
-                ward = None
-                for area in data.values():
-                    if area["type"] == "LBW":
-                        ward = area["codes"]["gss"]
-                return p, ward
-            if random.randint(1, 99) == 1:  # pragma: no cover
-                return p, "outside"
+            detail = get_cobrand().address_detail_for_uprn(random.choice(self.uprns))
+            if detail and detail.point:
+                point = detail.point.transform(27700, clone=True)
+                return Point(
+                    point.x + random.randint(-300, 300),
+                    point.y + random.randint(-300, 300),
+                    srid=27700,
+                )
 
     def _pick_radius(self):
         r = random.randint(1, 10)
@@ -230,9 +243,9 @@ class Command(BaseCommand):
     def set_up_staff_users(self):
         user = self.create(
             User,
-            username="auto-staff-outside@noiseworks",
+            username="auto-staff-outside@staff",
             defaults={
-                "email": "auto-staff-outside@noiseworks",
+                "email": "auto-staff-outside@staff",
                 "first_name": "Staff User",
                 "last_name": "Outside",
                 "email_verified": 1,
@@ -240,16 +253,16 @@ class Command(BaseCommand):
             },
         )
         staff_for_ward = {"outside": user}
-        wards = list(map(lambda x: x["gss"], cobrand.api.wards()))
+        wards = list(map(lambda x: x.gss_code, get_cobrand().wards))
         wards.append(None)  # This is so if wards uneven, last is included
         for pair in zip(wards[::2], wards[1::2]):
             pair = list(filter(None, pair))
             last_name = "".join(map(lambda x: x[-2:], pair))
             user = self.create(
                 User,
-                username=f"auto-staff-{pair[0]}@noiseworks",
+                username=f"auto-staff-{pair[0]}@staff",
                 defaults={
-                    "email": f"auto-staff-{pair[0]}@noiseworks",
+                    "email": f"auto-staff-{pair[0]}@staff",
                     "first_name": "Staff User",
                     "last_name": last_name,
                     "email_verified": 1,
@@ -318,22 +331,12 @@ class Command(BaseCommand):
 
     # Helpers
 
-    @property
-    def uprns(self):
-        return self._uprns
+    def empty(self):
+        Case.objects.all().delete()
+        User.objects.filter(is_superuser=False).delete()
 
-    def load_uprns(self, uprns_file=None):
-        uprns = []
-        for line in open(uprns_file):
-            uprns.append(int(line))
-        self._uprns = uprns
-
-    def _mapit_call(self, e, n):
-        key = settings.MAPIT_API_KEY
-        d = requests.get(
-            f"https://mapit.mysociety.org/point/27700/{e},{n}?api_key={key}"
-        ).json()
-        return d
+    def load_uprns(self, uprns_file):
+        return [line.strip() for line in open(uprns_file)]
 
     def create(self, model, defaults=None, **kwargs):
         if self.commit:

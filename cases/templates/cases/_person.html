@@ -49,7 +49,7 @@
 
     <p>
         {{ person.address_display }}
-        {% if person.estate == 'y' %} (Hackney Estates) {% endif %}
+        {% if person.estate == 'y' %} ({{ cobrand.body_name }} Estates) {% endif %}
     </p>
 
   {% if person.get_best_time_display and person.get_best_method_display %}
