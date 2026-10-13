@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -450,8 +451,11 @@ def merge_start(request, case):
     if case.uprn:
         cases_same_uprn = qs.filter(uprn=case.uprn).exclude(id=case.id)
     if case.point:
-        cases_nearby = qs.filter(point__dwithin=(case.point, D(m=500))).exclude(
-            id=case.id
+        cases_nearby = (
+            qs.filter(point__dwithin=(case.point, D(m=500)))
+            .exclude(id=case.id)
+            .annotate(distance=Distance("point", case.point))
+            .order_by("distance")[:50]
         )
 
     return render(
