@@ -121,12 +121,21 @@ class CaseManager(models.Manager):
         self.attach_diffs(histories)
         histories_by_case = self.prefetch_timeline_part(merge_map, histories, "id")
 
+        # mergerecords = MergeRecord.objects.filter(merged_into_id__in=case_ids)
+        # merged_into_by_case = self.prefetch_timeline_part(merge_map, mergerecords, "merged_into_id")
+        # mergerecords = MergeRecord.objects.filter(mergee_id__in=case_ids)
+        # mergee_by_case = self.prefetch_timeline_part(merge_map, mergerecords, "mergee_id")
+        # for k, v in merged_into_by_case.items():
+        #    mergee_by_case.setdefault(k, []).extend(v)
+
         # Set the actions for each result to the right ones
         for case in qs:
             case.actions_reversed = actions_by_case.get(case.id, [])
             case.all_complaints_reversed = complaints_by_case.get(case.id, [])
             case.historical_entries = histories_by_case.get(case.id, [])
             case.merged_into_list = merged_intos.get(case.id)
+
+    #            case.timeline_merge_records = mergee_by_case.get(case.id, [])
 
     @staticmethod
     def attach_diffs(histories):
