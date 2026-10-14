@@ -451,12 +451,13 @@ def merge_start(request, case):
     if case.uprn:
         cases_same_uprn = qs.filter(uprn=case.uprn).exclude(id=case.id)
     if case.point:
-        cases_nearby = (
+        cases_nearby = list(
             qs.filter(point__dwithin=(case.point, D(m=500)))
             .exclude(id=case.id)
             .annotate(distance=Distance("point", case.point))
             .order_by("distance")[:50]
         )
+        Case.objects.prefetch_timeline(cases_nearby)
 
     return render(
         request,
