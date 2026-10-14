@@ -98,7 +98,11 @@ class CaseManager(models.Manager):
 
         # Note that if case A is merged into case B, case A's actions_by_case
         # will not include case B's actions from after the merge.
-        actions = Action.objects.filter(case__in=case_ids).order_by("-time")
+        actions = (
+            Action.objects.filter(case__in=case_ids)
+            .prefetch_related("files")
+            .order_by("-time")
+        )
         actions_by_case = self.prefetch_timeline_part(merge_map, actions, "case_id")
         merged_intos = Case.objects.get_merged_into_cases(qs)
 
