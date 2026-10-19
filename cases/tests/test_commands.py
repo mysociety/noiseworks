@@ -4,49 +4,56 @@ from unittest.mock import mock_open
 
 import pytest
 from botocore.stub import Stubber
+from django.contrib.gis.geos import Point
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 from django.core.management import CommandError, call_command
 
 from cases.management.commands.export_data import client
+from cases.models import ActionType
+from cobrands.interface import AddressDetail, LocationDetail
+from cobrands.testing import TestCobrand
 
 from ..models import Action, ActionFile, Case, Notification, User
-from .conftest import ADDRESS
 
 
 @pytest.fixture
 def call_params(db, capsys, monkeypatch):
-    call_command("loaddata", "action_types_hackney")
     uprns = "1\n2\n3\n4"
     monkeypatch.setattr("builtins.open", lambda x: mock_open(read_data=uprns)())
     return {"uprns": "uprns.csv", "fixed": True}
 
 
-@pytest.fixture
-def mock_things(requests_mock):
-    requests_mock.get(
-        re.compile("uprn=[1-3]"),
-        json={"data": {"address": [ADDRESS]}},
-    )
-    requests_mock.get(
-        re.compile("uprn=4"),
-        json={"data": {"address": []}},
-    )
-    requests_mock.get(
-        re.compile("mapit.mysociety.org"),
-        json={
-            "2508": {"type": "LBO"},
-            "144397": {"type": "LBW", "codes": {"gss": "E05009385"}},
-        },
-    )
-    requests_mock.get(re.compile("greenspaces/ows"), json={"features": []})
-    requests_mock.get(re.compile("transport/ows"), json={"features": []})
-    requests_mock.get(re.compile("housing/ows"), json={"features": []})
+class TestCobrandWithLookupData(TestCobrand):
+    def address_detail_for_uprn(self, uprn):
+        if uprn in ["1", "2", "3"]:
+            return AddressDetail(
+                uprn="10001",
+                point=Point(533000, 184000, srid=27700),
+                label="Address",
+                ward_gss="GSS1",
+                in_an_estate=True,
+            )
+        return None
+
+    def location_detail_for_point(self, point):
+        return LocationDetail(
+            point=point,
+            description="point description",
+            ward_gss="GSS1",
+            in_an_estate=False,
+        )
+
+    def example_uprns(self):
+        return ["1", "2", "3"]
+
+
+pytestmark = pytest.mark.cobrand.with_args(TestCobrandWithLookupData)
 
 
 @pytest.fixture
 def case(db):
-    return Case.objects.create(kind="diy", ward="E05009373")
+    return Case.objects.create(kind="diy", ward="GSS1")
 
 
 @pytest.fixture
@@ -57,6 +64,35 @@ def action(db, case):
 @pytest.fixture
 def action_file_without_file(db, action):
     return ActionFile.objects.create(action=action)
+
+
+@pytest.fixture
+def action_types(db):
+    ActionType.objects.create(
+        name="Case closed",
+        common=False,
+        visibility="staff",
+    )
+    ActionType.objects.create(
+        name="Contacted complainant",
+        common=True,
+        visibility="public",
+    )
+    ActionType.objects.create(
+        name="Edit case",
+        common=False,
+        visibility="internal",
+    )
+    ActionType.objects.create(
+        name="Action 1",
+        common=True,
+        visibility="public",
+    )
+    ActionType.objects.create(
+        name="Action 2",
+        common=False,
+        visibility="internal",
+    )
 
 
 @pytest.fixture
@@ -90,24 +126,35 @@ def test_random_command_bad_input(db, monkeypatch):
         call_command("add_random_cases", uprns="uprns.csv")
 
 
-def test_random_command_no_mapit(requests_mock, mock_things, db, call_params):
-    requests_mock.get(
-        re.compile("mapit.mysociety.org"),
-        json={"error": "There was an error"},
-    )
-    with pytest.raises(Exception) as excinfo:
-        call_command("add_random_cases", number=1, **call_params)
-    assert "Error calling MapIt" == str(excinfo.value)
-
-
-def test_random_command(mock_things, db, call_params):
+def test_random_command_with_uprn_file(db, call_params, action_types):
     # Calling without commit does still save some things to the database at present
     call_command("add_random_cases", number=12, **call_params)
 
 
-def test_random_command_commit(mock_things, db, call_params):
+def test_random_command_with_cobrand_example_uprns(db, action_types):
+    # Calling without commit does still save soGme things to the database at present
+    call_command("add_random_cases", number=12)
+
+
+def test_random_command_commit(db, call_params, action_types):
     # 71 is enough for the fixed random seed to return all possible values
     call_command("add_random_cases", number=71, commit=True, **call_params)
+
+
+def test_random_command_empty(db, call_params, action_types, admin_user):
+    call_command("add_random_cases", number=4, commit=True, **call_params)
+    assert Case.objects.count() == 4
+    users = set(User.objects.filter(is_superuser=False).values_list("pk", flat=True))
+
+    call_command("add_random_cases", number=2, commit=True, empty=True, **call_params)
+    assert Case.objects.count() == 2
+    assert not User.objects.filter(pk__in=users).exists()
+    assert User.objects.filter(pk=admin_user.pk).exists()
+
+
+def test_random_command_empty_needs_commit(db, call_params, action_types):
+    with pytest.raises(CommandError):
+        call_command("add_random_cases", number=1, empty=True, **call_params)
 
 
 def test_export_data_file_command(case, db, tmpdir):
@@ -132,10 +179,10 @@ def test_close_cases_command_bad_input(case):
     assert "Please specify a number of days" == str(excinfo.value)
 
 
-def test_close_cases_command(call_params, case):
-    case2 = Case.objects.create(kind="diy", ward="E05009373")
-    case3 = Case.objects.create(kind="diy", ward="E05009373")
-    case4 = Case.objects.create(kind="diy", ward="E05009373")
+def test_close_cases_command(call_params, case, action_types):
+    case2 = Case.objects.create(kind="diy", ward="GSS1")
+    case3 = Case.objects.create(kind="diy", ward="GSS1")
+    case4 = Case.objects.create(kind="diy", ward="GSS1")
     case3.merge_into(case4)
     case3.save()
     Case.objects.filter(id__in=(case.id, case2.id, case4.id)).update(

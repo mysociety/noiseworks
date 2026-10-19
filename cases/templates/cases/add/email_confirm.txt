@@ -1,1 +1,1 @@
-Your Hackney NoiseWorks confirmation token is {{ token }}
+Your {{ cobrand.body_name }} {{ cobrand.site_name }} confirmation token is {{ token }}

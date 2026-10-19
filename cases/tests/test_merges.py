@@ -31,14 +31,14 @@ def same_case(db):
 def merged_case_setup(db):
     c1 = Case.objects.create(
         kind="diy",
-        ward="E05009373",
+        ward="GSS1",
         location_cache="Combined case",
         estate="?",
         point=Point(470267, 122766),
     )
     c2 = Case.objects.create(
         kind="diy",
-        ward="E05009373",
+        ward="GSS1",
         location_cache="Merged case",
         estate="?",
         point=Point(470267, 122766),

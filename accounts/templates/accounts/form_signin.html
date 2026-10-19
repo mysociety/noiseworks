@@ -9,7 +9,7 @@
 {% crispy form %}
 
 <aside class="nw-staff-signin">
-    <a href="{% url "oauth:authenticate" %}">Hackney Staff Sign-in</a>
+    <a href="{% url "oauth:authenticate" %}">{{ cobrand.body_name }} Staff Sign-in</a>
 </aside>
 
 {% endblock %}

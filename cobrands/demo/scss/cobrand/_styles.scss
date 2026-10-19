@@ -1,0 +1,10 @@
+// Drop LBH stripes under header.
+.lbh-header {
+    padding-bottom: 0;
+    border-bottom: 0;
+
+    &:before,
+    &:after {
+        content: none;
+    }
+}

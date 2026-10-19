@@ -57,6 +57,16 @@ image was last built, you’ll need to rebuild the image:
     docker-compose build
     script/server  # Outside docker
 
+### Creating an admin user
+
+You can create your first admin user via `./manage.py createsuperuser`. It will prompt you for the new user’s details.
+
+`DJANGO_SUPERUSER_*` environment variables are included in the `web` Docker container so, if you’re using that, you can do it in a single command with no further input:
+
+    docker compose exec web ./manage.py createsuperuser
+
+You can then log in to the user’s account via the Django `/admin` page.
+
 ### Adding fake data
 
 1. Get hold of a text file of UPRNs, one UPRN per line.
@@ -65,7 +75,7 @@ image was last built, you’ll need to rebuild the image:
 
 3. Ensure you have `ADDRESS_API_URL` and an `ADDRESS_API_KEY` in your `.env` file.
 
-3. Run `./manage.py loaddata action_types_hackney`
+3. Run `./manage.py loaddata action_types`
 
 4. Run `./manage.py add_random_cases --uprns UPRN_FILE --number 100 --commit`
 
@@ -75,6 +85,7 @@ If you are running inside Docker you will want to enter a shell in the `web` con
 ### Tests
 
 * `script/test` or `script/test --coverage` to run the tests (100% coverage at present).
+* `script/typecheck` to check types using mypy.
 
 Tests are written with pytest; the current examples should show uses of test
 client, fixtures, request mocking, settings override, and so on.

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block merging %}
   {% with request.session.merging_case as duplicate %}
@@ -201,7 +201,7 @@
     </div>
   {% if case.where == 'residence' %}
     <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">Hackney Estate?</dt>
+      <dt class="govuk-summary-list__key">{{ cobrand.body_name }} Estate?</dt>
       <dd class="govuk-summary-list__value">{{ case.get_estate_display }}</dd>
       <dd class="govuk-summary-list__actions"></dd>
     </div>
@@ -226,13 +226,13 @@ var nw = nw || {};
     map.attributionControl.setPrefix('');
 
     var layer;
-    if (nw.MAP_TYPE === 'osm') {
+    if (!nw.MAP_TILE_URL) {
         layer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         });
     } else {
-        layer = L.tileLayer('https://tilma.mysociety.org/os/hackney/Road_3857/{z}/{x}/{y}.png', {
+        layer = L.tileLayer(nw.MAP_TILE_URL, {
             maxZoom: 19
         });
     }
@@ -240,14 +240,14 @@ var nw = nw || {};
 
   {% if case.uprn %}
     var mapIcon = L.icon({
-      iconUrl: "/static/hackney/images/contact/map-marker.svg",
+      iconUrl: "{% static "lbh/images/contact/map-marker.svg" %}",
       iconSize: [48, 48],
       iconAnchor: [24, 48]
     });
     var marker = L.marker(point, { icon: mapIcon, interactive: false });
     map.addLayer(marker);
   {% else %}
-    var circle = L.circle(point, { radius: {{ case.radius }}, color: '#00664f' });
+    var circle = L.circle(point, { radius: {{ case.radius }}, color: nw.MAP_CIRCLE_COLOUR });
     map.addLayer(circle);
     map.fitBounds(circle.getBounds());
   {% endif %}

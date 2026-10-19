@@ -18,3 +18,4 @@ conf/stack.yml.deployed
 storage/
 
 noise.log
+node_modules/
