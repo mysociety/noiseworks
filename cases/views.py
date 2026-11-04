@@ -1160,9 +1160,12 @@ def consume_notification(request, pk):
 
 @staff_member_required
 def notifications_list(request):
-    notifications = request.user.notifications.order_by("read", "-time").all()
+    qs = request.user.notifications.order_by("read", "-time")
+    paginator = Paginator(qs, 20)
+    page_number = request.GET.get("page")
+    qs = paginator.get_page(page_number)
     return render(
         request,
         "cases/notifications/notification_list.html",
-        {"notifications": notifications},
+        {"qs": qs},
     )

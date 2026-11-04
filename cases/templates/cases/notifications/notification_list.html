@@ -6,7 +6,7 @@
 
 <h1>Notifications</h1>
 
-{% if not notifications %}
+{% if not qs %}
     <p> You have no notifications.</p>
 {% else %}
     <form method="POST">{% csrf_token %}
@@ -37,7 +37,7 @@
                 </tr>
             </thead>
             <tbody class="govuk-table__body">
-            {% for notification in notifications %}
+            {% for notification in qs %}
                 <tr class="govuk-table__row">
                     <td class="govuk-table__cell">
                         {% if not notification.read %}
@@ -79,6 +79,8 @@
             </tbody>
         </table>
     <form>
+
+    {% include "cases/_pagination.html" %}
 
     <script>
     (function() {
