@@ -1,0 +1,19 @@
+$nw-primary-colour: #7B60B6 !default;
+$nw-header-colour: $nw-primary-colour !default;
+
+@import "node_modules/lbh-frontend/lbh/settings/colour-palette";
+
+@if $nw-primary-colour {
+    $lbh-colours: map-merge($lbh-colours, (
+        "lbh-a01": $nw-primary-colour,
+        "lbh-a02": $nw-primary-colour,
+        "lbh-a03": $nw-primary-colour,
+        "lbh-a04": $nw-primary-colour,
+        "lbh-primary-button": $nw-primary-colour,
+        "lbh-primary-hover": mix(black, $nw-primary-colour, 20%),
+        "lbh-primary-inner-shadow": mix(black, $nw-primary-colour, 40%),
+        "lbh-secondary-inner-shadow": mix(black, $nw-primary-colour, 40%),
+        "lbh-primary-disabled": mix(white, $nw-primary-colour, 50%),
+        "lbh-primary-disabled-inner-shadow": mix(white, $nw-primary-colour, 20%),
+    )) !global;
+}

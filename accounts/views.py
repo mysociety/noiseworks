@@ -10,6 +10,7 @@ from django.urls import reverse
 from sesame.tokens import create_token
 from sesame.utils import get_user
 
+from cobrands.registry import get_cobrand
 from noiseworks.base32 import bytes_to_base32
 from noiseworks.decorators import staff_member_required
 from noiseworks.message import send_email, send_sms
@@ -82,9 +83,10 @@ def show_form(request):
                 {"url": url, "signature": signature},
             )
         else:  # username_type will be "phone"
+            cobrand = get_cobrand()
             send_sms(
                 str(user.phone),
-                f"Your Hackney NoiseWorks sign in token is {signature}\n\nAlternatively, you can sign in on this device by following this link:\n\n{url}",
+                f"Your {cobrand.body_name} {cobrand.site_name} sign in token is {signature}\n\nAlternatively, you can sign in on this device by following this link:\n\n{url}",
             )
 
         form = CodeForm(initial={"user_id": user.id, "timestamp": timestamp})

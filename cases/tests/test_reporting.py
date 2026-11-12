@@ -8,11 +8,17 @@ from django.core import mail
 from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
+from cobrands.interface import (
+    AddressCandidate,
+    AddressDetail,
+    LocationCandidate,
+    LocationDetail,
+    PlaceLookupError,
+)
+from cobrands.testing import TestCobrand
 
 from ..forms import WhereMapForm
 from ..models import Case, Complaint
-
-pytestmark = pytest.mark.django_db
 
 POINT = Point(-0.05, 51, srid=4326)
 POINT.transform(27700)
@@ -33,44 +39,60 @@ def normal_user(db):
     )
 
 
-@pytest.fixture
-def mocks(address_lookup, requests_mock, settings):
-    settings.COBRAND_SETTINGS["staff_destination"] = {
-        "outside": "outside@example.org",
-        "business": "business@example.org",
-        "hackney-housing": "hh@example.org,hh2@example.org",
-        "housing": "housing@example.org",
-    }
+class TestCobrandWithLookupData(TestCobrand):
+    def address_candidates_for_postcode(self, postcode):
+        if postcode == "SW1 2AA":
+            raise PlaceLookupError()
+        elif postcode.startswith("E"):
+            return [
+                AddressCandidate(
+                    uprn="10008315925",
+                    label="address label",
+                )
+            ]
+        return []
 
-    requests_mock.get(re.compile(r"postcode=BAD"), json={"error": "Error goes here"})
-    requests_mock.get(re.compile(r"postcode=SW1A\+1AA"), json={"error": "Bad postcode"})
-    requests_mock.get(re.compile(r"postcode=E1\+6GB"), json={"data": {"address": []}})
-    requests_mock.get(re.compile(r"q=Foobar0"), json=[])
-    requests_mock.get(
-        re.compile(r"q=Foobar1"),
-        json=[
-            {"lat": 51, "lon": -0.05, "display_name": "Result, Hackney, London"},
-        ],
-    )
-    requests_mock.get(
-        re.compile(r"q=Foobar2"),
-        json=[
-            {"lat": 51, "lon": -0.05, "display_name": "Result, Hackney, London"},
-            {"lat": 52, "lon": -0.06, "display_name": "Another, Hackney, London"},
-            {"lat": 90, "lon": 0, "display_name": "North Pole"},
-        ],
-    )
-    requests_mock.get(
-        re.compile("point/27700"),
-        json={
-            "2508": {"type": "LBO", "name": "Hackney"},
-            "144391": {
-                "type": "LBW",
-                "codes": {"gss": "E05009378"},
-                "name": "Hoxton West",
-            },
-        },
-    )
+    def address_detail_for_uprn(self, uprn):
+        return AddressDetail(
+            label="address label",
+            uprn=uprn,
+            point=None,
+            in_an_estate=None,
+            ward_gss="GSS1",
+        )
+
+    def location_candidates_for_string(self, string):
+        if string == "Error":
+            raise PlaceLookupError()
+        candidates = [
+            LocationCandidate(
+                point=Point(-0.05, 51, srid=4326),
+                label="Result",
+            ),
+            LocationCandidate(
+                point=Point(-0.06, 51, srid=4326),
+                label="Another",
+            ),
+        ]
+        if string == "Foobar1":
+            return candidates[:1]
+        if string == "Foobar2":
+            return candidates
+        return []
+
+    def location_detail_for_point(self, point):
+        return LocationDetail(
+            point=point,
+            description="location description",
+            ward_gss="GSS1",
+            in_an_estate=False,
+        )
+
+
+pytestmark = [
+    pytest.mark.django_db,
+    pytest.mark.cobrand.with_args(TestCobrandWithLookupData),
+]
 
 
 def test_new_existing_form(admin_client):
@@ -97,7 +119,7 @@ def _post_step(client, step, data, **kwargs):
     )
 
 
-def test_staff_case_creation(admin_client, normal_user, mocks):
+def test_staff_case_creation(admin_client, normal_user):
     """Picks existing user, UPRN based source"""
     post_step = partial(_post_step, admin_client)
     admin_client.get("/cases/add/begin")
@@ -106,11 +128,12 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     post_step("best_time", {"best_time": "weekday", "best_method": "email"})
     post_step("kind", {"kind": "diy"}, follow=True)
     post_step("where", {"where": "business"})
-    resp = post_step("where-location", {"search": "E16GB"}, follow=True)
+    resp = post_step("where-location", {"search": "SW1 1AA"}, follow=True)
     assertContains(resp, "could not recognise that postcode")
-    post_step("where-location", {"search": "SW1A 1AA"})
+    resp = post_step("where-location", {"search": "SW1 2AA"}, follow=True)
+    assertContains(resp, "something went wrong")
     post_step("where-location", {"search": "Foobar0"})
-    post_step("where-location", {"search": "E8 3DY"})
+    post_step("where-location", {"search": "E1 6GB"})
     post_step("where-postcode-results", {"source_uprn": "10008315925"})
     post_step("isitnow", {"happening_now": "1"})
     post_step("isnow", {"start_date": "today", "start_time": "9pm"})
@@ -132,7 +155,7 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     assertContains(resp, "weekday, by email")
     assertContains(resp, "DIY")
     assertContains(resp, "A shop, bar, nightclub")
-    assertContains(resp, "Line 1, Line 2, Line 3")
+    assertContains(resp, "address label")
     assertContains(resp, "Yes")  # Priority
     assertContains(resp, "Wed, 12 Oct 2022")
     today = datetime.date.today()
@@ -147,7 +170,7 @@ def test_staff_case_creation(admin_client, normal_user, mocks):
     admin_client.get("/cases/add/summary")
 
 
-def test_staff_case_creation_existing_user(admin_client, normal_user, mocks):
+def test_staff_case_creation_existing_user(admin_client, normal_user):
     post_step = partial(_post_step, admin_client)
     admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Something with no results"})
@@ -163,26 +186,8 @@ def test_staff_case_creation_existing_user(admin_client, normal_user, mocks):
     assertNotContains(resp, "Select a valid choice.")
 
 
-def test_staff_case_creation_new_user_map(
-    admin_client, admin_user, normal_user, mocks, requests_mock
-):
+def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user):
     """Picks new user, map based source"""
-    requests_mock.get(
-        re.compile("housing/ows"),
-        json={
-            "features": [
-                {
-                    "type": "Feature",
-                    "id": "lbh_housing.1",
-                    "properties": {
-                        "id": "1",
-                        "estate_name": "ABERSHAM ROAD ESTATE",
-                    },
-                }
-            ]
-        },
-    )
-
     post_step = partial(_post_step, admin_client)
     admin_client.get("/cases/add/begin")
     post_step("user_search", {"search": "Different"})
@@ -204,7 +209,7 @@ def test_staff_case_creation_new_user_map(
     resp = post_step("where-location", {"search": "Foobar2"}, follow=True)
     assertContains(resp, "Another")
     assertNotContains(resp, "North Pole")
-    post_step("where-geocode-results", {"geocode_result": "-0.05,51"})
+    post_step("where-geocode-results", {"geocode_result": "-0.05,51.0"})
     post_step("where-map", {"point": "POINT (-0.05 51)", "radius": 180, "zoom": 16})
     post_step("isitnow", {"happening_now": "0"})
     post_step(
@@ -221,17 +226,17 @@ def test_staff_case_creation_new_user_map(
     post_step("describe", {"description": "Desc"})
     post_step("effect", {"effect": "Effect"})
     resp = post_step("internal-flags", {"priority": True}, follow=True)
-    assertContains(resp, "Different User, Line 1, Line 2, Line 3, E8 1DY")
+    assertContains(resp, "Different User, address label")
     assertContains(resp, "weekday, by email")
     assertContains(resp, "DIY")
     assertContains(resp, "A house, flat, park or street")
-    assertContains(resp, f"180m around ({POINT.x:.0f},{POINT.y:.0f})")
+    assertContains(resp, "180m around location description")
     assertContains(resp, "Wed, 17 Nov 2021, 2 a.m.")
     assertContains(resp, "Wed, 17 Nov 2021, 3 a.m.")
     assertContains(resp, "Yes")  # Priority
     post_step("summary", {"true_statement": 1}, follow=True)
     assert len(mail.outbox) == 1
-    assert len(mail.outbox[0].to) == 2
+    assert len(mail.outbox[0].to) == 1
     admin_user.refresh_from_db()
     assert admin_user.first_name == ""
 
@@ -254,7 +259,7 @@ def test_non_staff_user_case_creation(client, settings):
     ],
 )
 def test_user_case_creation(
-    logged_in, email_verified, phone_verified, normal_user, client, mocks, settings
+    logged_in, email_verified, phone_verified, normal_user, client, settings
 ):
     """Gives details, picks address, map-based case"""
     settings.NON_STAFF_ACCESS = True
@@ -287,6 +292,8 @@ def test_user_case_creation(
     assertContains(resp, "at most 100 characters")
     post_step("kind", {"kind": "other", "kind_other": "Other"})
     post_step("where", {"where": "residence"})
+    resp = post_step("where-location", {"search": "Error"})
+    assertContains(resp, "address lookup by name is not working")
     post_step("where-location", {"search": "Foobar1"})
 
     # Couple of non-JS requests in here to test that
@@ -309,12 +316,12 @@ def test_user_case_creation(
     resp = post_step("effect", {"effect": "Effect"}, follow=True)
     assertContains(
         resp,
-        "Normal User, Line 1, Line 2, Line 3, E8 1DY, normal@example.org, +447900000000",
+        "Normal User, address label, normal@example.org, +447900000000",
     )
     assertContains(resp, "weekday, by email")
     assertContains(resp, "Other")
     assertContains(resp, "A house, flat, park or street")
-    assertContains(resp, f"180m around ({POINT.x:.0f},{POINT.y:.0f})")
+    assertContains(resp, "180m around location description")
     today = datetime.date.today()
     assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
     resp = post_step("summary", {"true_statement": 1}, follow=True)
@@ -343,26 +350,26 @@ def test_user_case_creation(
     for r in range(2):
         email = mail.outbox[r]
         assert "new noise report has been submitted" in email.body
-        assert f"180m around ({POINT.x:.0f},{POINT.y:.0f})" in email.body
-        assert "Hoxton West" in email.body
+        assert "180m around location description" in email.body
+        assert "Ward 1" in email.body
         assert "9 p.m." in email.body
         if r == 0:
-            assert "Line 1, Line 2, Line 3" in email.body
+            assert "address label" in email.body
             assert "weekday, by email" in email.body
         else:
             assert "weekday, by email" not in email.body
-            assert "Line 1, Line 2, Line 3" not in email.body
+            assert "address label" not in email.body
     mail.outbox = []
 
 
-def test_error_conditions(admin_client, mocks):
+def test_error_conditions(admin_client):
     form = WhereMapForm()
     assert re.search(r"L.LatLng\(, \)", str(form))
 
     admin_client.get("/cases/add/user_pick")
 
 
-def test_incorrect_staff_case_creation(client, mocks, settings):
+def test_incorrect_staff_case_creation(client, settings):
     settings.NON_STAFF_ACCESS = True
     settings.COBRAND_SETTINGS["staff_only_domains_re"] = "@ooh.example.org"
     em = "test@ooh.example.org"

@@ -41,7 +41,7 @@ def normal_user(db):
 @pytest.fixture
 def case_1(db, staff_user_1, normal_user):
     return Case.objects.create(
-        kind="diy", assigned=staff_user_1, created_by=normal_user, ward="E05009373"
+        kind="diy", assigned=staff_user_1, created_by=normal_user, ward="GSS1"
     )
 
 

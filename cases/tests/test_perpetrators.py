@@ -38,7 +38,7 @@ def normal_user_2(db):
 
 @pytest.fixture
 def case_1(db, normal_user):
-    return Case.objects.create(kind="diy", created_by=normal_user, ward="E05009373")
+    return Case.objects.create(kind="diy", created_by=normal_user, ward="GSS1")
 
 
 def _post_step(client, case_1, step, data, **kwargs):
@@ -57,9 +57,7 @@ def test_bad_submissions(admin_client, case_1, normal_user, normal_user_2):
     assertContains(resp, "Please specify a name and at least one")
 
 
-def test_add_perpetrator(
-    admin_client, case_1, normal_user, normal_user_2, address_lookup
-):
+def test_add_perpetrator(admin_client, case_1, normal_user, normal_user_2):
     post_step = partial(_post_step, admin_client, case_1)
     resp = admin_client.get(f"/cases/{case_1.id}/perpetrator/add", follow=True)
     resp = post_step("user_search", {"search": "normal"}, follow=True)
@@ -85,7 +83,7 @@ def test_add_perpetrator(
             **params,
             "last_name": "User3",
             "email": "normal3@example.org",
-            "postcode": "E8 3DY",
+            "postcode": "POSTCODE",
         },
         follow=True,
     )

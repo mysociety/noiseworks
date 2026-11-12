@@ -6,6 +6,8 @@ from django.core import mail
 from pytest_django.asserts import assertContains
 
 from accounts.models import User
+from cobrands.interface import AddressCandidate, AddressDetail
+from cobrands.testing import TestCobrand
 
 from ..models import Case, Complaint
 
@@ -43,16 +45,6 @@ def complaint(db, case_1, normal_user):
     )
 
 
-@pytest.fixture
-def staff_dest(settings):
-    settings.COBRAND_SETTINGS["staff_destination"] = {
-        "outside": "outside@example.org",
-        "business": "business@example.org",
-        "hackney-housing": "hh@example.org,hh2@example.org",
-        "housing": "housing@example.org",
-    }
-
-
 def _post_step(client, case_1, step, data, **kwargs):
     data = {f"{step}-{k}": v for k, v in data.items()}
     return client.post(
@@ -80,7 +72,7 @@ def test_non_staff_normal_user_permission(client, normal_user, complaint, settin
     assert resp.url == "/"
 
 
-def test_add_complaint_now_existing_user(admin_client, case_1, normal_user, staff_dest):
+def test_add_complaint_now_existing_user(admin_client, case_1, normal_user):
     post_step = partial(_post_step, admin_client, case_1)
 
     admin_client.get(f"/cases/{case_1.id}/complaint/add", follow=True)
@@ -155,7 +147,7 @@ def _test_add_complaint_not_now_new_user(
     assertContains(resp, "There is an existing user")
     resp = post_step("user_pick", {**params, **user_data}, follow=True)
     if "postcode" in user_data:
-        resp = post_step("user_address", {"address_uprn": "10008315925"}, follow=True)
+        resp = post_step("user_address", {"address_uprn": "1001"}, follow=True)
     assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
     assertContains(resp, "Fri, 12 Nov 2021, 10 p.m.")
     assertContains(resp, "Norman Normal")
@@ -166,29 +158,39 @@ def _test_add_complaint_not_now_new_user(
     assert not case_1.closed
 
 
-def test_add_complaint_not_now_new_user_email(
-    admin_client, case_1, normal_user, staff_dest, address_lookup
-):
+class TestCobrandWithLookupData(TestCobrand):
+    def address_candidates_for_postcode(self, postcode):
+        return [
+            AddressCandidate(
+                uprn="1001",
+                label="label",
+            )
+        ]
+
+    def address_detail_for_uprn(self, uprn):
+        return AddressDetail(
+            label="label", uprn=uprn, point=None, in_an_estate=None, ward_gss="GSS1"
+        )
+
+
+@pytest.mark.cobrand.with_args(TestCobrandWithLookupData)
+def test_add_complaint_not_now_new_user_email(admin_client, case_1, normal_user):
     _test_add_complaint_not_now_new_user(
         admin_client,
         case_1,
         normal_user,
-        {"email": "norman@example.org", "postcode": "E8 3DY"},
+        {"email": "norman@example.org", "postcode": "POSTCODE"},
         False,
     )
 
 
-def test_add_complaint_not_now_new_user_phone(
-    admin_client, case_1, normal_user, staff_dest
-):
+def test_add_complaint_not_now_new_user_phone(admin_client, case_1, normal_user):
     _test_add_complaint_not_now_new_user(
         admin_client, case_1, normal_user, {"phone": "07900000000"}, True
     )
 
 
-def test_add_complaint_as_normal_user(
-    client, complaint, normal_user, settings, staff_dest
-):
+def test_add_complaint_as_normal_user(client, complaint, normal_user, settings):
     settings.NON_STAFF_ACCESS = True
     case = complaint.case
     post_step = partial(_post_step, client, case)

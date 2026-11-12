@@ -5,7 +5,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from notifications_python_client.notifications import NotificationsAPIClient
 
-from noiseworks import cobrand
+from cobrands.registry import get_cobrand
 
 
 def send_sms(to, text):
@@ -20,21 +20,24 @@ def send_sms(to, text):
 def send_email(to, subject, template, data):
     if not isinstance(to, list):
         to = [to]
+    data["cobrand"] = get_cobrand()
     body_text = render_to_string(f"{template}.txt", data)
     settings = email_colours()
-    settings.update(cobrand.email.override_colours())
+    settings.update(get_cobrand().override_email_colours())
     email_settings(settings)
-    settings.update(cobrand.email.override_settings(settings))
+    settings.update(get_cobrand().override_email_settings(settings))
     data.update(settings)
     body_html = render_to_string(f"{template}.html", data)
-
-    logo = MIMEImage(data["logo_inline"]["data"])
-    logo.add_header("Content-ID", f"<{data['logo_inline']['id']}>")
 
     message = EmailMultiAlternatives(subject, body_text, None, to)
     message.mixed_subtype = "related"
     message.attach_alternative(body_html, "text/html")
-    message.attach(logo)
+
+    if "logo_inline" in data:  # pragma: no cover
+        logo = MIMEImage(data["logo_inline"]["data"])
+        logo.add_header("Content-ID", f"<{data['logo_inline']['id']}>")
+        message.attach(logo)
+
     message.send()
 
 
