@@ -107,6 +107,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "noiseworks.current_user.CurrentUserMiddleware",
+    "noiseworks.middleware.staff_locale_middleware",
 ]
 
 ROOT_URLCONF = "noiseworks.urls"

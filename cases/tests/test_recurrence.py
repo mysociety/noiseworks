@@ -100,7 +100,7 @@ def test_add_complaint_now_existing_user(admin_client, case_1, normal_user, staf
         {"user": normal_user.id},
         follow=True,
     )
-    assertContains(resp, f"{yesterday.strftime('%a, %-d %b %Y')}, 9 p.m.")
+    assertContains(resp, f"{yesterday.strftime('%a, %-d %b %Y')}, 21:00")
     assertContains(resp, "Still ongoing")
     assertContains(resp, "Normal User, 1 High Street")
 
@@ -156,8 +156,8 @@ def _test_add_complaint_not_now_new_user(
     resp = post_step("user_pick", {**params, **user_data}, follow=True)
     if "postcode" in user_data:
         resp = post_step("user_address", {"address_uprn": "10008315925"}, follow=True)
-    assertContains(resp, "Fri, 12 Nov 2021, 9 p.m.")
-    assertContains(resp, "Fri, 12 Nov 2021, 10 p.m.")
+    assertContains(resp, "Fri, 12 Nov 2021, 21:00")
+    assertContains(resp, "Fri, 12 Nov 2021, 22:00")
     assertContains(resp, "Norman Normal")
 
     post_step("summary", {"true_statement": 1}, follow=True)
@@ -221,8 +221,8 @@ def test_add_complaint_as_normal_user(
     assert len(mail.outbox) == 2
     email = mail.outbox[0]
     assert "noise reoccurrence" in email.body
-    assert "Fri, 12 Nov 2021, 9 p.m." in email.body
-    assert "Sat, 13 Nov 2021, 1 a.m." in email.body
+    assert "Fri, 12 Nov 2021, 21:00" in email.body
+    assert "Sat, 13 Nov 2021, 01:00" in email.body
     assert "1 High Street" in email.body
     assert "DIY" in email.body
     email = mail.outbox[1]

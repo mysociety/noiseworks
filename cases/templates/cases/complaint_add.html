@@ -42,7 +42,7 @@
     <dt class="govuk-summary-list__key">Noise ended</dt>
     <dd class="govuk-summary-list__value">
      {% if data.happening_now %}
-     Still ongoing at {% now "P, D j M Y" %}
+     Still ongoing at {% if request.user.is_staff %}{% now "H:i, D j M Y" %}{% else %}{% now "P, D j M Y" %}{% endif %}
      {% else %}
        {{ end_time }}
      {% endif %}

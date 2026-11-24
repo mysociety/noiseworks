@@ -1,4 +1,4 @@
-DATETIME_FORMAT = "D, j M Y, P"
+DATETIME_FORMAT = "D, j M Y, P"  # public, H:i for staff
 
 DATE_FORMAT = "D, j M Y"
 

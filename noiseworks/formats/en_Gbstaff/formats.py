@@ -1,0 +1,2 @@
+DATETIME_FORMAT = "D, j M Y, H:i"
+TIME_FORMAT = "H:i"

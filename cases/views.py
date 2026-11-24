@@ -16,7 +16,7 @@ from django.db import transaction
 from django.http.response import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.decorators import method_decorator
 from formtools.wizard.views import NamedUrlSessionWizardView
 from humanize import naturalsize
@@ -1116,6 +1116,8 @@ def send_emails(request, complaint, template):
     staff_dest = cobrand.email.case_destination(case)
     url = request.build_absolute_uri(case.get_absolute_url())
     complainant = complaint.complainant
+    cur_language = translation.get_language()
+    translation.activate("en-gbstaff")
     send_email(
         staff_dest,
         subject,
@@ -1126,7 +1128,9 @@ def send_emails(request, complaint, template):
         params = {"complaint": complaint, "url": url}
         if template == "report":
             params["case"] = case
+        translation.activate("en-gb")
         send_email(complainant.email, subject, f"cases/email/logged_{template}", params)
+    translation.activate(cur_language)
 
 
 @staff_member_required
