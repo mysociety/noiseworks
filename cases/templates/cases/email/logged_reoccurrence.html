@@ -9,10 +9,10 @@
   <h1 style="{{ h1_style }}">New noise reoccurrence</h1>
 
   <p style="{{ p_style }}">
-  Noise started: {{ complaint.start }}
-  <br>Noise ended: {% if complaint.happening_now %}Ongoing at {% endif %}{{ complaint.end }}
+  Started: {{ complaint.start }}
+  <br>Ended: {% if complaint.happening_now %}Ongoing at {% endif %}{{ complaint.end }}
   <br>Rooms affected: {{ complaint.rooms }}
-  <br>Noise description: {{ complaint.description }}
+  <br>Description: {{ complaint.description }}
   <br>Effect on complainant: {{ complaint.effect }}
   </p>
 

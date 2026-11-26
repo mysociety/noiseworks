@@ -54,6 +54,7 @@ class Cobrand(Protocol):
     wards: List[Ward]
     reporting_kind_form_help_text: Optional[str]
     map_tile_url: Optional[str]  # None means OpenStreetMap.
+    default_kind_group: Optional[str]
 
     def address_candidates_for_postcode(self, postcode: str) -> List[AddressCandidate]:
         """Raises PlaceLookupError on lookup issues."""

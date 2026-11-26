@@ -363,7 +363,7 @@ def test_user_case_creation(
 
 
 def test_error_conditions(admin_client):
-    form = WhereMapForm()
+    form = WhereMapForm(group="noise", kind="other", step="where-map")
     assert re.search(r"L.LatLng\(, \)", str(form))
 
     admin_client.get("/cases/add/user_pick")

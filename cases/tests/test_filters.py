@@ -7,10 +7,26 @@ from django.contrib.gis.geos import Point
 from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
+from cobrands.testing import TestCobrand
 
 from ..models import Action, ActionType, Case, Complaint
 
 pytestmark = pytest.mark.django_db
+
+
+class TestCobrandWithKindGroups(TestCobrand):
+    kinds = [
+        {
+            "label": "Noise",
+            "value": "noise",
+            "kinds": {"diy": "DIY", "other": "Other"},
+        },
+        {
+            "label": "Artificial light",
+            "value": "light",
+            "kinds": {"decorative": "Domestic decorative lighting"},
+        },
+    ]
 
 
 @pytest.fixture
@@ -134,6 +150,35 @@ def test_ward_group_filter(admin_client, admin_user, case_1):
     assertNotContains(response, f"/cases/{case_1.id}")
     response = admin_client.get("/cases?ward=North")
     assertContains(response, f"/cases/{case_1.id}")
+
+
+def test_kind_filter(admin_client, case_1, case_location):
+    response = admin_client.get("/cases?kind=diy")
+    assertContains(response, f"/cases/{case_location.id}")
+    assertNotContains(response, f"/cases/{case_1.id}")
+
+
+def test_kind_filter_single_group_has_no_optgroups(admin_client):
+    response = admin_client.get("/cases")
+    assertContains(response, '<option value="diy">DIY</option>', html=True)
+    assertNotContains(response, "<optgroup")
+
+
+@pytest.mark.cobrand.with_args(TestCobrandWithKindGroups)
+def test_kind_filter_multiple_groups_has_optgroups(admin_client, case_location):
+    response = admin_client.get("/cases")
+    assertContains(response, "<optgroup", count=2)
+    assertContains(
+        response,
+        """<optgroup label="Artificial light">
+        <option value="decorative">Domestic decorative lighting</option>
+        </optgroup>""",
+        html=True,
+    )
+    response = admin_client.get("/cases?kind=decorative")
+    assertNotContains(response, f"/cases/{case_location.id}")
+    response = admin_client.get("/cases?kind=diy")
+    assertContains(response, f"/cases/{case_location.id}")
 
 
 def test_search(admin_client, case_1):

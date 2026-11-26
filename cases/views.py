@@ -197,7 +197,7 @@ def edit_kind(request, pk):
     if form.is_valid():
         form.save()
         case.notify_followers(
-            f"Set kind to {form.cleaned_data['kind']}.", triggered_by=request.user
+            f"Changed type to {case.kind_display}.", triggered_by=request.user
         )
         return redirect(case)
     return render(
@@ -525,13 +525,33 @@ def show_map_form(wizard):
     return data1.get("geocode_result") or data2.get("geocode_result")
 
 
+def show_isitnow_form(wizard):
+    group = get_cobrand().default_kind_group
+    if not group:
+        data = wizard.get_cleaned_data_for_step("kind_group") or {}
+        group = data.get("group")
+    return group in ("noise", "dust", "smoke", "light", "asb")
+
+
 def show_happening_now_form(wizard):
+    if not show_isitnow_form(wizard):
+        return False
     data = wizard.get_cleaned_data_for_step("isitnow") or {}
     return data.get("happening_now")
 
 
 def show_not_happening_now_form(wizard):
+    if not show_isitnow_form(wizard):
+        return False
     return not show_happening_now_form(wizard)
+
+
+def show_rooms_form(wizard):
+    group = get_cobrand().default_kind_group
+    if not group:
+        data = wizard.get_cleaned_data_for_step("kind_group") or {}
+        group = data.get("group")
+    return group in ("noise", "dust", "smoke", "light", "pest")
 
 
 def show_user_form(wizard):
@@ -548,6 +568,10 @@ def show_about_form(wizard):
     return not show_user_form(wizard)
 
 
+def show_kind_group_form(wizard):
+    return not get_cobrand().default_kind_group
+
+
 def show_internal_flags_form(wizard):
     user = wizard.request.user
     return user.is_active and user.is_staff
@@ -559,6 +583,9 @@ def show_confirmation_step(wizard):
 
 
 def compile_dates(data):
+    if "start_date" not in data:
+        return None, None
+
     start = datetime.datetime.combine(data["start_date"], data["start_time"])
     start = timezone.make_aware(start)
 
@@ -631,6 +658,25 @@ class PerCaseWizard(CaseWizard):
         return super().get_context_data(**kwargs)
 
 
+SHARED_CONDITION_DICT = {
+    "isitnow": show_isitnow_form,
+    "isnow": show_happening_now_form,
+    "notnow": show_not_happening_now_form,
+    "rooms": show_rooms_form,
+    "user_search": show_user_form,
+    "user_pick": show_user_form,
+    "user_address": show_user_address_form,
+}
+COMPLAINT_FORM_LIST = [
+    ("isitnow", forms.IsItHappeningNowForm),
+    ("isnow", forms.HappeningNowForm),
+    ("notnow", forms.NotHappeningNowForm),
+    ("rooms", forms.RoomsAffectedForm),
+    ("describe", forms.DescribeForm),
+    ("effect", forms.EffectForm),
+]
+
+
 class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
     template_name = "cases/complaint_add.html"
     summary_check_page = "isitnow"
@@ -670,10 +716,18 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
         return super().get_context_data(**kwargs)
 
     def get_form_kwargs(self, step):
+        kwargs = super().get_form_kwargs(step)
+        kwargs["step"] = step
+        kwargs["kind"] = self.object.kind
+        for g in get_cobrand().kinds:
+            for k in g["kinds"].keys():
+                if k == self.object.kind:
+                    kwargs["group"] = g["value"]
+
         if step == "user_address":
             data = self.storage.get_step_data("user_pick") or {}
-            return {"address_choices": data["postcode_results"]}
-        return super().get_form_kwargs(step)
+            kwargs["address_choices"] = data["postcode_results"]
+        return kwargs
 
     def get_form_initial(self, step):
         """The user pick form needs the search query passed to it"""
@@ -683,26 +737,14 @@ class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
                 return {"search": data["search"]}
         return super().get_form_initial(step)
 
-    form_list = [
-        ("isitnow", forms.IsItHappeningNowForm),
-        ("isnow", forms.HappeningNowForm),
-        ("notnow", forms.NotHappeningNowForm),
-        ("rooms", forms.RoomsAffectedForm),
-        ("describe", forms.DescribeNoiseForm),
-        ("effect", forms.EffectForm),
+    form_list = COMPLAINT_FORM_LIST + [
         ("user_search", forms.RecurrencePersonSearchForm),
         ("user_pick", forms.PersonPickForm),
         ("user_address", forms.PersonAddressForm),
         ("summary", forms.SummaryForm),
     ]
 
-    condition_dict = {
-        "isnow": show_happening_now_form,
-        "notnow": show_not_happening_now_form,
-        "user_search": show_user_form,
-        "user_pick": show_user_form,
-        "user_address": show_user_address_form,
-    }
+    condition_dict = SHARED_CONDITION_DICT
 
     def done(self, form_list, form_dict, **kwargs):
         data = self.get_all_cleaned_data()
@@ -847,27 +889,42 @@ class ReportingWizard(CaseWizard):
         return super().get_context_data(**kwargs)
 
     def get_form_kwargs(self, step):
+        kwargs = super().get_form_kwargs(step)
+        kwargs["step"] = step
+
+        # Put kind on every form so they can customise if need be
+        data = self.storage.get_step_data("kind") or {}
+        kwargs["kind"] = data.get("kind-kind")
+        data = self.storage.get_step_data("kind_group") or {}
+        kwargs["group"] = data.get("kind_group-group")
+
         if step == "where-postcode-results":
             data = self.storage.get_step_data("where-location") or {}
-            return {"address_choices": data["postcode_results"]}
+            kwargs["address_choices"] = data["postcode_results"]
         elif step == "where-geocode-results":
             data = self.storage.get_step_data("where-location") or {}
             if data.get("geocode_results"):
-                return {"geocode_choices": data["geocode_results"]}
+                kwargs["geocode_choices"] = data["geocode_results"]
         elif step == "best_time":
-            return {"staff": self.request.user.is_active and self.request.user.is_staff}
+            kwargs["staff"] = self.request.user.is_active and self.request.user.is_staff
         elif step == "about":
-            return {"user": self.request.user.is_authenticated and self.request.user}
+            kwargs["user"] = self.request.user.is_authenticated and self.request.user
         elif step == "address":
             data = self.storage.get_step_data("postcode") or {}
-            return {"address_choices": data["postcode_results"]}
+            kwargs["address_choices"] = data["postcode_results"]
         elif step == "user_address":
             data = self.storage.get_step_data("user_pick") or {}
-            return {"address_choices": data["postcode_results"]}
+            kwargs["address_choices"] = data["postcode_results"]
         elif step == "confirmation":
             data = self.storage.get_step_data("summary") or {}
-            return {"token": data.get("token")}
-        return super().get_form_kwargs(step)
+            kwargs["token"] = data.get("token")
+        elif step == "kind":
+            group = get_cobrand().default_kind_group
+            if not group:
+                data = self.storage.get_step_data("kind_group") or {}
+                group = data.get("kind_group-group")
+            kwargs["group"] = group
+        return kwargs
 
     def get_form_initial(self, step):
         """The user pick form needs the search query passed to it"""
@@ -930,43 +987,39 @@ class ReportingWizard(CaseWizard):
 
         return data
 
-    form_list = [
-        ("user_search", forms.RecurrencePersonSearchForm),
-        ("user_pick", forms.PersonPickForm),
-        ("user_address", forms.PersonAddressForm),
-        ("about", forms.AboutYouForm),
-        ("best_time", forms.BestTimeForm),
-        ("postcode", forms.PostcodeForm),
-        ("address", forms.AddressForm),
-        ("kind", forms.ReportingKindForm),
-        ("where", forms.WhereForm),
-        ("where-location", forms.WhereLocationForm),
-        ("where-postcode-results", forms.WherePostcodeResultsForm),
-        ("where-geocode-results", forms.WhereGeocodeResultsForm),
-        ("where-map", forms.WhereMapForm),
-        ("isitnow", forms.IsItHappeningNowForm),
-        ("isnow", forms.HappeningNowForm),
-        ("notnow", forms.NotHappeningNowForm),
-        ("rooms", forms.RoomsAffectedForm),
-        ("describe", forms.DescribeNoiseForm),
-        ("effect", forms.EffectForm),
-        ("internal-flags", forms.InternalFlagsForm),
-        ("summary", forms.SummaryForm),
-        ("confirmation", forms.ConfirmationForm),
-    ]
+    form_list = (
+        [
+            ("user_search", forms.RecurrencePersonSearchForm),
+            ("user_pick", forms.PersonPickForm),
+            ("user_address", forms.PersonAddressForm),
+            ("about", forms.AboutYouForm),
+            ("best_time", forms.BestTimeForm),
+            ("postcode", forms.PostcodeForm),
+            ("address", forms.AddressForm),
+            ("kind_group", forms.ReportingKindGroupForm),
+            ("kind", forms.ReportingKindForm),
+            ("where", forms.WhereForm),
+            ("where-location", forms.WhereLocationForm),
+            ("where-postcode-results", forms.WherePostcodeResultsForm),
+            ("where-geocode-results", forms.WhereGeocodeResultsForm),
+            ("where-map", forms.WhereMapForm),
+        ]
+        + COMPLAINT_FORM_LIST
+        + [
+            ("internal-flags", forms.InternalFlagsForm),
+            ("summary", forms.SummaryForm),
+            ("confirmation", forms.ConfirmationForm),
+        ]
+    )
 
-    condition_dict = {
-        "user_search": show_user_form,
-        "user_pick": show_user_form,
-        "user_address": show_user_address_form,
+    condition_dict = SHARED_CONDITION_DICT | {
         "about": show_about_form,
         "postcode": show_about_form,
         "address": show_about_form,
+        "kind_group": show_kind_group_form,
         "where-postcode-results": show_postcode_results_form,
         "where-geocode-results": show_geocode_results_form,
         "where-map": show_map_form,
-        "isnow": show_happening_now_form,
-        "notnow": show_not_happening_now_form,
         "internal-flags": show_internal_flags_form,
         "confirmation": show_confirmation_step,
     }

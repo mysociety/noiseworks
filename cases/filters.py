@@ -24,9 +24,21 @@ def get_wards():
     return wards
 
 
+def get_kinds():
+    cobrand = get_cobrand()
+    groups = [(g["label"], list(g["kinds"].items())) for g in cobrand.kinds]
+    # Only use optgroups if there's more than one group to choose between.
+    if len(groups) == 1:
+        return groups[0][1]
+    return groups
+
+
 class CaseFilter(django_filters.FilterSet):
     search = django_filters.CharFilter(
         label="", method="search_filter", widget=SearchWidget
+    )
+    kind = django_filters.ChoiceFilter(
+        choices=get_kinds,
     )
     assigned = django_filters.ChoiceFilter(
         choices=[
@@ -99,8 +111,8 @@ class CaseFilter(django_filters.FilterSet):
         super().__init__(data, *args, **kwargs)
 
         self.filters.move_to_end("search", last=False)
-        self.filters["kind"].label = "Noise type"
-        self.filters["where"].label = "Noise location type"
+        self.filters["kind"].label = "Type"
+        self.filters["where"].label = "Location type"
         self.filters["estate"].label = f"{get_cobrand().body_name} Estates property?"
         self.filters["ward"].extra["choices"] = list(get_wards().items())
 

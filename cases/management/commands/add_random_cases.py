@@ -167,25 +167,9 @@ class Command(BaseCommand):
                 break
 
     def _pick_kind(self):
-        r = random.randint(1, 20)
-        music_choices = [
-            "music-pub",
-            "music-club",
-            "music-other",
-        ]
-        if r <= 10:
-            return random.choice(music_choices)
-        elif r <= 15:
-            return "other"
-        elif r <= 17:
-            return "shouting"
-        else:
-            choices = [
-                c[0]
-                for c in Case.KIND_CHOICES
-                if c[0] not in ("other", "shouting", *music_choices)
-            ]
-            return random.choice(choices)
+        cobrand = get_cobrand()
+        group = random.choice(cobrand.kinds)
+        return random.choice(list(group["kinds"].keys()))
 
     def _pick_where(self):
         if random.randint(1, 6) == 1:
