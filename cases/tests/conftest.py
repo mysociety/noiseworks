@@ -1,8 +1,8 @@
 import re
 
 import pytest
-from pytest_django.asserts import assertContains, assertNotContains
 from django.utils.timezone import localtime, make_aware, now
+from pytest_django.asserts import assertContains, assertNotContains
 
 from accounts.models import User
 
