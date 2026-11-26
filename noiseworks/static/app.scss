@@ -240,6 +240,31 @@ ul.case-list-user li {
     }
 }
 
+.nw-case-header {
+    border-bottom: 3px solid;
+    padding: 0 0 1em;
+    margin-bottom: 3em;
+
+    .nw-tags {
+        margin-bottom: 1em;
+    }
+
+    .nw-back-link {
+        font-weight: 600;
+        font-size: 1.25em;
+
+        // border-bottom on hover pushes rest of page down 1px, yuck
+        &:hover {
+            border-bottom: none;
+        }
+    }
+
+    // No need for massive margin-top on action_form and visit_form headers
+    & + h1 {
+        margin-top: 0;
+    }
+}
+
 // Fix uneven space around first and last pagination numbers.
 .lbh-pagination__item {
     &:first-of-type a {

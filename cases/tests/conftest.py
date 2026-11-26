@@ -1,6 +1,7 @@
 import re
 
 import pytest
+from pytest_django.asserts import assertContains, assertNotContains
 from django.utils.timezone import localtime, make_aware, now
 
 from accounts.models import User
@@ -68,3 +69,24 @@ def add_time_to_log_payload(payload, time=None):
     payload["date_2"] = date.year
     payload["action_time"] = time.strftime("%I:%M %p")
     return payload
+
+
+def assertCaseHeader(response, case, kind_and_location, merged_into=None, tags=True):
+    """Check the page has a _case_header.html for the given case. Tags should
+    only be shown to staff."""
+
+    assertContains(
+        response,
+        f'<a href="/cases/{case.id}" class="nw-back-link">{kind_and_location}</a>',
+        html=True,
+    )
+
+    if not tags:
+        assertNotContains(response, "nw-tags")
+    else:
+        assertContains(response, "nw-tags")
+
+    if merged_into:
+        assertContains(response, "nw-tag--merged")
+    else:
+        assertNotContains(response, "nw-tag--merged")

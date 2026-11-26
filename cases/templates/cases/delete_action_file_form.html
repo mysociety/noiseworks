@@ -3,6 +3,8 @@
 
 {% block content %}
 
+{% include "cases/_case_header.html" with case=case %}
+
 <h2>Are you sure you want to delete {{ file.original_name }} ({{ file.human_readable_size }})?</h2>
 <form method="post">{% csrf_token %}
     <input type="submit" class="govuk-button lbh-button" value="Yes, delete it">

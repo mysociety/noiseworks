@@ -14,7 +14,7 @@ from pytest_django.asserts import assertContains, assertNotContains
 from ..forms import LogActionForm
 from ..models import Action, ActionType, Case, CaseSettingsSingleton, Complaint
 from ..views import compile_dates
-from .conftest import add_time_to_log_payload
+from .conftest import add_time_to_log_payload, assertCaseHeader
 
 pytestmark = pytest.mark.django_db
 
@@ -33,6 +33,16 @@ def case_other_uprn(db):
 @pytest.fixture
 def case_bad_uprn(db):
     yield Case.objects.create(uprn="bad_uprn", kind="diy", estate="?")
+
+
+@pytest.fixture
+def case_location(db):
+    return Case.objects.create(
+        kind="diy",
+        point=Point(470267, 122766),
+        location_cache="Flat 4, 2 Example Road",
+        estate="?",
+    )
 
 
 @pytest.fixture
@@ -85,6 +95,22 @@ def test_log_view(admin_client, case_1, action_types):
     )
     response = admin_client.get("/cases?assigned=others")
     assertContains(response, "Letter sent")
+
+
+@pytest.mark.parametrize("url_suffix", ["log", "log-visit"])
+def test_log_pages_show_case_header(admin_client, case_location, url_suffix):
+    response = admin_client.get(f"/cases/{case_location.id}/{url_suffix}")
+    assertCaseHeader(response, case_location, "DIY at Flat 4, 2 Example Road")
+
+
+@pytest.mark.parametrize(
+    "url_suffix",
+    ["edit-kind", "edit-location", "edit-review-date", "reassign", "followers"],
+)
+def test_case_editing_pages_show_case_header(admin_client, case_location, url_suffix):
+    response = admin_client.get(f"/cases/{case_location.id}/{url_suffix}")
+    assert response.status_code == HTTPStatus.OK
+    assertCaseHeader(response, case_location, "DIY at Flat 4, 2 Example Road")
 
 
 def test_log_past_action(admin_client, case_1, action_types):
@@ -373,6 +399,23 @@ def test_case_manager_get_merged_cases(case_1, case_other_uprn):
 def test_complaint_view(admin_client, complaint):
     response = admin_client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
     assertContains(response, "Still ongoing at Tue, 9 Nov 2021, 2:29 p.m.", html=True)
+
+
+@pytest.mark.parametrize(
+    "url_suffix", ["complaint/add/isitnow", "perpetrator/add/user_search"]
+)
+def test_staff_wizard_pages_show_case_header(admin_client, case_1, url_suffix):
+    response = admin_client.get(f"/cases/{case_1.id}/{url_suffix}")
+    assert response.status_code == HTTPStatus.OK
+    assertCaseHeader(response, case_1, "DIY at Unknown location")
+
+
+def test_complaint_view_shows_case_header(admin_client, complaint):
+    response = admin_client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
+    assertCaseHeader(response, complaint.case, "DIY at Unknown location")
+    assertContains(
+        response, '<h1 class="govuk-heading-l">Complaint info</h1>', html=True
+    )
 
 
 def test_complaint_bad_case(admin_client, case_other_uprn, complaint):

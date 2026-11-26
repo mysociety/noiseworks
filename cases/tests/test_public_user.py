@@ -7,6 +7,7 @@ from pytest_django.asserts import assertContains, assertNotContains
 from accounts.models import User
 
 from ..models import Action, ActionType, Case, Complaint
+from .conftest import assertCaseHeader
 
 pytestmark = pytest.mark.django_db
 
@@ -153,3 +154,18 @@ def test_non_staff_complaint_view_when_open(
     client.force_login(normal_user_2)
     response = client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize("url_suffix", ["complaint/add/isitnow", "complaint/{id}"])
+def test_complainant_pages_show_case_header_without_tags(
+    client, complaint, non_staff_access, url_suffix
+):
+    case = complaint.case
+    case.priority = True
+    case.save()
+    client.force_login(complaint.complainant)
+    url_suffix = url_suffix.format(id=complaint.id)
+    response = client.get(f"/cases/{case.id}/{url_suffix}")
+    assert response.status_code == 200
+    assertCaseHeader(response, case, "DIY at Entered location", tags=False)
+    assertNotContains(response, "Priority")
