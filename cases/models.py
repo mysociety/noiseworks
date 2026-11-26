@@ -306,7 +306,7 @@ class Case(AbstractModel):
     )
 
     # Type
-    kind = models.CharField("Type", max_length=15)
+    kind = models.CharField("Type", max_length=50)
     kind_other = models.CharField("Other type", max_length=100, blank=True)
 
     # Location
