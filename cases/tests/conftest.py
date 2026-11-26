@@ -90,3 +90,8 @@ def assertCaseHeader(response, case, kind_and_location, merged_into=None, tags=T
         assertContains(response, "nw-tag--merged")
     else:
         assertNotContains(response, "nw-tag--merged")
+
+
+def assertPageTitle(response, title):
+    """Check the page's <title> starts with the given title"""
+    assertContains(response, f"<title>{title} | ")
