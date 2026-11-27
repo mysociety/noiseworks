@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -15,7 +16,7 @@ from django.db import transaction
 from django.http.response import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.decorators import method_decorator
 from formtools.wizard.views import NamedUrlSessionWizardView
 from humanize import naturalsize
@@ -451,9 +452,13 @@ def merge_start(request, case):
     if case.uprn:
         cases_same_uprn = qs.filter(uprn=case.uprn).exclude(id=case.id)
     if case.point:
-        cases_nearby = qs.filter(point__dwithin=(case.point, D(m=500))).exclude(
-            id=case.id
+        cases_nearby = list(
+            qs.filter(point__dwithin=(case.point, D(m=500)))
+            .exclude(id=case.id)
+            .annotate(distance=Distance("point", case.point))
+            .order_by("distance")[:50]
         )
+        Case.objects.prefetch_timeline(cases_nearby)
 
     return render(
         request,
@@ -1112,6 +1117,8 @@ def send_emails(request, complaint, template):
     staff_dest = get_cobrand().staff_destination_email_addresses_for_case(case)
     url = request.build_absolute_uri(case.get_absolute_url())
     complainant = complaint.complainant
+    cur_language = translation.get_language()
+    translation.activate("en-gbstaff")
     send_email(
         staff_dest,
         subject,
@@ -1122,7 +1129,9 @@ def send_emails(request, complaint, template):
         params = {"complaint": complaint, "url": url}
         if template == "report":
             params["case"] = case
+        translation.activate("en-gb")
         send_email(complainant.email, subject, f"cases/email/logged_{template}", params)
+    translation.activate(cur_language)
 
 
 @staff_member_required
@@ -1156,9 +1165,12 @@ def consume_notification(request, pk):
 
 @staff_member_required
 def notifications_list(request):
-    notifications = request.user.notifications.order_by("read", "-time").all()
+    qs = request.user.notifications.order_by("read", "-time")
+    paginator = Paginator(qs, 20)
+    page_number = request.GET.get("page")
+    qs = paginator.get_page(page_number)
     return render(
         request,
         "cases/notifications/notification_list.html",
-        {"notifications": notifications},
+        {"qs": qs},
     )

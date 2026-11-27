@@ -372,7 +372,7 @@ def test_case_manager_get_merged_cases(case_1, case_other_uprn):
 
 def test_complaint_view(admin_client, complaint):
     response = admin_client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
-    assertContains(response, "Still ongoing at Tue, 9 Nov 2021, 2:29 p.m.", html=True)
+    assertContains(response, "Still ongoing at Tue, 9 Nov 2021, 14:29", html=True)
 
 
 def test_complaint_bad_case(admin_client, case_other_uprn, complaint):

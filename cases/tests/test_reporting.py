@@ -159,7 +159,7 @@ def test_staff_case_creation(admin_client, normal_user):
     assertContains(resp, "Yes")  # Priority
     assertContains(resp, "Wed, 12 Oct 2022")
     today = datetime.date.today()
-    assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 9 p.m.")
+    assertContains(resp, f"{today.strftime('%a, %-d %b %Y')}, 21:00")
     post_step("summary", {"true_statement": 1}, follow=True)
     assert Case.objects.count() == 1
     case = Case.objects.all()[0]
@@ -231,8 +231,8 @@ def test_staff_case_creation_new_user_map(admin_client, admin_user, normal_user)
     assertContains(resp, "DIY")
     assertContains(resp, "A house, flat, park or street")
     assertContains(resp, "180m around location description")
-    assertContains(resp, "Wed, 17 Nov 2021, 2 a.m.")
-    assertContains(resp, "Wed, 17 Nov 2021, 3 a.m.")
+    assertContains(resp, "Wed, 17 Nov 2021, 02:00")
+    assertContains(resp, "Wed, 17 Nov 2021, 03:00")
     assertContains(resp, "Yes")  # Priority
     post_step("summary", {"true_statement": 1}, follow=True)
     assert len(mail.outbox) == 1
@@ -352,11 +352,12 @@ def test_user_case_creation(
         assert "new noise report has been submitted" in email.body
         assert "180m around location description" in email.body
         assert "Ward 1" in email.body
-        assert "9 p.m." in email.body
         if r == 0:
+            assert "21:00" in email.body
             assert "address label" in email.body
             assert "weekday, by email" in email.body
         else:
+            assert "9 p.m." in email.body
             assert "weekday, by email" not in email.body
             assert "address label" not in email.body
     mail.outbox = []
