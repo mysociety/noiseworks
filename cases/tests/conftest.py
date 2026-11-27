@@ -88,6 +88,7 @@ def assertCaseHeader(response, case, kind_and_location, merged_into=None, tags=T
 
     if merged_into:
         assertContains(response, "nw-tag--merged")
+        assertContains(response, "Merged into {}".format(merged_into.id))
     else:
         assertNotContains(response, "nw-tag--merged")
 
