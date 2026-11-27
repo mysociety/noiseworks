@@ -7,7 +7,7 @@ from humanize import naturalsize
 from pytest_django.asserts import assertContains, assertNotContains
 
 from ..models import Action, ActionFile, CaseSettingsSingleton
-from .conftest import add_time_to_log_payload
+from .conftest import add_time_to_log_payload, assertPageTitle
 
 pytestmark = pytest.mark.django_db
 TEMPDIR = tempfile.TemporaryDirectory().name
@@ -98,6 +98,7 @@ def test_delete_logged_file_happy_path(client, logged_action_1, staff_user_1):
 
     response = client.get(f"{action_file.get_absolute_url()}/delete")
     assert response.status_code == HTTPStatus.OK
+    assertPageTitle(response, f"#{logged_action_1.case.id} Delete attachment")
 
     response = client.post(f"{action_file.get_absolute_url()}/delete", follow=True)
     assert response.status_code == HTTPStatus.OK

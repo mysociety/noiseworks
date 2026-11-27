@@ -1,0 +1,8 @@
+<div class="nw-case-header">
+  {% if request.user.is_staff %}
+    {% include "cases/_case_tags.html" with case=case %}
+  {% endif %}
+    <a href="{% url "case-view" case.id %}" class="nw-back-link">
+        {{ case.kind_display }} at {{ case.location_display }}
+    </a>
+</div>

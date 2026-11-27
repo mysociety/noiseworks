@@ -7,6 +7,7 @@ from pytest_django.asserts import assertContains, assertNotContains
 from accounts.models import User
 
 from ..models import Action, ActionType, Case, Complaint
+from .conftest import assertCaseHeader, assertPageTitle
 
 pytestmark = pytest.mark.django_db
 
@@ -99,6 +100,7 @@ def test_case_list_user_view(client, complaint, edited_case, non_staff_access):
 def test_case_detail_user_view(client, complaint, action_types, non_staff_access):
     client.force_login(complaint.complainant)
     response = client.get(f"/cases/{complaint.case.id}")
+    assertPageTitle(response, "Your noise report")
     assertContains(response, "Letter sent")
     assertNotContains(response, "Noise witnessed")
 
@@ -153,3 +155,25 @@ def test_non_staff_complaint_view_when_open(
     client.force_login(normal_user_2)
     response = client.get(f"/cases/{complaint.case.id}/complaint/{complaint.id}")
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "url_suffix, title",
+    [
+        ("complaint/add/isitnow", "Report a reoccurrence"),
+        ("complaint/{id}", "Complaint info"),
+    ],
+)
+def test_complainant_pages_show_case_header_without_tags(
+    client, complaint, non_staff_access, url_suffix, title
+):
+    case = complaint.case
+    case.priority = True
+    case.save()
+    client.force_login(complaint.complainant)
+    url_suffix = url_suffix.format(id=complaint.id)
+    response = client.get(f"/cases/{case.id}/{url_suffix}")
+    assert response.status_code == 200
+    assertPageTitle(response, title)
+    assertCaseHeader(response, case, "DIY at Entered location", tags=False)
+    assertNotContains(response, "Priority")

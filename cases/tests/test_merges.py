@@ -7,6 +7,7 @@ from django.utils.timezone import now
 from pytest_django.asserts import assertContains, assertNotContains
 
 from ..models import Action, ActionType, Case, MergeRecord
+from .conftest import assertCaseHeader, assertPageTitle
 
 pytestmark = pytest.mark.django_db
 
@@ -99,6 +100,7 @@ def test_merge_stop_not_started(admin_client, case):
 
 def test_merging_cases_list(admin_client, case, cases, already_merged_case):
     response = admin_client.post(f"/cases/{case.id}/merge")
+    assertPageTitle(response, f"#{case.id} Merge case")
     assertContains(response, "Select a case to merge into")
     assertContains(response, "Same UPRN")
     assertContains(response, "Within 500m")
@@ -241,3 +243,24 @@ def test_cant_merge_case_into_itself(admin_client, case):
     with pytest.raises(ValidationError) as e:
         admin_client.post(f"/cases/{case.id}/merge", {"dupe": 1}, follow=True)
     assert "You cannot merge a case into itself." in str(e.value)
+
+
+def test_log_action_on_merged_case_shows_merged_case(admin_client, merged_case_setup):
+    into, merged = merged_case_setup
+    response = admin_client.get(f"/cases/{merged.id}/log")
+    assertPageTitle(response, f"#{merged.id} Log an action")
+    assertCaseHeader(response, merged, "DIY at Merged case", merged_into=into)
+    assertNotContains(response, "Combined case")
+
+
+def test_log_action_on_case_merged_twice_shows_final_case(
+    admin_client, merged_case_setup
+):
+    into, merged = merged_case_setup
+    final = Case.objects.create(kind="diy", location_cache="Final case", estate="?")
+    into.merge_into(final)
+    into.save()
+    response = admin_client.get(f"/cases/{merged.id}/log")
+    assertCaseHeader(response, merged, "DIY at Merged case", merged_into=final)
+    assertNotContains(response, "Combined case")
+    assertNotContains(response, "Final case")

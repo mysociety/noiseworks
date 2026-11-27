@@ -3,22 +3,7 @@
 
 {% block content %}
 
-<div>
-    <a href="{% url "case-view" case.id %}" class="nw-back-link">Back to case #{{ case.id }}</a>
-</div>
-
-<div class="nw-merge-source">
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-            <p class="govuk-body">
-            <strong>{{ case.kind_display }} at {{ case.location_display }}</strong>
-            </p>
-            <p class="govuk-body" style="margin-bottom:0">
-            Case reference <strong>{{ case.id }}</strong>
-            </p>
-        </div>
-    </div>
-</div>
+{% include "cases/_case_header.html" with case=case %}
 
 {% error_summary wizard.form %}
 

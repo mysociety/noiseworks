@@ -31,6 +31,12 @@ from .models import Action, ActionFile, ActionType, Case, Complaint, Notificatio
 from .signals import new_case_reported
 
 
+def case_page_title(case, text):
+    """Page title for a staff case page. The case number goes first so that it
+    is still visible when browsers truncate the titles of tabs."""
+    return f"#{case.id} {text}"
+
+
 def home(request):
     if request.user.is_staff:
         return redirect("cases")
@@ -108,7 +114,11 @@ def case_user(request, pk):
     qs = qs.select_related("assigned")
     case = get_object_or_404(qs, pk=pk)
     case = case.original_entry()
-    return render(request, "cases/case_detail_user.html", context={"case": case})
+    return render(
+        request,
+        "cases/case_detail_user.html",
+        context={"case": case, "title": "Your noise report"},
+    )
 
 
 @staff_member_required
@@ -125,6 +135,9 @@ def case_staff(request, pk):
         "cases/case_detail_staff.html",
         context={
             "case": case,
+            "title": case_page_title(
+                case, f"{case.kind_display} at {case.location_display}"
+            ),
             "is_follower": is_follower,
             "timeline": timeline,
             "priority_change_form": priority_change_form,
@@ -153,6 +166,7 @@ def reassign(request, pk):
         "cases/reassign.html",
         {
             "case": case,
+            "title": case_page_title(case, "Reassign"),
             "form": form,
         },
     )
@@ -170,6 +184,7 @@ def followers(request, pk):
         "cases/followers.html",
         {
             "case": case,
+            "title": case_page_title(case, "Change followers"),
             "form": form,
         },
     )
@@ -205,6 +220,7 @@ def edit_kind(request, pk):
         "cases/edit-kind.html",
         {
             "case": case,
+            "title": case_page_title(case, "Change type"),
             "form": form,
         },
     )
@@ -223,6 +239,7 @@ def edit_location(request, pk):
         "cases/edit-location.html",
         {
             "case": case,
+            "title": case_page_title(case, "Change location"),
             "form": form,
         },
     )
@@ -251,6 +268,7 @@ def edit_review_date(request, pk):
         "cases/edit-review-date.html",
         {
             "case": case,
+            "title": case_page_title(case, "Change review date"),
             "form": form,
         },
     )
@@ -294,6 +312,7 @@ def log_visit(request, pk):
             "case": case,
             "form": form,
             "form_title": "Log a visit",
+            "title": case_page_title(case, "Log a visit"),
             "can_upload_files": bytes_remaining > 0,
             "remaining_file_storage_bytes": bytes_remaining,
             "remaining_file_storage_human_readable": naturalsize(bytes_remaining),
@@ -329,6 +348,7 @@ def log_action(request, pk):
             "form": form,
             "close_type_id": ActionType.case_closed.id,
             "form_title": "Log an action",
+            "title": case_page_title(case, "Log an action"),
             "can_upload_files": bytes_remaining > 0,
             "remaining_file_storage_bytes": bytes_remaining,
             "remaining_file_storage_human_readable": naturalsize(bytes_remaining),
@@ -358,6 +378,7 @@ def edit_logged_action(request, case_pk, action_pk):
             "case": case,
             "form": form,
             "form_title": "Edit a logged action",
+            "title": case_page_title(case, "Edit a logged action"),
         },
     )
 
@@ -380,6 +401,7 @@ def action_file_delete(request, case_pk, action_pk, file_pk):
         "cases/delete_action_file_form.html",
         {
             "case": case,
+            "title": case_page_title(case, "Delete attachment"),
             "file": _file,
         },
     )
@@ -460,6 +482,7 @@ def merge_start(request, case):
         "cases/merged_start.html",
         {
             "case": case,
+            "title": case_page_title(case, "Merge case"),
             "cases_same_uprn": cases_same_uprn,
             "cases_nearby": cases_nearby,
         },
@@ -499,10 +522,14 @@ def complaint(request, pk, complaint):
     case_ids = merge_map.keys()
     if complaint.case.id not in case_ids:
         return redirect(case)
+    if request.user.is_staff:
+        title = case_page_title(case, "Complaint info")
+    else:
+        title = "Complaint info"
     return render(
         request,
         "cases/complaint_detail.html",
-        context={"case": case, "complaint": complaint},
+        context={"case": case, "complaint": complaint, "title": title},
     )
 
 
@@ -628,11 +655,16 @@ class PerCaseWizard(CaseWizard):
 
     def get_context_data(self, **kwargs):
         kwargs["case"] = self.object
+        if self.request.user.is_staff:
+            kwargs["title"] = case_page_title(self.object, self.page_title)
+        else:
+            kwargs["title"] = self.page_title
         return super().get_context_data(**kwargs)
 
 
 class RecurrenceWizard(LoginRequiredMixin, PerCaseWizard):
     template_name = "cases/complaint_add.html"
+    page_title = "Report a reoccurrence"
     summary_check_page = "isitnow"
 
     def dispatch(self, request, *args, **kwargs):
@@ -1062,6 +1094,7 @@ class ReportingWizard(CaseWizard):
 @method_decorator(permission_required("cases.edit_perpetrators"), name="dispatch")
 class PerpetratorWizard(LoginRequiredMixin, PerCaseWizard):
     template_name = "cases/complaint_add.html"
+    page_title = "Add a perpetrator"
     summary_check_page = "user_search"
 
     def dispatch(self, request, *args, **kwargs):
